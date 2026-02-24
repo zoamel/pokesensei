@@ -39,7 +39,7 @@ func (s *Server) Handle(pattern string, handler http.Handler) {
 }
 
 func (s *Server) Handler() http.Handler {
-	return s.withMiddleware(s.mux)
+	return s.httpServer.Handler
 }
 
 func (s *Server) Start() error {

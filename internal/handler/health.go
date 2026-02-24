@@ -28,14 +28,18 @@ func (h *HealthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.log.Error("health check failed", "error", err)
 		w.WriteHeader(http.StatusServiceUnavailable)
-		json.NewEncoder(w).Encode(map[string]string{
+		if encErr := json.NewEncoder(w).Encode(map[string]string{
 			"status": "error",
 			"error":  err.Error(),
-		})
+		}); encErr != nil {
+			h.log.Error("failed to encode health response", "error", encErr)
+		}
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]string{
+	if encErr := json.NewEncoder(w).Encode(map[string]string{
 		"status": "ok",
-	})
+	}); encErr != nil {
+		h.log.Error("failed to encode health response", "error", encErr)
+	}
 }
