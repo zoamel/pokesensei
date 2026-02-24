@@ -1,3 +1,6 @@
+-include .env
+export
+
 .PHONY: tools generate templ sqlc tailwind dev migrate build clean
 
 ## Install development tools
@@ -26,7 +29,9 @@ tailwind:
 
 ## Start dev server with hot reload (requires Docker Compose running)
 dev:
-	air
+	@tailwindcss -i static/css/input.css -o static/css/output.css --watch & \
+	air; \
+	kill %1 2>/dev/null || true
 
 ## Run database migrations
 migrate:

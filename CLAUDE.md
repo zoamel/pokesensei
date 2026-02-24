@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Full-stack Go web application (`zoamel/my-sundry`) using Go 1.25.5. No web framework — uses the standard library `net/http` with Go 1.22+ enhanced ServeMux for method-based routing.
 
-**Stack:** templ (HTML templates), HTMX + Alpine.js (interactivity), Tailwind CSS v3 (styling), PostgreSQL 17 with pgx/v5 (database), sqlc (query generation), goose (migrations), log/slog (structured logging).
+**Stack:** templ (HTML templates), HTMX + Alpine.js (interactivity), Tailwind CSS v4 (styling), PostgreSQL 17 with pgx/v5 (database), sqlc (query generation), goose (migrations), log/slog (structured logging).
 
 ## Build & Development Commands
 

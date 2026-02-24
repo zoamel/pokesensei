@@ -7,4 +7,11 @@ tmp_dir = "tmp"
   bin = "./tmp/server"
   include_ext = ["go", "templ"]
   exclude_dir = ["tmp", "static", "db/generated"]
+  exclude_regex = ["_templ\\.go$"]
   delay = 1000
+
+[proxy]
+  enabled = false
+
+[misc]
+  clean_on_exit = true
