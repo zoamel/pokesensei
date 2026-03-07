@@ -34,8 +34,5 @@ go.work.sum
 # Air
 tmp/
 
-# Tailwind output (regenerated from input.css)
-static/css/output.css
-
 # OS files
 .DS_Store
