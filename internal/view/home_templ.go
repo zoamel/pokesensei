@@ -41,7 +41,7 @@ func HomePage() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main class=\"min-h-screen flex items-center justify-center\"><div class=\"text-center\"><h1 class=\"text-4xl font-bold text-gray-900\">Hello, World!</h1><p class=\"mt-4 text-lg text-gray-600\">Full-stack Go with templ, HTMX, and Tailwind CSS.</p></div></main>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main class=\"page-center\"><div><h1 class=\"heading\">Hello, World!</h1><p class=\"subheading\">Full-stack Go with templ, HTMX, and modern CSS.</p></div></main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
