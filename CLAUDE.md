@@ -6,13 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Full-stack Go web application (`zoamel/my-sundry`) using Go 1.25.5. No web framework — uses the standard library `net/http` with Go 1.22+ enhanced ServeMux for method-based routing.
 
-**Stack:** templ (HTML templates), HTMX + Alpine.js (interactivity), Tailwind CSS v4 (styling), PostgreSQL 17 with pgx/v5 (database), sqlc (query generation), goose (migrations), log/slog (structured logging).
+**Stack:** templ (HTML templates), HTMX + Alpine.js (interactivity), Modern CSS with @layer/@import (styling), PostgreSQL 17 with pgx/v5 (database), sqlc (query generation), goose (migrations), log/slog (structured logging).
 
 ## Build & Development Commands
 
 ```bash
 make tools              # Install dev tools (templ, sqlc, goose, air)
-make generate           # Run all code generators (templ + sqlc + tailwind)
+make generate           # Run all code generators (templ + sqlc)
 make dev                # Start air hot reload server (requires Postgres running)
 make migrate            # Run goose migrations
 make build              # Full production build → bin/server
@@ -43,7 +43,7 @@ db/
   queries/                   ← sqlc SQL query files
   generated/                 ← sqlc generated Go code (committed)
   embed.go                   ← Embeds migrations into binary via embed.FS
-static/                      ← Vendored HTMX/Alpine.js, Tailwind CSS
+static/                      ← Vendored HTMX/Alpine.js, CSS (main.css + @layer partials)
 ```
 
 **Key patterns:**
@@ -53,15 +53,16 @@ static/                      ← Vendored HTMX/Alpine.js, Tailwind CSS
 
 ## Code Generation Workflow
 
-After changing `.templ` files, `.sql` queries, or Tailwind classes:
+After changing `.templ` files or `.sql` queries:
 
 ```bash
 templ generate           # .templ → _templ.go (committed)
 sqlc generate            # .sql → db/generated/*.go (committed)
-tailwindcss -i static/css/input.css -o static/css/output.css --minify  # (gitignored)
 ```
 
 Or run all at once: `make generate`
+
+CSS files in `static/css/` are hand-written (no build step). Entry point is `main.css` which imports partials via `@import` with `@layer`.
 
 ## Configuration
 
