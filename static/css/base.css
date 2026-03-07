@@ -1,0 +1,27 @@
+:root {
+  color-scheme: light dark;
+
+  /* Colors — oklch for perceptual uniformity, light-dark() for theme switching */
+  --color-text: light-dark(oklch(0.25 0.01 260), oklch(0.9 0.01 260));
+  --color-text-muted: light-dark(oklch(0.45 0.01 260), oklch(0.65 0.01 260));
+
+  /* Typography */
+  --font-size-lg: 1.125rem;
+  --font-size-4xl: 2.25rem;
+
+  /* Spacing */
+  --space-4: 1rem;
+}
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  color: var(--color-text);
+}

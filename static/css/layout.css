@@ -1,0 +1,7 @@
+.page-center {
+  min-block-size: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
