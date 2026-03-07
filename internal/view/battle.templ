@@ -1,0 +1,141 @@
+package view
+
+import (
+	"fmt"
+	"zoamel/pokesensei/db/generated"
+	"zoamel/pokesensei/internal/matchup"
+)
+
+// BattleMatchup pairs an opponent with ranked team results.
+type BattleMatchup struct {
+	Opponent matchup.Pokemon
+	Rankings []matchup.MatchupResult
+}
+
+templ BattlePage(trainers []generated.Trainer) {
+	@AppShell("Battle Helper", "battle") {
+		<div class="battle">
+			<h1>Battle Helper</h1>
+			<div class="battle-layout">
+				<aside class="battle-sidebar">
+					<h2>Trainers</h2>
+					if len(trainers) == 0 {
+						<p class="empty-state">Import game data to see trainers.</p>
+					} else {
+						<div class="trainer-list">
+							for _, t := range trainers {
+								<button
+									class="trainer-item"
+									hx-get={ fmt.Sprintf("/battle/trainer/%d", t.ID) }
+									hx-target="#matchup-results"
+									hx-swap="innerHTML"
+								>
+									<span class="trainer-name">{ t.Name }</span>
+									<span class="trainer-meta">
+										{ t.TrainerClass }
+										if t.BadgeNumber > 0 && t.BadgeNumber < 9 {
+											{ fmt.Sprintf(" · Badge %d", t.BadgeNumber) }
+										}
+									</span>
+								</button>
+							}
+						</div>
+					}
+					<h2>Search Pokémon</h2>
+					<input
+						type="text"
+						name="name"
+						placeholder="Search opponent..."
+						hx-get="/battle/search"
+						hx-trigger="input changed delay:300ms"
+						hx-target="#battle-search-results"
+						hx-swap="innerHTML"
+					/>
+					<div id="battle-search-results"></div>
+				</aside>
+				<section class="battle-main">
+					<div id="matchup-results">
+						<p class="empty-state">Select a trainer or search for a Pokémon to see matchup analysis.</p>
+					</div>
+				</section>
+			</div>
+		</div>
+	}
+}
+
+templ TrainerMatchupPartial(trainer generated.Trainer, matchups []BattleMatchup) {
+	<div class="matchup-header">
+		<h2>{ trainer.Name }</h2>
+		<span class="matchup-meta">{ trainer.EncounterName }</span>
+	</div>
+	for _, mu := range matchups {
+		@matchupCard(mu)
+	}
+}
+
+templ PokemonMatchupPartial(mu BattleMatchup) {
+	<div class="matchup-header">
+		<h2>vs { mu.Opponent.Name }</h2>
+	</div>
+	@matchupCard(mu)
+}
+
+templ matchupCard(mu BattleMatchup) {
+	<div class="matchup-card">
+		<div class="matchup-opponent">
+			<img src={ mu.Opponent.SpriteURL } alt={ mu.Opponent.Name } width="48" height="48"/>
+			<div>
+				<strong>{ mu.Opponent.Name }</strong>
+				if mu.Opponent.Level > 0 {
+					<span class="matchup-level">{ fmt.Sprintf("Lv. %d", mu.Opponent.Level) }</span>
+				}
+			</div>
+		</div>
+		<div class="matchup-rankings">
+			if len(mu.Rankings) == 0 {
+				<p class="warning-item">No team members to analyze. Add Pokémon to your team first.</p>
+			} else {
+				for _, r := range mu.Rankings {
+					<div class={ "ranking-row", rankingClass(r.Effectiveness) }>
+						<img src={ r.TeamMember.SpriteURL } alt={ r.TeamMember.Name } width="32" height="32"/>
+						<span class="ranking-name">{ r.TeamMember.Name }</span>
+						if r.BestMove != nil {
+							<span class="ranking-move">{ r.BestMove.Name }</span>
+							<span class="ranking-class">{ r.BestMove.DamageClass }</span>
+						}
+						<span class="ranking-label">{ r.EffectivenessLabel }</span>
+					</div>
+				}
+			}
+		</div>
+	</div>
+}
+
+templ BattleSearchResults(pokemon []generated.Pokemon) {
+	<div class="battle-search-list">
+		for _, p := range pokemon {
+			<button
+				class="battle-search-item"
+				hx-get={ fmt.Sprintf("/battle/pokemon/%d", p.ID) }
+				hx-target="#matchup-results"
+				hx-swap="innerHTML"
+			>
+				<img src={ p.SpriteUrl } alt={ p.Name } width="32" height="32"/>
+				<span>{ p.Name }</span>
+			</button>
+		}
+	</div>
+}
+
+func rankingClass(effectiveness float64) string {
+	switch {
+	case effectiveness >= 160:
+		return "ranking-super"
+	case effectiveness >= 80:
+		return "ranking-neutral"
+	case effectiveness > 0:
+		return "ranking-weak"
+	default:
+		return "ranking-none"
+	}
+}

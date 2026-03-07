@@ -4,13 +4,54 @@
   /* Colors — oklch for perceptual uniformity, light-dark() for theme switching */
   --color-text: light-dark(oklch(0.25 0.01 260), oklch(0.9 0.01 260));
   --color-text-muted: light-dark(oklch(0.45 0.01 260), oklch(0.65 0.01 260));
+  --color-surface: light-dark(oklch(0.98 0.005 260), oklch(0.15 0.01 260));
+  --color-surface-alt: light-dark(oklch(0.95 0.005 260), oklch(0.2 0.01 260));
+  --color-border: light-dark(oklch(0.85 0.01 260), oklch(0.3 0.01 260));
+  --color-primary: oklch(0.55 0.15 250);
+  --color-primary-text: oklch(0.98 0 0);
+
+  /* Pokémon type colors */
+  --type-normal: oklch(0.65 0.04 90);
+  --type-fire: oklch(0.6 0.18 30);
+  --type-water: oklch(0.55 0.15 250);
+  --type-electric: oklch(0.8 0.18 90);
+  --type-grass: oklch(0.6 0.16 145);
+  --type-ice: oklch(0.75 0.1 200);
+  --type-fighting: oklch(0.5 0.18 20);
+  --type-poison: oklch(0.5 0.16 310);
+  --type-ground: oklch(0.65 0.12 70);
+  --type-flying: oklch(0.65 0.12 280);
+  --type-psychic: oklch(0.6 0.18 350);
+  --type-bug: oklch(0.6 0.14 120);
+  --type-rock: oklch(0.55 0.08 75);
+  --type-ghost: oklch(0.45 0.12 290);
+  --type-dragon: oklch(0.5 0.18 275);
+  --type-dark: oklch(0.4 0.06 60);
+  --type-steel: oklch(0.65 0.03 260);
+  --type-fairy: oklch(0.7 0.12 340);
 
   /* Typography */
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
   --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
   --font-size-4xl: 2.25rem;
 
   /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
   --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+
+  /* Radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
 }
 
 *,
@@ -24,4 +65,5 @@
 body {
   font-family: system-ui, sans-serif;
   color: var(--color-text);
+  background-color: var(--color-surface);
 }

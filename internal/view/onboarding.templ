@@ -1,0 +1,105 @@
+package view
+
+import (
+	"fmt"
+	"zoamel/pokesensei/db/generated"
+)
+
+templ OnboardingPage(versions []generated.GameVersion) {
+	@Layout("Welcome") {
+		<main class="onboarding">
+			<div class="onboarding-container" x-data="{ step: 1 }">
+				<div class="step-indicator">
+					<span class="step-dot" :class="step >= 1 && 'active'">1. Game</span>
+					<span class="step-dot" :class="step >= 2 && 'active'">2. Starter</span>
+					<span class="step-dot" :class="step >= 3 && 'active'">3. Badge</span>
+				</div>
+				<div id="onboarding-step">
+					@OnboardingGameStep(versions)
+				</div>
+			</div>
+		</main>
+	}
+}
+
+templ OnboardingGameStep(versions []generated.GameVersion) {
+	<div class="onboarding-step" x-init="step = 1">
+		<h2>Choose Your Game</h2>
+		<p class="step-description">Which Pokémon game are you playing?</p>
+		<form
+			hx-post="/onboarding/game"
+			hx-target="#onboarding-step"
+			hx-swap="innerHTML"
+		>
+			<div class="game-cards">
+				for _, v := range versions {
+					<label class="game-card">
+						<input type="radio" name="game_version_id" value={ fmt.Sprint(v.ID) } required/>
+						<span class="game-card-label">{ v.Name }</span>
+					</label>
+				}
+			</div>
+			<button type="submit" class="btn btn-primary">Continue</button>
+		</form>
+	</div>
+}
+
+templ OnboardingStarterStep(starters []StarterInfo) {
+	<div class="onboarding-step" x-init="step = 2">
+		<h2>Choose Your Starter</h2>
+		<p class="step-description">Pick the Pokémon you started with.</p>
+		<form
+			hx-post="/onboarding/starter"
+			hx-target="#onboarding-step"
+			hx-swap="innerHTML"
+		>
+			<div class="starter-cards">
+				for _, s := range starters {
+					<label class="starter-card">
+						<input type="radio" name="starter_pokemon_id" value={ fmt.Sprint(s.PokemonID) } required/>
+						<img src={ s.SpriteURL } alt={ s.Name } width="96" height="96"/>
+						<span class="starter-name">{ s.Name }</span>
+						<span class="type-pill">{ s.TypeName }</span>
+					</label>
+				}
+			</div>
+			<button type="submit" class="btn btn-primary">Continue</button>
+		</form>
+	</div>
+}
+
+templ OnboardingBadgeStep() {
+	<div class="onboarding-step" x-init="step = 3">
+		<h2>Badge Progress</h2>
+		<p class="step-description">How many badges do you have?</p>
+		<form
+			hx-post="/onboarding/badge"
+			hx-target="#onboarding-step"
+			hx-swap="innerHTML"
+		>
+			<div class="badge-selector" x-data="{ selected: 0 }">
+				for i := 0; i <= 8; i++ {
+					<label class="badge-option">
+						<input
+							type="radio"
+							name="badge_count"
+							value={ fmt.Sprint(i) }
+							x-on:click={ fmt.Sprintf("selected = %d", i) }
+							if i == 0 {
+								checked
+							}
+						/>
+						<span class="badge-label" :class={ fmt.Sprintf("selected >= %d && 'earned'", i) }>
+							if i == 0 {
+								None
+							} else {
+								{ fmt.Sprintf("Badge %d", i) }
+							}
+						</span>
+					</label>
+				}
+			</div>
+			<button type="submit" class="btn btn-primary">Start Playing</button>
+		</form>
+	</div>
+}

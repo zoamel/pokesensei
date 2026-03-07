@@ -1,0 +1,78 @@
+package view
+
+import (
+	"fmt"
+	"zoamel/pokesensei/db/generated"
+)
+
+templ SettingsPage(gs generated.GameState, versions []generated.GameVersion) {
+	@AppShell("Settings", "settings") {
+		<div class="settings">
+			<h1>Settings</h1>
+			<section class="settings-section">
+				<h2>Game</h2>
+				<form hx-patch="/settings/game" hx-swap="none">
+					<select name="game_version_id" hx-trigger="change" hx-patch="/settings/game" hx-swap="none">
+						for _, v := range versions {
+							<option
+								value={ fmt.Sprint(v.ID) }
+								if gs.GameVersionID.Valid && gs.GameVersionID.Int32 == v.ID {
+									selected
+								}
+							>
+								{ v.Name }
+							</option>
+						}
+					</select>
+				</form>
+			</section>
+			<section class="settings-section">
+				<h2>Badge Progress</h2>
+				<form hx-patch="/settings/badge" hx-swap="none">
+					<div class="badge-selector">
+						for i := 0; i <= 8; i++ {
+							<label class="badge-option">
+								<input
+									type="radio"
+									name="badge_count"
+									value={ fmt.Sprint(i) }
+									hx-trigger="change"
+									hx-patch="/settings/badge"
+									hx-swap="none"
+									if int16(i) == gs.BadgeCount {
+										checked
+									}
+								/>
+								<span class="badge-label">
+									if i == 0 {
+										None
+									} else {
+										{ fmt.Sprintf("%d", i) }
+									}
+								</span>
+							</label>
+						}
+					</div>
+				</form>
+			</section>
+			<section class="settings-section">
+				<h2>Trading</h2>
+				<form hx-patch="/settings/trading" hx-swap="none">
+					<label class="toggle">
+						<input
+							type="checkbox"
+							name="trading_enabled"
+							hx-trigger="change"
+							hx-patch="/settings/trading"
+							hx-swap="none"
+							if gs.TradingEnabled {
+								checked
+							}
+						/>
+						<span>Enable trade evolutions</span>
+					</label>
+				</form>
+			</section>
+		</div>
+	}
+}

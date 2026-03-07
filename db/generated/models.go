@@ -3,3 +3,168 @@
 //   sqlc v1.30.0
 
 package generated
+
+import (
+	"github.com/jackc/pgx/v5/pgtype"
+)
+
+type Ability struct {
+	ID          int32
+	Name        string
+	Slug        string
+	Description string
+}
+
+type Encounter struct {
+	ID            int32
+	PokemonID     int32
+	LocationID    int32
+	GameVersionID int32
+	Method        string
+	Chance        int16
+	MinLevel      int16
+	MaxLevel      int16
+	BadgeRequired int16
+}
+
+type EvolutionChain struct {
+	ID int32
+}
+
+type EvolutionStep struct {
+	ID               int32
+	ChainID          int32
+	PokemonID        int32
+	EvolvesFromID    pgtype.Int4
+	EvolutionTrigger pgtype.Text
+	MinLevel         pgtype.Int2
+	TriggerItem      pgtype.Text
+	TradeRequired    bool
+	Position         int16
+}
+
+type GameState struct {
+	ID               int32
+	GameVersionID    pgtype.Int4
+	StarterPokemonID pgtype.Int4
+	BadgeCount       int16
+	TradingEnabled   bool
+	CreatedAt        pgtype.Timestamptz
+	UpdatedAt        pgtype.Timestamptz
+}
+
+type GameVersion struct {
+	ID   int32
+	Name string
+	Slug string
+}
+
+type Location struct {
+	ID            int32
+	PokeapiID     int32
+	Name          string
+	Slug          string
+	GameVersionID int32
+	AreaName      string
+}
+
+type Move struct {
+	ID          int32
+	Name        string
+	Slug        string
+	TypeID      pgtype.Int4
+	Power       pgtype.Int2
+	Accuracy    pgtype.Int2
+	Pp          int16
+	DamageClass string
+}
+
+type Nature struct {
+	ID            int32
+	Name          string
+	Slug          string
+	IncreasedStat pgtype.Text
+	DecreasedStat pgtype.Text
+}
+
+type Pokemon struct {
+	ID          int32
+	Name        string
+	Slug        string
+	Generation  int16
+	SpriteUrl   string
+	BaseHp      int16
+	BaseAttack  int16
+	BaseDefense int16
+	BaseSpAtk   int16
+	BaseSpDef   int16
+	BaseSpeed   int16
+}
+
+type PokemonAbility struct {
+	PokemonID int32
+	AbilityID int32
+	IsHidden  bool
+	Slot      int16
+}
+
+type PokemonMove struct {
+	PokemonID      int32
+	MoveID         int32
+	VersionGroupID int32
+	LearnMethod    string
+	LevelLearnedAt int16
+}
+
+type PokemonType struct {
+	PokemonID int32
+	TypeID    int32
+	Slot      int16
+}
+
+type TeamMember struct {
+	ID          int32
+	GameStateID int32
+	PokemonID   int32
+	Level       int16
+	Slot        int16
+	IsLocked    bool
+}
+
+type Trainer struct {
+	ID            int32
+	Name          string
+	TrainerClass  string
+	GameVersionID int32
+	BadgeNumber   int16
+	SpecialtyType pgtype.Text
+	SpriteUrl     string
+	EncounterName string
+}
+
+type TrainerPokemon struct {
+	ID        int32
+	TrainerID int32
+	PokemonID int32
+	Level     int16
+	Position  int16
+}
+
+type TrainerPokemonMove struct {
+	ID               int32
+	TrainerPokemonID int32
+	MoveID           int32
+	Slot             int16
+}
+
+type Type struct {
+	ID   int32
+	Name string
+	Slug string
+}
+
+type TypeEfficacy struct {
+	AttackingTypeID int32
+	DefendingTypeID int32
+	DamageFactor    int16
+}

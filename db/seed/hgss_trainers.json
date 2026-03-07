@@ -1,0 +1,198 @@
+{
+  "game_version_slugs": ["heartgold", "soulsilver"],
+  "trainers": [
+    {
+      "name": "Falkner",
+      "trainer_class": "gym_leader",
+      "badge_number": 1,
+      "specialty_type": "flying",
+      "encounter_name": "Violet City Gym",
+      "pokemon": [
+        { "pokemon_id": 16, "level": 9, "position": 1, "moves": ["tackle", "mud-slap", "gust"] },
+        { "pokemon_id": 17, "level": 13, "position": 2, "moves": ["tackle", "mud-slap", "gust", "roost"] }
+      ]
+    },
+    {
+      "name": "Bugsy",
+      "trainer_class": "gym_leader",
+      "badge_number": 2,
+      "specialty_type": "bug",
+      "encounter_name": "Azalea Town Gym",
+      "pokemon": [
+        { "pokemon_id": 11, "level": 15, "position": 1, "moves": ["tackle", "string-shot", "electroweb"] },
+        { "pokemon_id": 14, "level": 15, "position": 2, "moves": ["tackle", "string-shot", "poison-sting"] },
+        { "pokemon_id": 123, "level": 17, "position": 3, "moves": ["u-turn", "quick-attack", "leer", "focus-energy"] }
+      ]
+    },
+    {
+      "name": "Whitney",
+      "trainer_class": "gym_leader",
+      "badge_number": 3,
+      "specialty_type": "normal",
+      "encounter_name": "Goldenrod City Gym",
+      "pokemon": [
+        { "pokemon_id": 35, "level": 17, "position": 1, "moves": ["double-slap", "mimic", "encore", "metronome"] },
+        { "pokemon_id": 241, "level": 19, "position": 2, "moves": ["rollout", "attract", "stomp", "milk-drink"] }
+      ]
+    },
+    {
+      "name": "Morty",
+      "trainer_class": "gym_leader",
+      "badge_number": 4,
+      "specialty_type": "ghost",
+      "encounter_name": "Ecruteak City Gym",
+      "pokemon": [
+        { "pokemon_id": 92, "level": 21, "position": 1, "moves": ["lick", "spite", "mean-look", "curse"] },
+        { "pokemon_id": 93, "level": 21, "position": 2, "moves": ["lick", "spite", "mean-look", "hypnosis"] },
+        { "pokemon_id": 93, "level": 23, "position": 3, "moves": ["lick", "spite", "mean-look", "shadow-ball"] },
+        { "pokemon_id": 94, "level": 25, "position": 4, "moves": ["shadow-ball", "sucker-punch", "mean-look", "hypnosis"] }
+      ]
+    },
+    {
+      "name": "Chuck",
+      "trainer_class": "gym_leader",
+      "badge_number": 5,
+      "specialty_type": "fighting",
+      "encounter_name": "Cianwood City Gym",
+      "pokemon": [
+        { "pokemon_id": 57, "level": 29, "position": 1, "moves": ["double-team", "leer", "focus-punch", "rock-slide"] },
+        { "pokemon_id": 62, "level": 31, "position": 2, "moves": ["hypnosis", "focus-punch", "surf", "body-slam"] }
+      ]
+    },
+    {
+      "name": "Jasmine",
+      "trainer_class": "gym_leader",
+      "badge_number": 6,
+      "specialty_type": "steel",
+      "encounter_name": "Olivine City Gym",
+      "pokemon": [
+        { "pokemon_id": 81, "level": 30, "position": 1, "moves": ["thunderbolt", "supersonic", "thunder-wave", "sonic-boom"] },
+        { "pokemon_id": 81, "level": 30, "position": 2, "moves": ["thunderbolt", "supersonic", "thunder-wave", "sonic-boom"] },
+        { "pokemon_id": 208, "level": 35, "position": 3, "moves": ["iron-tail", "rock-throw", "screech", "sandstorm"] }
+      ]
+    },
+    {
+      "name": "Pryce",
+      "trainer_class": "gym_leader",
+      "badge_number": 7,
+      "specialty_type": "ice",
+      "encounter_name": "Mahogany Town Gym",
+      "pokemon": [
+        { "pokemon_id": 86, "level": 30, "position": 1, "moves": ["hail", "icy-wind", "aurora-beam", "rest"] },
+        { "pokemon_id": 87, "level": 32, "position": 2, "moves": ["hail", "icy-wind", "aurora-beam", "rest"] },
+        { "pokemon_id": 221, "level": 34, "position": 3, "moves": ["hail", "icy-wind", "ice-fang", "mud-bomb"] }
+      ]
+    },
+    {
+      "name": "Clair",
+      "trainer_class": "gym_leader",
+      "badge_number": 8,
+      "specialty_type": "dragon",
+      "encounter_name": "Blackthorn City Gym",
+      "pokemon": [
+        { "pokemon_id": 148, "level": 38, "position": 1, "moves": ["thunder-wave", "twister", "dragon-pulse", "slam"] },
+        { "pokemon_id": 148, "level": 38, "position": 2, "moves": ["thunder-wave", "twister", "dragon-pulse", "fire-blast"] },
+        { "pokemon_id": 148, "level": 38, "position": 3, "moves": ["thunder-wave", "twister", "dragon-pulse", "surf"] },
+        { "pokemon_id": 230, "level": 41, "position": 4, "moves": ["dragon-pulse", "hydro-pump", "hyper-beam", "smokescreen"] }
+      ]
+    },
+    {
+      "name": "Will",
+      "trainer_class": "elite_four",
+      "badge_number": 9,
+      "specialty_type": "psychic",
+      "encounter_name": "Indigo Plateau",
+      "pokemon": [
+        { "pokemon_id": 178, "level": 40, "position": 1, "moves": ["psychic", "air-slash", "confuse-ray", "u-turn"] },
+        { "pokemon_id": 124, "level": 41, "position": 2, "moves": ["psychic", "ice-punch", "lovely-kiss", "mean-look"] },
+        { "pokemon_id": 103, "level": 41, "position": 3, "moves": ["psychic", "egg-bomb", "reflect", "hypnosis"] },
+        { "pokemon_id": 80, "level": 41, "position": 4, "moves": ["psychic", "amnesia", "body-slam", "water-gun"] },
+        { "pokemon_id": 178, "level": 42, "position": 5, "moves": ["psychic", "air-slash", "confuse-ray", "shadow-ball"] }
+      ]
+    },
+    {
+      "name": "Koga",
+      "trainer_class": "elite_four",
+      "badge_number": 9,
+      "specialty_type": "poison",
+      "encounter_name": "Indigo Plateau",
+      "pokemon": [
+        { "pokemon_id": 168, "level": 40, "position": 1, "moves": ["double-team", "giga-drain", "toxic", "baton-pass"] },
+        { "pokemon_id": 49, "level": 41, "position": 2, "moves": ["psychic", "toxic", "double-team", "signal-beam"] },
+        { "pokemon_id": 89, "level": 42, "position": 3, "moves": ["minimize", "gunk-shot", "toxic", "mud-bomb"] },
+        { "pokemon_id": 169, "level": 44, "position": 4, "moves": ["double-team", "confuse-ray", "air-slash", "toxic"] },
+        { "pokemon_id": 205, "level": 43, "position": 5, "moves": ["toxic-spikes", "explosion", "protect", "swift"] }
+      ]
+    },
+    {
+      "name": "Bruno",
+      "trainer_class": "elite_four",
+      "badge_number": 9,
+      "specialty_type": "fighting",
+      "encounter_name": "Indigo Plateau",
+      "pokemon": [
+        { "pokemon_id": 106, "level": 42, "position": 1, "moves": ["hi-jump-kick", "blaze-kick", "focus-energy", "fake-out"] },
+        { "pokemon_id": 107, "level": 42, "position": 2, "moves": ["thunder-punch", "ice-punch", "fire-punch", "bullet-punch"] },
+        { "pokemon_id": 95, "level": 43, "position": 3, "moves": ["earthquake", "rock-slide", "sandstorm", "dragon-breath"] },
+        { "pokemon_id": 237, "level": 42, "position": 4, "moves": ["triple-kick", "counter", "quick-attack", "pursuit"] },
+        { "pokemon_id": 68, "level": 46, "position": 5, "moves": ["cross-chop", "rock-slide", "foresight", "scary-face"] }
+      ]
+    },
+    {
+      "name": "Karen",
+      "trainer_class": "elite_four",
+      "badge_number": 9,
+      "specialty_type": "dark",
+      "encounter_name": "Indigo Plateau",
+      "pokemon": [
+        { "pokemon_id": 197, "level": 42, "position": 1, "moves": ["dark-pulse", "confuse-ray", "feint-attack", "sand-attack"] },
+        { "pokemon_id": 45, "level": 42, "position": 2, "moves": ["petal-dance", "moonlight", "stun-spore", "toxic"] },
+        { "pokemon_id": 94, "level": 45, "position": 3, "moves": ["shadow-ball", "sludge-bomb", "lick", "spite"] },
+        { "pokemon_id": 198, "level": 44, "position": 4, "moves": ["dark-pulse", "sucker-punch", "whirlwind", "pursuit"] },
+        { "pokemon_id": 229, "level": 47, "position": 5, "moves": ["dark-pulse", "flamethrower", "nasty-plot", "crunch"] }
+      ]
+    },
+    {
+      "name": "Champion Lance",
+      "trainer_class": "champion",
+      "badge_number": 9,
+      "specialty_type": "dragon",
+      "encounter_name": "Indigo Plateau",
+      "pokemon": [
+        { "pokemon_id": 130, "level": 46, "position": 1, "moves": ["waterfall", "ice-fang", "dragon-rage", "flail"] },
+        { "pokemon_id": 149, "level": 49, "position": 2, "moves": ["thunder-wave", "hyper-beam", "outrage", "blizzard"] },
+        { "pokemon_id": 149, "level": 49, "position": 3, "moves": ["thunder-wave", "hyper-beam", "outrage", "fire-blast"] },
+        { "pokemon_id": 149, "level": 50, "position": 4, "moves": ["thunder-wave", "hyper-beam", "outrage", "thunder"] },
+        { "pokemon_id": 6, "level": 48, "position": 5, "moves": ["flamethrower", "air-slash", "dragon-pulse", "shadow-claw"] },
+        { "pokemon_id": 142, "level": 48, "position": 6, "moves": ["rock-slide", "aerial-ace", "crunch", "thunder-fang"] }
+      ]
+    },
+    {
+      "name": "Rival Silver",
+      "trainer_class": "rival",
+      "badge_number": 0,
+      "encounter_name": "New Bark Town (if player chose Chikorita)",
+      "pokemon": [
+        { "pokemon_id": 155, "level": 5, "position": 1, "moves": ["tackle", "leer"] }
+      ]
+    },
+    {
+      "name": "Rival Silver",
+      "trainer_class": "rival",
+      "badge_number": 0,
+      "encounter_name": "New Bark Town (if player chose Cyndaquil)",
+      "pokemon": [
+        { "pokemon_id": 158, "level": 5, "position": 1, "moves": ["scratch", "leer"] }
+      ]
+    },
+    {
+      "name": "Rival Silver",
+      "trainer_class": "rival",
+      "badge_number": 0,
+      "encounter_name": "New Bark Town (if player chose Totodile)",
+      "pokemon": [
+        { "pokemon_id": 152, "level": 5, "position": 1, "moves": ["tackle", "growl"] }
+      ]
+    }
+  ]
+}

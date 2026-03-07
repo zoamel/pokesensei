@@ -6,7 +6,7 @@ templ Layout(title string) {
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<title>{ title }</title>
+			<title>{ title } — PokéSensei</title>
 			<link rel="stylesheet" href="/static/css/main.css"/>
 			<script src="/static/js/htmx.min.js"></script>
 			<script src="/static/js/alpine.min.js" defer></script>
@@ -15,4 +15,25 @@ templ Layout(title string) {
 			{ children... }
 		</body>
 	</html>
+}
+
+templ AppShell(title string, activePage string) {
+	@Layout(title) {
+		<nav class="app-nav">
+			<div class="app-nav-inner">
+				<a href="/dashboard" class="app-nav-brand">PokéSensei</a>
+				<div class="app-nav-links">
+					<a href="/dashboard" class={ "app-nav-link", templ.KV("active", activePage == "dashboard") }>Dashboard</a>
+					<a href="/pokemon" class={ "app-nav-link", templ.KV("active", activePage == "pokemon") }>Pokémon</a>
+					<a href="/team" class={ "app-nav-link", templ.KV("active", activePage == "team") }>Team</a>
+					<a href="/battle" class={ "app-nav-link", templ.KV("active", activePage == "battle") }>Battle</a>
+					<a href="/guide" class={ "app-nav-link", templ.KV("active", activePage == "guide") }>Guide</a>
+					<a href="/settings" class={ "app-nav-link", templ.KV("active", activePage == "settings") }>Settings</a>
+				</div>
+			</div>
+		</nav>
+		<main class="app-main">
+			{ children... }
+		</main>
+	}
 }

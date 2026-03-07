@@ -1,0 +1,229 @@
+{
+  "game_version_slugs": ["firered", "leafgreen"],
+  "trainers": [
+    {
+      "name": "Brock",
+      "trainer_class": "gym_leader",
+      "badge_number": 1,
+      "specialty_type": "rock",
+      "encounter_name": "Pewter City Gym",
+      "pokemon": [
+        { "pokemon_id": 74, "level": 12, "position": 1, "moves": ["tackle", "defense-curl"] },
+        { "pokemon_id": 95, "level": 14, "position": 2, "moves": ["tackle", "bind", "rock-tomb", "harden"] }
+      ]
+    },
+    {
+      "name": "Misty",
+      "trainer_class": "gym_leader",
+      "badge_number": 2,
+      "specialty_type": "water",
+      "encounter_name": "Cerulean City Gym",
+      "pokemon": [
+        { "pokemon_id": 120, "level": 18, "position": 1, "moves": ["tackle", "harden", "water-pulse", "recover"] },
+        { "pokemon_id": 121, "level": 21, "position": 2, "moves": ["water-pulse", "swift", "recover", "rapid-spin"] }
+      ]
+    },
+    {
+      "name": "Lt. Surge",
+      "trainer_class": "gym_leader",
+      "badge_number": 3,
+      "specialty_type": "electric",
+      "encounter_name": "Vermilion City Gym",
+      "pokemon": [
+        { "pokemon_id": 100, "level": 21, "position": 1, "moves": ["sonic-boom", "tackle", "spark", "screech"] },
+        { "pokemon_id": 25, "level": 18, "position": 2, "moves": ["quick-attack", "thunder-wave", "spark"] },
+        { "pokemon_id": 26, "level": 24, "position": 3, "moves": ["shock-wave", "quick-attack", "thunder-wave", "double-team"] }
+      ]
+    },
+    {
+      "name": "Erika",
+      "trainer_class": "gym_leader",
+      "badge_number": 4,
+      "specialty_type": "grass",
+      "encounter_name": "Celadon City Gym",
+      "pokemon": [
+        { "pokemon_id": 71, "level": 29, "position": 1, "moves": ["giga-drain", "acid", "stun-spore", "sleep-powder"] },
+        { "pokemon_id": 114, "level": 24, "position": 2, "moves": ["giga-drain", "constrict", "ingrain", "sleep-powder"] },
+        { "pokemon_id": 45, "level": 29, "position": 3, "moves": ["giga-drain", "acid", "stun-spore", "sleep-powder"] }
+      ]
+    },
+    {
+      "name": "Koga",
+      "trainer_class": "gym_leader",
+      "badge_number": 5,
+      "specialty_type": "poison",
+      "encounter_name": "Fuchsia City Gym",
+      "pokemon": [
+        { "pokemon_id": 109, "level": 37, "position": 1, "moves": ["self-destruct", "sludge", "smokescreen", "tackle"] },
+        { "pokemon_id": 89, "level": 39, "position": 2, "moves": ["sludge", "minimize", "acid-armor", "toxic"] },
+        { "pokemon_id": 109, "level": 37, "position": 3, "moves": ["self-destruct", "sludge", "smokescreen", "toxic"] },
+        { "pokemon_id": 110, "level": 43, "position": 4, "moves": ["sludge", "smokescreen", "tackle", "toxic"] }
+      ]
+    },
+    {
+      "name": "Sabrina",
+      "trainer_class": "gym_leader",
+      "badge_number": 6,
+      "specialty_type": "psychic",
+      "encounter_name": "Saffron City Gym",
+      "pokemon": [
+        { "pokemon_id": 64, "level": 38, "position": 1, "moves": ["psychic", "calm-mind", "flash", "reflect"] },
+        { "pokemon_id": 122, "level": 37, "position": 2, "moves": ["psychic", "barrier", "calm-mind", "baton-pass"] },
+        { "pokemon_id": 49, "level": 38, "position": 3, "moves": ["psychic", "gust", "leech-life", "supersonic"] },
+        { "pokemon_id": 65, "level": 43, "position": 4, "moves": ["psychic", "calm-mind", "future-sight", "recover"] }
+      ]
+    },
+    {
+      "name": "Blaine",
+      "trainer_class": "gym_leader",
+      "badge_number": 7,
+      "specialty_type": "fire",
+      "encounter_name": "Cinnabar Island Gym",
+      "pokemon": [
+        { "pokemon_id": 58, "level": 42, "position": 1, "moves": ["flamethrower", "roar", "take-down", "agility"] },
+        { "pokemon_id": 77, "level": 40, "position": 2, "moves": ["flamethrower", "stomp", "bounce", "fire-spin"] },
+        { "pokemon_id": 78, "level": 42, "position": 3, "moves": ["flamethrower", "stomp", "bounce", "fire-spin"] },
+        { "pokemon_id": 59, "level": 47, "position": 4, "moves": ["flamethrower", "bite", "take-down", "roar"] }
+      ]
+    },
+    {
+      "name": "Giovanni",
+      "trainer_class": "gym_leader",
+      "badge_number": 8,
+      "specialty_type": "ground",
+      "encounter_name": "Viridian City Gym",
+      "pokemon": [
+        { "pokemon_id": 111, "level": 45, "position": 1, "moves": ["earthquake", "horn-drill", "rock-blast", "scary-face"] },
+        { "pokemon_id": 51, "level": 42, "position": 2, "moves": ["earthquake", "slash", "sand-attack", "mud-slap"] },
+        { "pokemon_id": 31, "level": 44, "position": 3, "moves": ["earthquake", "double-kick", "body-slam", "poison-sting"] },
+        { "pokemon_id": 34, "level": 45, "position": 4, "moves": ["earthquake", "thrash", "megahorn", "poison-sting"] },
+        { "pokemon_id": 112, "level": 50, "position": 5, "moves": ["earthquake", "rock-blast", "megahorn", "scary-face"] }
+      ]
+    },
+    {
+      "name": "Lorelei",
+      "trainer_class": "elite_four",
+      "badge_number": 9,
+      "specialty_type": "ice",
+      "encounter_name": "Indigo Plateau",
+      "pokemon": [
+        { "pokemon_id": 87, "level": 52, "position": 1, "moves": ["ice-beam", "surf", "hail", "body-slam"] },
+        { "pokemon_id": 91, "level": 51, "position": 2, "moves": ["ice-beam", "surf", "supersonic", "protect"] },
+        { "pokemon_id": 80, "level": 52, "position": 3, "moves": ["ice-beam", "surf", "yawn", "amnesia"] },
+        { "pokemon_id": 124, "level": 54, "position": 4, "moves": ["ice-beam", "psychic", "lovely-kiss", "double-slap"] },
+        { "pokemon_id": 131, "level": 54, "position": 5, "moves": ["ice-beam", "surf", "body-slam", "confuse-ray"] }
+      ]
+    },
+    {
+      "name": "Bruno",
+      "trainer_class": "elite_four",
+      "badge_number": 9,
+      "specialty_type": "fighting",
+      "encounter_name": "Indigo Plateau",
+      "pokemon": [
+        { "pokemon_id": 95, "level": 51, "position": 1, "moves": ["earthquake", "rock-tomb", "iron-tail", "sandstorm"] },
+        { "pokemon_id": 107, "level": 53, "position": 2, "moves": ["sky-uppercut", "mach-punch", "counter", "agility"] },
+        { "pokemon_id": 106, "level": 53, "position": 3, "moves": ["mega-kick", "foresight", "hi-jump-kick", "endure"] },
+        { "pokemon_id": 68, "level": 56, "position": 4, "moves": ["cross-chop", "bulk-up", "rock-tomb", "scary-face"] },
+        { "pokemon_id": 95, "level": 54, "position": 5, "moves": ["earthquake", "rock-tomb", "iron-tail", "double-edge"] }
+      ]
+    },
+    {
+      "name": "Agatha",
+      "trainer_class": "elite_four",
+      "badge_number": 9,
+      "specialty_type": "ghost",
+      "encounter_name": "Indigo Plateau",
+      "pokemon": [
+        { "pokemon_id": 94, "level": 54, "position": 1, "moves": ["shadow-ball", "sludge-bomb", "confuse-ray", "toxic"] },
+        { "pokemon_id": 42, "level": 54, "position": 2, "moves": ["shadow-ball", "air-cutter", "confuse-ray", "bite"] },
+        { "pokemon_id": 93, "level": 53, "position": 3, "moves": ["shadow-ball", "sludge-bomb", "hypnosis", "dream-eater"] },
+        { "pokemon_id": 24, "level": 56, "position": 4, "moves": ["sludge-bomb", "screech", "iron-tail", "bite"] },
+        { "pokemon_id": 94, "level": 58, "position": 5, "moves": ["shadow-ball", "sludge-bomb", "hypnosis", "nightmare"] }
+      ]
+    },
+    {
+      "name": "Lance",
+      "trainer_class": "elite_four",
+      "badge_number": 9,
+      "specialty_type": "dragon",
+      "encounter_name": "Indigo Plateau",
+      "pokemon": [
+        { "pokemon_id": 130, "level": 56, "position": 1, "moves": ["hyper-beam", "dragon-rage", "bite", "twister"] },
+        { "pokemon_id": 148, "level": 54, "position": 2, "moves": ["hyper-beam", "dragon-rage", "outrage", "safeguard"] },
+        { "pokemon_id": 148, "level": 54, "position": 3, "moves": ["hyper-beam", "dragon-rage", "outrage", "safeguard"] },
+        { "pokemon_id": 142, "level": 58, "position": 4, "moves": ["hyper-beam", "ancient-power", "wing-attack", "scary-face"] },
+        { "pokemon_id": 149, "level": 60, "position": 5, "moves": ["hyper-beam", "outrage", "safeguard", "wing-attack"] }
+      ]
+    },
+    {
+      "name": "Champion Blue",
+      "trainer_class": "champion",
+      "badge_number": 9,
+      "encounter_name": "Indigo Plateau (if player chose Bulbasaur)",
+      "pokemon": [
+        { "pokemon_id": 18, "level": 59, "position": 1, "moves": ["aerial-ace", "feather-dance", "sand-attack", "whirlwind"] },
+        { "pokemon_id": 65, "level": 57, "position": 2, "moves": ["psychic", "calm-mind", "reflect", "future-sight"] },
+        { "pokemon_id": 112, "level": 59, "position": 3, "moves": ["earthquake", "rock-tomb", "megahorn", "scary-face"] },
+        { "pokemon_id": 130, "level": 61, "position": 4, "moves": ["hydro-pump", "dragon-rage", "bite", "thrash"] },
+        { "pokemon_id": 59, "level": 61, "position": 5, "moves": ["flamethrower", "bite", "roar", "extreme-speed"] },
+        { "pokemon_id": 6, "level": 63, "position": 6, "moves": ["flamethrower", "aerial-ace", "slash", "fire-spin"] }
+      ]
+    },
+    {
+      "name": "Champion Blue",
+      "trainer_class": "champion",
+      "badge_number": 9,
+      "encounter_name": "Indigo Plateau (if player chose Charmander)",
+      "pokemon": [
+        { "pokemon_id": 18, "level": 59, "position": 1, "moves": ["aerial-ace", "feather-dance", "sand-attack", "whirlwind"] },
+        { "pokemon_id": 65, "level": 57, "position": 2, "moves": ["psychic", "calm-mind", "reflect", "future-sight"] },
+        { "pokemon_id": 59, "level": 59, "position": 3, "moves": ["flamethrower", "bite", "roar", "extreme-speed"] },
+        { "pokemon_id": 103, "level": 61, "position": 4, "moves": ["giga-drain", "psychic", "sleep-powder", "egg-bomb"] },
+        { "pokemon_id": 130, "level": 61, "position": 5, "moves": ["hydro-pump", "dragon-rage", "bite", "thrash"] },
+        { "pokemon_id": 9, "level": 63, "position": 6, "moves": ["hydro-pump", "ice-beam", "rain-dance", "bite"] }
+      ]
+    },
+    {
+      "name": "Champion Blue",
+      "trainer_class": "champion",
+      "badge_number": 9,
+      "encounter_name": "Indigo Plateau (if player chose Squirtle)",
+      "pokemon": [
+        { "pokemon_id": 18, "level": 59, "position": 1, "moves": ["aerial-ace", "feather-dance", "sand-attack", "whirlwind"] },
+        { "pokemon_id": 65, "level": 57, "position": 2, "moves": ["psychic", "calm-mind", "reflect", "future-sight"] },
+        { "pokemon_id": 130, "level": 59, "position": 3, "moves": ["hydro-pump", "dragon-rage", "bite", "thrash"] },
+        { "pokemon_id": 59, "level": 61, "position": 4, "moves": ["flamethrower", "bite", "roar", "extreme-speed"] },
+        { "pokemon_id": 103, "level": 61, "position": 5, "moves": ["giga-drain", "psychic", "sleep-powder", "egg-bomb"] },
+        { "pokemon_id": 3, "level": 63, "position": 6, "moves": ["giga-drain", "synthesis", "solar-beam", "growth"] }
+      ]
+    },
+    {
+      "name": "Rival Blue",
+      "trainer_class": "rival",
+      "badge_number": 0,
+      "encounter_name": "Oak's Lab (if player chose Bulbasaur)",
+      "pokemon": [
+        { "pokemon_id": 4, "level": 5, "position": 1, "moves": ["scratch", "growl"] }
+      ]
+    },
+    {
+      "name": "Rival Blue",
+      "trainer_class": "rival",
+      "badge_number": 0,
+      "encounter_name": "Oak's Lab (if player chose Charmander)",
+      "pokemon": [
+        { "pokemon_id": 7, "level": 5, "position": 1, "moves": ["tackle", "tail-whip"] }
+      ]
+    },
+    {
+      "name": "Rival Blue",
+      "trainer_class": "rival",
+      "badge_number": 0,
+      "encounter_name": "Oak's Lab (if player chose Squirtle)",
+      "pokemon": [
+        { "pokemon_id": 1, "level": 5, "position": 1, "moves": ["tackle", "growl"] }
+      ]
+    }
+  ]
+}

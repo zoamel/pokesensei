@@ -1,0 +1,281 @@
+package view
+
+import (
+	"fmt"
+	"zoamel/pokesensei/db/generated"
+)
+
+templ PokemonFinderPage(types []generated.Type, gs generated.GameState) {
+	@AppShell("Pokémon Finder", "pokemon") {
+		<div class="finder">
+			<h1>Pokémon Finder</h1>
+			<div class="finder-layout">
+				<aside class="finder-filters">
+					<h2>Filters</h2>
+					<form id="pokemon-filters">
+						if gs.GameVersionID.Valid {
+							<input type="hidden" name="game_version_id" value={ fmt.Sprint(gs.GameVersionID.Int32) }/>
+						}
+						<div class="filter-group">
+							<label for="name-search">Name</label>
+							<input
+								type="text"
+								id="name-search"
+								name="name"
+								placeholder="Search Pokémon..."
+								hx-get="/pokemon/search"
+								hx-trigger="input changed delay:300ms"
+								hx-target="#search-results"
+								hx-include="#pokemon-filters"
+							/>
+						</div>
+						<div class="filter-group">
+							<label for="type-filter">Type</label>
+							<select
+								id="type-filter"
+								name="type_id"
+								hx-get="/pokemon/search"
+								hx-trigger="change"
+								hx-target="#search-results"
+								hx-include="#pokemon-filters"
+							>
+								<option value="">All Types</option>
+								for _, t := range types {
+									<option value={ fmt.Sprint(t.ID) }>{ t.Name }</option>
+								}
+							</select>
+						</div>
+						if gs.GameVersionID.Valid {
+							<div class="filter-group">
+								<label for="badge-filter">Max Badge</label>
+								<select
+									id="badge-filter"
+									name="max_badge"
+									hx-get="/pokemon/search"
+									hx-trigger="change"
+									hx-target="#search-results"
+									hx-include="#pokemon-filters"
+								>
+									<option value="">Any Badge</option>
+									for i := 0; i <= 8; i++ {
+										<option
+											value={ fmt.Sprint(i) }
+											if int16(i) == gs.BadgeCount {
+												selected
+											}
+										>
+											if i == 0 {
+												Pre-badge
+											} else {
+												{ fmt.Sprintf("Badge %d", i) }
+											}
+										</option>
+									}
+								</select>
+							</div>
+						}
+					</form>
+				</aside>
+				<section class="finder-results">
+					<div
+						id="search-results"
+						hx-get="/pokemon/search"
+						hx-trigger="load"
+						hx-include="#pokemon-filters"
+					>
+						<p class="loading-text">Loading...</p>
+					</div>
+				</section>
+			</div>
+		</div>
+	}
+}
+
+templ PokemonSearchResults(pokemon []PokemonListItem) {
+	if len(pokemon) == 0 {
+		<p class="empty-state">No Pokémon found matching your filters.</p>
+	} else {
+		<div class="pokemon-grid">
+			for _, p := range pokemon {
+				<a href={ templ.SafeURL(fmt.Sprintf("/pokemon/%d", p.Pokemon.ID)) } class="pokemon-card">
+					<img src={ p.Pokemon.SpriteUrl } alt={ p.Pokemon.Name } width="64" height="64" loading="lazy"/>
+					<span class="pokemon-card-id">{ fmt.Sprintf("#%03d", p.Pokemon.ID) }</span>
+					<span class="pokemon-card-name">{ p.Pokemon.Name }</span>
+					<div class="pokemon-card-types">
+						for _, t := range p.Types {
+							<span class={ "type-pill", fmt.Sprintf("type-%s", t.Slug) }>{ t.Name }</span>
+						}
+					</div>
+				</a>
+			}
+		</div>
+	}
+}
+
+templ PokemonDetailPage(detail PokemonDetail) {
+	@AppShell(detail.Pokemon.Name, "pokemon") {
+		<div class="pokemon-detail">
+			<div class="detail-header">
+				<a href="/pokemon" class="back-link">← Back to Finder</a>
+				<div class="detail-title">
+					<img src={ detail.Pokemon.SpriteUrl } alt={ detail.Pokemon.Name } width="96" height="96"/>
+					<div>
+						<span class="detail-id">{ fmt.Sprintf("#%03d", detail.Pokemon.ID) }</span>
+						<h1>{ detail.Pokemon.Name }</h1>
+						<div class="detail-types">
+							for _, t := range detail.Types {
+								<span class={ "type-pill", fmt.Sprintf("type-%s", t.Slug) }>{ t.Name }</span>
+							}
+						</div>
+					</div>
+				</div>
+				<button
+					class="btn btn-primary"
+					hx-post="/team/members"
+					hx-vals={ fmt.Sprintf(`{"pokemon_id": "%d", "level": "5"}`, detail.Pokemon.ID) }
+					hx-swap="none"
+				>
+					Add to Team
+				</button>
+			</div>
+			<div class="detail-sections">
+				<section class="detail-section">
+					<h2>Base Stats</h2>
+					<div class="stats-grid">
+						@statBar("HP", int(detail.Pokemon.BaseHp), 255)
+						@statBar("Attack", int(detail.Pokemon.BaseAttack), 255)
+						@statBar("Defense", int(detail.Pokemon.BaseDefense), 255)
+						@statBar("Sp. Atk", int(detail.Pokemon.BaseSpAtk), 255)
+						@statBar("Sp. Def", int(detail.Pokemon.BaseSpDef), 255)
+						@statBar("Speed", int(detail.Pokemon.BaseSpeed), 255)
+					</div>
+				</section>
+				if len(detail.Abilities) > 0 {
+					<section class="detail-section">
+						<h2>Abilities</h2>
+						<ul class="ability-list">
+							for _, a := range detail.Abilities {
+								<li>
+									<strong>{ a.Name }</strong>
+									if a.IsHidden {
+										<span class="badge-hidden">Hidden</span>
+									}
+									if a.Description != "" {
+										<p>{ a.Description }</p>
+									}
+								</li>
+							}
+						</ul>
+					</section>
+				}
+				if len(detail.EvoChain) > 1 {
+					<section class="detail-section">
+						<h2>Evolution Chain</h2>
+						<div class="evo-chain">
+							for _, evo := range detail.EvoChain {
+								<div class={ "evo-step", templ.KV("current", evo.PokemonID == detail.Pokemon.ID) }>
+									<a href={ templ.SafeURL(fmt.Sprintf("/pokemon/%d", evo.PokemonID)) }>
+										<img src={ evo.SpriteUrl } alt={ evo.PokemonName } width="64" height="64"/>
+										<span>{ evo.PokemonName }</span>
+									</a>
+									if evo.TradeRequired {
+										<span class="badge-trade">Trade</span>
+									}
+									if evo.MinLevel.Valid {
+										<span class="evo-level">{ fmt.Sprintf("Lv. %d", evo.MinLevel.Int16) }</span>
+									}
+								</div>
+							}
+						</div>
+					</section>
+				}
+				if len(detail.Encounters) > 0 {
+					<section class="detail-section">
+						<h2>Locations</h2>
+						<table class="encounter-table">
+							<thead>
+								<tr>
+									<th>Location</th>
+									<th>Method</th>
+									<th>Chance</th>
+									<th>Level</th>
+									<th>Badge</th>
+								</tr>
+							</thead>
+							<tbody>
+								for _, e := range detail.Encounters {
+									<tr>
+										<td>{ e.LocationName }</td>
+										<td>{ e.Method }</td>
+										<td>{ fmt.Sprintf("%d%%", e.Chance) }</td>
+										<td>{ fmt.Sprintf("%d-%d", e.MinLevel, e.MaxLevel) }</td>
+										<td>{ fmt.Sprint(e.BadgeRequired) }</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					</section>
+				}
+				if len(detail.Moves) > 0 {
+					<section class="detail-section">
+						<h2>Moves</h2>
+						<table class="move-table">
+							<thead>
+								<tr>
+									<th>Move</th>
+									<th>Type</th>
+									<th>Power</th>
+									<th>Acc</th>
+									<th>Class</th>
+									<th>Method</th>
+									<th>Level</th>
+								</tr>
+							</thead>
+							<tbody>
+								for _, m := range detail.Moves {
+									<tr>
+										<td>{ m.Name }</td>
+										<td>–</td>
+										<td>
+											if m.Power.Valid {
+												{ fmt.Sprint(m.Power.Int16) }
+											} else {
+												–
+											}
+										</td>
+										<td>
+											if m.Accuracy.Valid {
+												{ fmt.Sprintf("%d%%", m.Accuracy.Int16) }
+											} else {
+												–
+											}
+										</td>
+										<td>{ m.DamageClass }</td>
+										<td>{ m.LearnMethod }</td>
+										<td>
+											if m.LevelLearnedAt > 0 {
+												{ fmt.Sprint(m.LevelLearnedAt) }
+											} else {
+												–
+											}
+										</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					</section>
+				}
+			</div>
+		</div>
+	}
+}
+
+templ statBar(name string, value int, max int) {
+	<div class="stat-row">
+		<span class="stat-name">{ name }</span>
+		<span class="stat-value">{ fmt.Sprint(value) }</span>
+		<div class="stat-bar">
+			<div class="stat-bar-fill" style={ fmt.Sprintf("width: %d%%", value*100/max) }></div>
+		</div>
+	</div>
+}

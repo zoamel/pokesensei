@@ -56,13 +56,71 @@ func run() error {
 
 	// Wire dependencies
 	queries := generated.New(pool)
-	homeHandler := handler.NewHome(log)
+
+	rootHandler := handler.NewRoot(queries, log)
 	healthHandler := handler.NewHealth(queries, log)
+	onboardingHandler := handler.NewOnboarding(queries, log)
+	dashboardHandler := handler.NewDashboard(queries, log)
+	settingsHandler := handler.NewSettings(queries, log)
+	pokemonHandler := handler.NewPokemon(queries, log)
+	teamHandler := handler.NewTeam(queries, log)
+	suggestionHandler := handler.NewSuggestions(queries, log)
+	battleHandler := handler.NewBattle(queries, log)
+	guideHandler := handler.NewGuide(queries, log)
 
 	// Configure server and routes
 	srv := server.New(cfg, log)
-	srv.Handle("GET /{$}", homeHandler)
+
+	srv.Handle("GET /{$}", rootHandler)
 	srv.Handle("GET /health", healthHandler)
+
+	// Onboarding
+	srv.Handle("GET /onboarding", onboardingHandler)
+	srv.Handle("POST /onboarding/game", http.HandlerFunc(onboardingHandler.HandleGameStep))
+	srv.Handle("POST /onboarding/starter", http.HandlerFunc(onboardingHandler.HandleStarterStep))
+	srv.Handle("POST /onboarding/badge", http.HandlerFunc(onboardingHandler.HandleBadgeStep))
+
+	// Dashboard
+	srv.Handle("GET /dashboard", dashboardHandler)
+
+	// Settings
+	srv.Handle("GET /settings", settingsHandler)
+	srv.Handle("PATCH /settings/game", http.HandlerFunc(settingsHandler.HandleGameUpdate))
+	srv.Handle("PATCH /settings/starter", http.HandlerFunc(settingsHandler.HandleStarterUpdate))
+	srv.Handle("PATCH /settings/badge", http.HandlerFunc(settingsHandler.HandleBadgeUpdate))
+	srv.Handle("PATCH /settings/trading", http.HandlerFunc(settingsHandler.HandleTradingUpdate))
+
+	// Pokémon Finder
+	srv.Handle("GET /pokemon", pokemonHandler)
+	srv.Handle("GET /pokemon/search", http.HandlerFunc(pokemonHandler.HandleSearch))
+	srv.Handle("GET /pokemon/{id}", http.HandlerFunc(pokemonHandler.HandleDetail))
+
+	// Team Builder
+	srv.Handle("GET /team", teamHandler)
+	srv.Handle("POST /team/members", http.HandlerFunc(teamHandler.HandleAdd))
+	srv.Handle("DELETE /team/members/{id}", http.HandlerFunc(teamHandler.HandleRemove))
+	srv.Handle("PATCH /team/members/{id}", http.HandlerFunc(teamHandler.HandleUpdate))
+	srv.Handle("GET /team/coverage", http.HandlerFunc(teamHandler.HandleCoverage))
+	srv.Handle("GET /team/suggestions", suggestionHandler)
+
+	// Battle Helper
+	srv.Handle("GET /battle", battleHandler)
+	srv.Handle("GET /battle/trainer/{id}", http.HandlerFunc(battleHandler.HandleTrainerMatchup))
+	srv.Handle("GET /battle/pokemon/{id}", http.HandlerFunc(battleHandler.HandlePokemonMatchup))
+	srv.Handle("GET /battle/search", http.HandlerFunc(battleHandler.HandleSearch))
+
+	// Basics Guide
+	srv.Handle("GET /guide", guideHandler)
+	srv.Handle("GET /guide/types", http.HandlerFunc(guideHandler.HandleTypes))
+	srv.Handle("GET /guide/natures", http.HandlerFunc(guideHandler.HandleNatures))
+	srv.Handle("GET /guide/abilities", http.HandlerFunc(guideHandler.HandleAbilities))
+	srv.Handle("GET /guide/abilities/search", http.HandlerFunc(guideHandler.HandleAbilitySearch))
+	srv.Handle("GET /guide/evs-ivs", http.HandlerFunc(guideHandler.HandleEVsIVs))
+	srv.Handle("GET /guide/status", http.HandlerFunc(guideHandler.HandleStatus))
+	srv.Handle("GET /guide/moves", http.HandlerFunc(guideHandler.HandleMoves))
+	srv.Handle("GET /guide/mechanics/{game}", http.HandlerFunc(guideHandler.HandleMechanics))
+
+	// Static files
 	srv.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	// Graceful shutdown on SIGINT/SIGTERM

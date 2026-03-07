@@ -1,0 +1,173 @@
+package view
+
+import (
+	"fmt"
+	"zoamel/pokesensei/db/generated"
+)
+
+templ TeamBuilderPage(gs generated.GameState, slots []TeamSlotData) {
+	@AppShell("Team Builder", "team") {
+		<div class="team-builder" hx-trigger="team-updated from:body" hx-get="/team" hx-select=".team-builder" hx-target=".team-builder" hx-swap="outerHTML" hx-disinherit="hx-select hx-target">
+			<h1>Team Builder</h1>
+			<section class="team-grid-section">
+				<div class="team-builder-grid">
+					for i, slot := range slots {
+						@teamBuilderSlot(i+1, slot)
+					}
+				</div>
+			</section>
+			<section class="coverage-section">
+				<h2>Type Coverage</h2>
+				<div
+					id="coverage-matrix"
+					hx-get="/team/coverage"
+					hx-trigger="load, team-updated from:body"
+					hx-swap="innerHTML"
+				>
+					<p class="loading-text">Analyzing coverage...</p>
+				</div>
+			</section>
+			<section class="suggestions-section">
+				<h2>Suggestions</h2>
+				<div
+					id="suggestions"
+					hx-get="/team/suggestions"
+					hx-trigger="load, team-updated from:body"
+					hx-swap="innerHTML"
+				>
+					<p class="loading-text">Generating suggestions...</p>
+				</div>
+			</section>
+			<section class="add-pokemon-section">
+				<h2>Add Pokémon</h2>
+				<p>Use the <a href="/pokemon">Pokémon Finder</a> to search and add Pokémon to your team.</p>
+			</section>
+		</div>
+	}
+}
+
+templ teamBuilderSlot(slotNum int, slot TeamSlotData) {
+	<div class="builder-slot">
+		if slot.Member != nil {
+			<div class="builder-member">
+				<img src={ slot.Member.SpriteUrl } alt={ slot.Member.PokemonName } width="64" height="64"/>
+				<div class="builder-member-info">
+					<a href={ templ.SafeURL(fmt.Sprintf("/pokemon/%d", slot.Member.PokemonID)) } class="builder-member-name">
+						{ slot.Member.PokemonName }
+					</a>
+					<div class="builder-member-types">
+						for _, t := range slot.Types {
+							<span class={ "type-pill type-pill-sm", fmt.Sprintf("type-%s", t.Slug) }>{ t.Name }</span>
+						}
+					</div>
+					<form class="builder-member-controls">
+						<label class="level-input">
+							<span>Lv.</span>
+							<input
+								type="number"
+								name="level"
+								value={ fmt.Sprint(slot.Member.Level) }
+								min="1"
+								max="100"
+								hx-patch={ fmt.Sprintf("/team/members/%d", slot.Member.ID) }
+								hx-trigger="change"
+								hx-swap="none"
+							/>
+						</label>
+						<label class="lock-toggle" title="Lock this slot">
+							<input
+								type="checkbox"
+								name="is_locked"
+								if slot.Member.IsLocked {
+									checked
+								}
+								hx-patch={ fmt.Sprintf("/team/members/%d", slot.Member.ID) }
+								hx-trigger="change"
+								hx-swap="none"
+								hx-vals='{"is_locked": "true"}'
+							/>
+							🔒
+						</label>
+					</form>
+				</div>
+				<button
+					class="btn-remove"
+					hx-delete={ fmt.Sprintf("/team/members/%d", slot.Member.ID) }
+					hx-swap="none"
+					title="Remove from team"
+				>
+					×
+				</button>
+			</div>
+		} else {
+			<div class="builder-empty">
+				<span class="empty-slot-label">{ fmt.Sprintf("Slot %d", slotNum) }</span>
+				<a href="/pokemon" class="btn btn-outline">+ Add</a>
+			</div>
+		}
+	</div>
+}
+
+templ TeamCoveragePartial(types []generated.Type, coverage map[int32]int16) {
+	<div class="coverage-grid">
+		for _, t := range types {
+			<div class={ "coverage-cell", coverageClass(coverage[t.ID]) }>
+				<span class="coverage-type">{ t.Name }</span>
+				<span class="coverage-factor">{ coverageLabel(coverage[t.ID]) }</span>
+			</div>
+		}
+	</div>
+	if hasGaps(coverage) {
+		<div class="coverage-warnings">
+			<h3>Coverage Gaps</h3>
+			<ul>
+				for _, t := range types {
+					if coverage[t.ID] < 100 {
+						<li class="warning-item">
+							<span>No effective move against </span>
+							<strong>{ t.Name }</strong>
+							<span> types</span>
+						</li>
+					}
+				}
+			</ul>
+		</div>
+	}
+}
+
+func coverageClass(factor int16) string {
+	switch {
+	case factor >= 200:
+		return "coverage-super"
+	case factor >= 100:
+		return "coverage-neutral"
+	case factor > 0:
+		return "coverage-resist"
+	default:
+		return "coverage-none"
+	}
+}
+
+func coverageLabel(factor int16) string {
+	switch {
+	case factor >= 200:
+		return "2×"
+	case factor >= 100:
+		return "1×"
+	case factor == 50:
+		return "½×"
+	case factor == 0:
+		return "0×"
+	default:
+		return "–"
+	}
+}
+
+func hasGaps(coverage map[int32]int16) bool {
+	for _, factor := range coverage {
+		if factor < 100 {
+			return true
+		}
+	}
+	return false
+}

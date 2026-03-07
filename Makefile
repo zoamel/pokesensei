@@ -1,7 +1,7 @@
 -include .env
 export
 
-.PHONY: tools generate templ sqlc dev migrate build clean
+.PHONY: tools generate templ sqlc dev migrate setup import build clean
 
 ## Install development tools
 tools:
@@ -28,6 +28,24 @@ dev:
 ## Run database migrations
 migrate:
 	goose -dir db/migrations postgres "$(DATABASE_URL)" up
+
+## One-time setup: start Postgres, run migrations, import data if needed
+setup:
+	docker compose up -d
+	@echo "Waiting for Postgres..."
+	@until pg_isready -h localhost -p 5432 -q 2>/dev/null; do sleep 0.5; done
+	goose -dir db/migrations postgres "$(DATABASE_URL)" up
+	@if [ "$$(psql "$(DATABASE_URL)" -tAc "SELECT count(*) FROM pokemon" 2>/dev/null)" = "0" ] || \
+	    [ "$$(psql "$(DATABASE_URL)" -tAc "SELECT count(*) FROM pokemon" 2>/dev/null)" = "" ]; then \
+		echo "Database empty — importing data..."; \
+		go run ./cmd/import/ --database-url "$(DATABASE_URL)" --games frlg,hgss --seed-trainers; \
+	else \
+		echo "Data already imported — skipping (use 'make import' to force re-import)"; \
+	fi
+
+## Import PokéAPI data + trainer seeds (re-runnable, truncates and reloads)
+import:
+	go run ./cmd/import/ --database-url "$(DATABASE_URL)" --games frlg,hgss --seed-trainers
 
 ## Build production binary
 build: generate

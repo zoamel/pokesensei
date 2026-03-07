@@ -1,0 +1,76 @@
+package view
+
+import (
+	"fmt"
+	"zoamel/pokesensei/db/generated"
+)
+
+templ DashboardPage(gs generated.GameState, team []generated.ListTeamMembersRow) {
+	@AppShell("Dashboard", "dashboard") {
+		<div class="dashboard">
+			<h1>Dashboard</h1>
+			<section class="team-overview">
+				<h2>Your Team</h2>
+				<div class="team-slots">
+					for slot := 1; slot <= 6; slot++ {
+						@teamSlot(slot, team)
+					}
+				</div>
+			</section>
+			<section class="tool-shortcuts">
+				<h2>Tools</h2>
+				<div class="shortcut-grid">
+					<a href="/team" class="shortcut-card">
+						<h3>Team Builder</h3>
+						<p>Build and manage your team</p>
+					</a>
+					<a href="/battle" class="shortcut-card">
+						<h3>Battle Helper</h3>
+						<p>Prepare for upcoming battles</p>
+					</a>
+					<a href="/pokemon" class="shortcut-card">
+						<h3>Pokémon Finder</h3>
+						<p>Search available Pokémon</p>
+					</a>
+					<a href="/guide" class="shortcut-card">
+						<h3>Basics Guide</h3>
+						<p>Learn game mechanics</p>
+					</a>
+				</div>
+			</section>
+			<div class="game-info">
+				<span>
+					{ fmt.Sprintf("Badges: %d/8", gs.BadgeCount) }
+				</span>
+			</div>
+		</div>
+	}
+}
+
+templ teamSlot(slot int, team []generated.ListTeamMembersRow) {
+	<div class="team-slot">
+		for _, member := range team {
+			if int(member.Slot) == slot {
+				<div class="team-member">
+					<img src={ member.SpriteUrl } alt={ member.PokemonName } width="64" height="64"/>
+					<span class="member-name">{ member.PokemonName }</span>
+					<span class="member-level">{ fmt.Sprintf("Lv. %d", member.Level) }</span>
+				</div>
+			}
+		}
+		if !slotOccupied(slot, team) {
+			<div class="team-member empty">
+				<span class="empty-slot">{ fmt.Sprintf("Slot %d", slot) }</span>
+			</div>
+		}
+	</div>
+}
+
+func slotOccupied(slot int, team []generated.ListTeamMembersRow) bool {
+	for _, m := range team {
+		if int(m.Slot) == slot {
+			return true
+		}
+	}
+	return false
+}
