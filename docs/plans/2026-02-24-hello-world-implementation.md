@@ -27,9 +27,9 @@ services:
   db:
     image: postgres:17
     environment:
-      POSTGRES_USER: sundry
-      POSTGRES_PASSWORD: sundry
-      POSTGRES_DB: sundry_dev
+      POSTGRES_USER: pokesensei
+      POSTGRES_PASSWORD: pokesensei
+      POSTGRES_DB: pokesensei_dev
     ports:
       - "5432:5432"
     volumes:
@@ -42,7 +42,7 @@ volumes:
 **Step 2: Create `.env.example`**
 
 ```
-DATABASE_URL=postgres://sundry:sundry@localhost:5432/sundry_dev?sslmode=disable
+DATABASE_URL=postgres://pokesensei:pokesensei@localhost:5432/pokesensei_dev?sslmode=disable
 PORT=8080
 LOG_LEVEL=debug
 ```
@@ -568,7 +568,7 @@ templ Layout(title string) {
 package view
 
 templ HomePage() {
-	@Layout("My Sundry") {
+	@Layout("PokéSensei") {
 		<main class="min-h-screen flex items-center justify-center">
 			<div class="text-center">
 				<h1 class="text-4xl font-bold text-gray-900">Hello, World!</h1>
@@ -665,7 +665,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"zoamel/my-sundry/internal/view"
+	"zoamel/pokesensei/internal/view"
 )
 
 type HomeHandler struct {
@@ -873,7 +873,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"zoamel/my-sundry/internal/config"
+	"zoamel/pokesensei/internal/config"
 )
 
 func newTestServer(t *testing.T) *Server {
@@ -1004,7 +1004,7 @@ import (
 	"net/http"
 	"time"
 
-	"zoamel/my-sundry/internal/config"
+	"zoamel/pokesensei/internal/config"
 )
 
 type Server struct {
@@ -1089,12 +1089,12 @@ import (
 	"syscall"
 	"time"
 
-	"zoamel/my-sundry/db"
-	"zoamel/my-sundry/db/generated"
-	"zoamel/my-sundry/internal/config"
-	"zoamel/my-sundry/internal/database"
-	"zoamel/my-sundry/internal/handler"
-	"zoamel/my-sundry/internal/server"
+	"zoamel/pokesensei/db"
+	"zoamel/pokesensei/db/generated"
+	"zoamel/pokesensei/internal/config"
+	"zoamel/pokesensei/internal/database"
+	"zoamel/pokesensei/internal/handler"
+	"zoamel/pokesensei/internal/server"
 )
 
 func main() {

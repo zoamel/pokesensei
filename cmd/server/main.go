@@ -11,12 +11,12 @@ import (
 	"syscall"
 	"time"
 
-	"zoamel/my-sundry/db"
-	"zoamel/my-sundry/db/generated"
-	"zoamel/my-sundry/internal/config"
-	"zoamel/my-sundry/internal/database"
-	"zoamel/my-sundry/internal/handler"
-	"zoamel/my-sundry/internal/server"
+	"zoamel/pokesensei/db"
+	"zoamel/pokesensei/db/generated"
+	"zoamel/pokesensei/internal/config"
+	"zoamel/pokesensei/internal/database"
+	"zoamel/pokesensei/internal/handler"
+	"zoamel/pokesensei/internal/server"
 )
 
 func main() {

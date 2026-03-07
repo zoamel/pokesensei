@@ -2,7 +2,7 @@
 
 ## Overview
 
-Full-stack Go web application scaffold for "my-sundry". Sets up the foundational architecture, tooling, and a working hello world that proves all layers are wired end-to-end.
+Full-stack Go web application scaffold for "pokesensei". Sets up the foundational architecture, tooling, and a working hello world that proves all layers are wired end-to-end.
 
 ## Stack
 
@@ -28,7 +28,7 @@ Layer-based with `internal/` packages. Constructor-based dependency injection. C
 ### Directory Structure
 
 ```
-my-sundry/
+pokesensei/
 ├── cmd/server/main.go              # Entry point, DI wiring, graceful shutdown
 ├── internal/
 │   ├── config/config.go            # Config struct, LoadFromEnv()
@@ -152,7 +152,7 @@ Goose SQL migrations in `db/migrations/`. Run at app startup via `database.RunMi
 
 ### Docker Compose
 
-Postgres 17 with `sundry` user/password/db on port 5432.
+Postgres 17 with `pokesensei` user/password/db on port 5432.
 
 ### air (hot reload)
 

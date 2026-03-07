@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Full-stack Go web application (`zoamel/my-sundry`) using Go 1.25.5. No web framework — uses the standard library `net/http` with Go 1.22+ enhanced ServeMux for method-based routing.
+Full-stack Go web application (`zoamel/pokesensei`) — PokéSensei, an app for managing Pokémon. Uses Go 1.25.5. No web framework — uses the standard library `net/http` with Go 1.22+ enhanced ServeMux for method-based routing.
 
 **Stack:** templ (HTML templates), HTMX + Alpine.js (interactivity), Modern CSS with @layer/@import (styling), PostgreSQL 17 with pgx/v5 (database), sqlc (query generation), goose (migrations), log/slog (structured logging).
 

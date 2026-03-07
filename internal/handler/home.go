@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"zoamel/my-sundry/internal/view"
+	"zoamel/pokesensei/internal/view"
 )
 
 type HomeHandler struct {

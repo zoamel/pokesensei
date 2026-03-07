@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"zoamel/my-sundry/internal/config"
+	"zoamel/pokesensei/internal/config"
 )
 
 type Server struct {

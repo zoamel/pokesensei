@@ -114,7 +114,7 @@ Replace the entire template body. The new version uses semantic classes and upda
 package view
 
 templ HomePage() {
-	@Layout("My Sundry") {
+	@Layout("PokéSensei") {
 		<main class="page-center">
 			<div>
 				<h1 class="heading">Hello, World!</h1>

@@ -1,6 +1,6 @@
 # Technical Reference
 
-A learning reference for the my-sundry project. Explains the tools, patterns, Go language features, and architectural decisions behind the scaffold.
+A learning reference for the pokesensei project. Explains the tools, patterns, Go language features, and architectural decisions behind the scaffold.
 
 ---
 
@@ -163,7 +163,7 @@ Go convention for application entry points. Each subdirectory of `cmd/` produces
 
 Go's **access control mechanism**. Packages under `internal/` can only be imported by code within the same module. This prevents external packages from depending on your internal implementation details.
 
-**Why it matters:** If someone imports `zoamel/my-sundry/internal/handler`, Go's compiler will refuse. This gives you freedom to refactor internal packages without worrying about breaking external consumers.
+**Why it matters:** If someone imports `zoamel/pokesensei/internal/handler`, Go's compiler will refuse. This gives you freedom to refactor internal packages without worrying about breaking external consumers.
 
 ### `internal/config/`
 
@@ -535,7 +535,7 @@ resp, _ := http.Get(ts.URL + "/test")   // real HTTP request
 5. HomeHandler.ServeHTTP:
    a. Calls view.HomePage() — returns templ.Component
    b. Calls .Render(r.Context(), w) — writes HTML to ResponseWriter
-   c. templ engine: HomePage calls Layout("My Sundry") with children
+   c. templ engine: HomePage calls Layout("PokéSensei") with children
    d. Layout writes: DOCTYPE, <html>, <head> (CSS, JS links), <body>
    e. HomePage children: <main> with "Hello, World!"
    f. Layout closes: </body>, </html>

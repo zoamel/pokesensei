@@ -1,4 +1,4 @@
-module zoamel/my-sundry
+module zoamel/pokesensei
 
 go 1.25.5
 

@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"zoamel/my-sundry/internal/config"
+	"zoamel/pokesensei/internal/config"
 )
 
 func newTestServer(t *testing.T) *Server {
