@@ -141,6 +141,7 @@ templ PokemonDetailPage(detail PokemonDetail) {
 			<div class="detail-sections">
 				<section class="detail-section">
 					<h2>Base Stats</h2>
+					<p class="guide-intro"><strong>HP</strong> = health points. <strong>Attack</strong> = physical move damage. <strong>Defense</strong> = physical damage resistance. <strong>Sp. Atk</strong> = special move damage. <strong>Sp. Def</strong> = special damage resistance. <strong>Speed</strong> = who moves first in battle. Higher bars = stronger in that stat. Most Pokémon specialize — use moves that match their best offensive stat.</p>
 					<div class="stats-grid">
 						@statBar("HP", int(detail.Pokemon.BaseHp), 255)
 						@statBar("Attack", int(detail.Pokemon.BaseAttack), 255)
@@ -205,11 +206,28 @@ templ PokemonDetailPage(detail PokemonDetail) {
 							<tbody>
 								for _, e := range detail.Encounters {
 									<tr>
-										<td>{ e.LocationName }</td>
-										<td>{ e.Method }</td>
+										<td>
+											{ e.LocationName }
+											if e.AreaName != "" {
+												<span class="area-name"> ({ e.AreaName })</span>
+											}
+										</td>
+										<td>{ formatEncounterMethod(e.Method) }</td>
 										<td>{ fmt.Sprintf("%d%%", e.Chance) }</td>
-										<td>{ fmt.Sprintf("%d-%d", e.MinLevel, e.MaxLevel) }</td>
-										<td>{ fmt.Sprint(e.BadgeRequired) }</td>
+										<td>
+											if e.MinLevel == e.MaxLevel {
+												{ fmt.Sprint(e.MinLevel) }
+											} else {
+												{ fmt.Sprintf("%d–%d", e.MinLevel, e.MaxLevel) }
+											}
+										</td>
+										<td>
+											if e.BadgeRequired == 0 {
+												Start
+											} else {
+												{ fmt.Sprintf("Badge %d", e.BadgeRequired) }
+											}
+										</td>
 									</tr>
 								}
 							</tbody>
@@ -219,14 +237,16 @@ templ PokemonDetailPage(detail PokemonDetail) {
 				if len(detail.Moves) > 0 {
 					<section class="detail-section">
 						<h2>Moves</h2>
+						<p class="guide-intro"><strong>Building a moveset:</strong> Aim for 4 moves of different types. Include at least one move that matches this Pokémon's type (STAB bonus = 50% more damage). Mix Physical and Special moves based on this Pokémon's stronger attacking stat.</p>
 						<table class="move-table">
 							<thead>
 								<tr>
 									<th>Move</th>
 									<th>Type</th>
+									<th>Class</th>
 									<th>Power</th>
 									<th>Acc</th>
-									<th>Class</th>
+									<th>PP</th>
 									<th>Method</th>
 									<th>Level</th>
 								</tr>
@@ -234,8 +254,22 @@ templ PokemonDetailPage(detail PokemonDetail) {
 							<tbody>
 								for _, m := range detail.Moves {
 									<tr>
-										<td>{ m.Name }</td>
-										<td>–</td>
+										<td>
+											{ m.Name }
+											if m.Effect != "" {
+												<span class="move-info" data-tooltip={ m.Effect }>i</span>
+											}
+										</td>
+										<td>
+											if m.TypeSlug.Valid {
+												<span class={ "type-pill type-pill-sm", fmt.Sprintf("type-%s", m.TypeSlug.String) }>{ m.TypeName.String }</span>
+											} else {
+												–
+											}
+										</td>
+										<td>
+											<span class={ "damage-class", fmt.Sprintf("damage-%s", m.DamageClass) }>{ m.DamageClass }</span>
+										</td>
 										<td>
 											if m.Power.Valid {
 												{ fmt.Sprint(m.Power.Int16) }
@@ -250,8 +284,10 @@ templ PokemonDetailPage(detail PokemonDetail) {
 												–
 											}
 										</td>
-										<td>{ m.DamageClass }</td>
-										<td>{ m.LearnMethod }</td>
+										<td>{ fmt.Sprint(m.Pp) }</td>
+										<td>
+											<span class="has-tooltip" data-tooltip={ learnMethodTip(m.LearnMethod) }>{ formatLearnMethod(m.LearnMethod) }</span>
+										</td>
 										<td>
 											if m.LevelLearnedAt > 0 {
 												{ fmt.Sprint(m.LevelLearnedAt) }

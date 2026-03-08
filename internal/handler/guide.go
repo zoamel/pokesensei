@@ -152,3 +152,38 @@ func (h *GuideHandler) HandleMechanics(w http.ResponseWriter, r *http.Request) {
 		h.log.Error("failed to render mechanics guide", "error", err)
 	}
 }
+
+// GET /guide/basics — how Pokémon works tutorial
+func (h *GuideHandler) HandleBasics(w http.ResponseWriter, r *http.Request) {
+	if err := view.GuideBasicsPage().Render(r.Context(), w); err != nil {
+		h.log.Error("failed to render basics guide", "error", err)
+	}
+}
+
+// GET /guide/catching — catching Pokémon guide
+func (h *GuideHandler) HandleCatching(w http.ResponseWriter, r *http.Request) {
+	if err := view.GuideCatchingPage().Render(r.Context(), w); err != nil {
+		h.log.Error("failed to render catching guide", "error", err)
+	}
+}
+
+// GET /guide/gym-tips — per-gym beginner strategy tips
+func (h *GuideHandler) HandleGymTips(w http.ResponseWriter, r *http.Request) {
+	if err := view.GuideGymTipsPage().Render(r.Context(), w); err != nil {
+		h.log.Error("failed to render gym tips guide", "error", err)
+	}
+}
+
+// GET /guide/recommended — recommended Pokémon list
+func (h *GuideHandler) HandleRecommended(w http.ResponseWriter, r *http.Request) {
+	if err := view.GuideRecommendedPage().Render(r.Context(), w); err != nil {
+		h.log.Error("failed to render recommended guide", "error", err)
+	}
+}
+
+// GET /guide/items — item basics guide
+func (h *GuideHandler) HandleItems(w http.ResponseWriter, r *http.Request) {
+	if err := view.GuideItemsPage().Render(r.Context(), w); err != nil {
+		h.log.Error("failed to render items guide", "error", err)
+	}
+}

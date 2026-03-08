@@ -166,15 +166,15 @@ func startersForGame(gameVersionID int) []view.StarterInfo {
 	switch {
 	case gameVersionID == 10 || gameVersionID == 11: // FireRed/LeafGreen
 		return []view.StarterInfo{
-			{1, "Bulbasaur", "Grass/Poison", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png"},
-			{4, "Charmander", "Fire", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png"},
-			{7, "Squirtle", "Water", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png"},
+			{1, "Bulbasaur", "Grass/Poison", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png", "Strong early game, resists first two gyms."},
+			{4, "Charmander", "Fire", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png", "Challenging early but powerful later, evolves into Charizard."},
+			{7, "Squirtle", "Water", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png", "Balanced and reliable throughout the game."},
 		}
 	case gameVersionID == 15 || gameVersionID == 16: // HeartGold/SoulSilver
 		return []view.StarterInfo{
-			{152, "Chikorita", "Grass", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/152.png"},
-			{155, "Cyndaquil", "Fire", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/155.png"},
-			{158, "Totodile", "Water", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/158.png"},
+			{152, "Chikorita", "Grass", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/152.png", "Defensive and supportive, but struggles against early gyms."},
+			{155, "Cyndaquil", "Fire", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/155.png", "Strong special attacker, great against Bug and Steel gyms."},
+			{158, "Totodile", "Water", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/158.png", "Powerful physical attacker, learns Ice Fang for coverage."},
 		}
 	default:
 		return nil

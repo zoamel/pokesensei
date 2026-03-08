@@ -25,7 +25,7 @@ templ OnboardingPage(versions []generated.GameVersion) {
 templ OnboardingGameStep(versions []generated.GameVersion) {
 	<div class="onboarding-step" x-init="step = 1">
 		<h2>Choose Your Game</h2>
-		<p class="step-description">Which Pokémon game are you playing?</p>
+		<p class="step-description">Which Pokémon game are you playing? FireRed/LeafGreen are set in Kanto (Gen I remakes). HeartGold/SoulSilver are set in Johto (Gen II remakes) with more features and a longer endgame. Both are great first games.</p>
 		<form
 			hx-post="/onboarding/game"
 			hx-target="#onboarding-step"
@@ -60,6 +60,9 @@ templ OnboardingStarterStep(starters []StarterInfo) {
 						<img src={ s.SpriteURL } alt={ s.Name } width="96" height="96"/>
 						<span class="starter-name">{ s.Name }</span>
 						<span class="type-pill">{ s.TypeName }</span>
+						if s.Description != "" {
+							<span class="step-description">{ s.Description }</span>
+						}
 					</label>
 				}
 			</div>
@@ -71,7 +74,7 @@ templ OnboardingStarterStep(starters []StarterInfo) {
 templ OnboardingBadgeStep() {
 	<div class="onboarding-step" x-init="step = 3">
 		<h2>Badge Progress</h2>
-		<p class="step-description">How many badges do you have?</p>
+		<p class="step-description">How many badges do you have? Badges are earned by defeating Gym Leaders in major cities. Each badge unlocks new areas and lets you use moves like Surf and Fly outside of battle. Set this to 0 if you're just starting.</p>
 		<form
 			hx-post="/onboarding/badge"
 			hx-target="#onboarding-step"

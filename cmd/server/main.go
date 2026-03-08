@@ -118,6 +118,11 @@ func run() error {
 	srv.Handle("GET /guide/evs-ivs", http.HandlerFunc(guideHandler.HandleEVsIVs))
 	srv.Handle("GET /guide/status", http.HandlerFunc(guideHandler.HandleStatus))
 	srv.Handle("GET /guide/moves", http.HandlerFunc(guideHandler.HandleMoves))
+	srv.Handle("GET /guide/basics", http.HandlerFunc(guideHandler.HandleBasics))
+	srv.Handle("GET /guide/catching", http.HandlerFunc(guideHandler.HandleCatching))
+	srv.Handle("GET /guide/gym-tips", http.HandlerFunc(guideHandler.HandleGymTips))
+	srv.Handle("GET /guide/recommended", http.HandlerFunc(guideHandler.HandleRecommended))
+	srv.Handle("GET /guide/items", http.HandlerFunc(guideHandler.HandleItems))
 	srv.Handle("GET /guide/mechanics/{game}", http.HandlerFunc(guideHandler.HandleMechanics))
 
 	// Static files

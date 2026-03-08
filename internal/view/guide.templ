@@ -11,9 +11,25 @@ templ GuideIndexPage() {
 			<h1>Basics Guide</h1>
 			<p class="guide-intro">Everything a first-time Pokémon player needs to know.</p>
 			<div class="guide-grid">
+				<a href="/guide/basics" class="guide-card">
+					<h3>How Pokémon Works</h3>
+					<p>Brand new? Start here — the core loop, battles, types, and leveling explained.</p>
+				</a>
+				<a href="/guide/catching" class="guide-card">
+					<h3>Catching Pokémon</h3>
+					<p>How encounters work, how to catch effectively, and which Poké Balls to use.</p>
+				</a>
 				<a href="/guide/types" class="guide-card">
 					<h3>Type Chart</h3>
 					<p>Interactive matchup table — super effective, not very effective, and immune.</p>
+				</a>
+				<a href="/guide/gym-tips" class="guide-card">
+					<h3>Gym Strategy Tips</h3>
+					<p>Per-gym advice for every gym leader in FRLG and HGSS.</p>
+				</a>
+				<a href="/guide/recommended" class="guide-card">
+					<h3>Recommended Pokémon</h3>
+					<p>Curated picks for a strong, balanced team — with where to find them.</p>
 				</a>
 				<a href="/guide/natures" class="guide-card">
 					<h3>Natures</h3>
@@ -35,6 +51,10 @@ templ GuideIndexPage() {
 					<h3>Move Categories</h3>
 					<p>Physical vs Special vs Status and the Gen IV split.</p>
 				</a>
+				<a href="/guide/items" class="guide-card">
+					<h3>Item Basics</h3>
+					<p>Healing, status cures, Poké Balls, battle items, and key items explained.</p>
+				</a>
 				<a href="/guide/mechanics/frlg" class="guide-card">
 					<h3>FRLG Mechanics</h3>
 					<p>Sevii Islands, version exclusives, and game-specific info.</p>
@@ -53,6 +73,9 @@ templ GuideTypesPage(types []generated.Type, matrix map[int32]map[int32]int16) {
 		<div class="guide">
 			<a href="/guide" class="back-link">← Back to Guide</a>
 			<h1>Type Chart</h1>
+			<div class="guide-content">
+				<p>Every Pokémon and move has a type. When attacking, your move's type vs the defender's type determines damage: super effective (2x), not very effective (0.5x), or immune (0x). Master a few key matchups — Water beats Fire, Fire beats Grass, Grass beats Water — and build from there.</p>
+			</div>
 			<p class="guide-intro">Click a row to highlight that attacking type's matchups.</p>
 			<div class="type-chart-wrapper" x-data="{ activeRow: null }">
 				<table class="type-chart">
@@ -98,6 +121,9 @@ templ GuideNaturesPage(natures []generated.Nature) {
 			<a href="/guide" class="back-link">← Back to Guide</a>
 			<h1>Natures</h1>
 			<p class="guide-intro">Each Pokémon has a nature that boosts one stat by 10% and lowers another. Neutral natures have no effect.</p>
+			<div class="guide-content">
+				<p>For your first playthrough, natures make a small difference. Just avoid natures that lower your Pokémon's main attacking stat. The table below is here for reference when you're ready.</p>
+			</div>
 			<table class="nature-table">
 				<thead>
 					<tr>
@@ -137,6 +163,9 @@ templ GuideAbilitiesPage(abilities []generated.Ability) {
 		<div class="guide">
 			<a href="/guide" class="back-link">← Back to Guide</a>
 			<h1>Abilities</h1>
+			<div class="guide-content">
+				<p>Every Pokémon has an ability that provides a passive effect in battle or the overworld. Most activate automatically. Some abilities are "hidden" and only available through special means.</p>
+			</div>
 			<input
 				type="text"
 				placeholder="Search abilities..."
@@ -195,6 +224,7 @@ templ GuideStatusPage() {
 		<div class="guide guide-content">
 			<a href="/guide" class="back-link">← Back to Guide</a>
 			<h1>Status Effects</h1>
+			<p>Status moves inflict conditions on the opponent. Fire-types can't be burned, Electric-types can't be paralyzed, Steel/Poison-types can't be poisoned. Stock up on Full Heals before tough battles.</p>
 			<table class="status-table">
 				<thead>
 					<tr><th>Status</th><th>Effect</th><th>Cure</th></tr>
@@ -218,6 +248,7 @@ templ GuideMovesPage() {
 		<div class="guide guide-content">
 			<a href="/guide" class="back-link">← Back to Guide</a>
 			<h1>Move Categories</h1>
+			<p>This matters because you want to match your Pokémon's higher stat (Attack or Sp.Atk) with the right move category for maximum damage.</p>
 			<h2>Physical vs Special</h2>
 			<p>In Gen I-III (including FireRed/LeafGreen), whether a move is Physical or Special depends on its <strong>type</strong>. In Gen IV (HeartGold/SoulSilver), each move has its own category.</p>
 			<table class="move-cat-table">
@@ -274,6 +305,7 @@ templ GuideMechanicsPage(game string) {
 		</div>
 	}
 }
+
 
 func typeAbbrev(name string) string {
 	if len(name) <= 3 {

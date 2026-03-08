@@ -46,7 +46,7 @@ func GuideIndexPage() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"guide\"><h1>Basics Guide</h1><p class=\"guide-intro\">Everything a first-time Pokémon player needs to know.</p><div class=\"guide-grid\"><a href=\"/guide/types\" class=\"guide-card\"><h3>Type Chart</h3><p>Interactive matchup table — super effective, not very effective, and immune.</p></a> <a href=\"/guide/natures\" class=\"guide-card\"><h3>Natures</h3><p>All 25 natures and their stat effects.</p></a> <a href=\"/guide/abilities\" class=\"guide-card\"><h3>Abilities</h3><p>Searchable list of all abilities and what they do.</p></a> <a href=\"/guide/evs-ivs\" class=\"guide-card\"><h3>EVs &amp; IVs</h3><p>What they are, why they matter, how to influence them.</p></a> <a href=\"/guide/status\" class=\"guide-card\"><h3>Status Effects</h3><p>All status conditions and their in-battle effects.</p></a> <a href=\"/guide/moves\" class=\"guide-card\"><h3>Move Categories</h3><p>Physical vs Special vs Status and the Gen IV split.</p></a> <a href=\"/guide/mechanics/frlg\" class=\"guide-card\"><h3>FRLG Mechanics</h3><p>Sevii Islands, version exclusives, and game-specific info.</p></a> <a href=\"/guide/mechanics/hgss\" class=\"guide-card\"><h3>HGSS Mechanics</h3><p>Day/night cycle, Pokémon following, Pokéathlon, and more.</p></a></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"guide\"><h1>Basics Guide</h1><p class=\"guide-intro\">Everything a first-time Pokémon player needs to know.</p><div class=\"guide-grid\"><a href=\"/guide/basics\" class=\"guide-card\"><h3>How Pokémon Works</h3><p>Brand new? Start here — the core loop, battles, types, and leveling explained.</p></a> <a href=\"/guide/catching\" class=\"guide-card\"><h3>Catching Pokémon</h3><p>How encounters work, how to catch effectively, and which Poké Balls to use.</p></a> <a href=\"/guide/types\" class=\"guide-card\"><h3>Type Chart</h3><p>Interactive matchup table — super effective, not very effective, and immune.</p></a> <a href=\"/guide/gym-tips\" class=\"guide-card\"><h3>Gym Strategy Tips</h3><p>Per-gym advice for every gym leader in FRLG and HGSS.</p></a> <a href=\"/guide/recommended\" class=\"guide-card\"><h3>Recommended Pokémon</h3><p>Curated picks for a strong, balanced team — with where to find them.</p></a> <a href=\"/guide/natures\" class=\"guide-card\"><h3>Natures</h3><p>All 25 natures and their stat effects.</p></a> <a href=\"/guide/abilities\" class=\"guide-card\"><h3>Abilities</h3><p>Searchable list of all abilities and what they do.</p></a> <a href=\"/guide/evs-ivs\" class=\"guide-card\"><h3>EVs &amp; IVs</h3><p>What they are, why they matter, how to influence them.</p></a> <a href=\"/guide/status\" class=\"guide-card\"><h3>Status Effects</h3><p>All status conditions and their in-battle effects.</p></a> <a href=\"/guide/moves\" class=\"guide-card\"><h3>Move Categories</h3><p>Physical vs Special vs Status and the Gen IV split.</p></a> <a href=\"/guide/items\" class=\"guide-card\"><h3>Item Basics</h3><p>Healing, status cures, Poké Balls, battle items, and key items explained.</p></a> <a href=\"/guide/mechanics/frlg\" class=\"guide-card\"><h3>FRLG Mechanics</h3><p>Sevii Islands, version exclusives, and game-specific info.</p></a> <a href=\"/guide/mechanics/hgss\" class=\"guide-card\"><h3>HGSS Mechanics</h3><p>Day/night cycle, Pokémon following, Pokéathlon, and more.</p></a></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -93,7 +93,7 @@ func GuideTypesPage(types []generated.Type, matrix map[int32]map[int32]int16) te
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"guide\"><a href=\"/guide\" class=\"back-link\">← Back to Guide</a><h1>Type Chart</h1><p class=\"guide-intro\">Click a row to highlight that attacking type's matchups.</p><div class=\"type-chart-wrapper\" x-data=\"{ activeRow: null }\"><table class=\"type-chart\"><thead><tr><th class=\"type-chart-corner\">Atk ↓ / Def →</th>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"guide\"><a href=\"/guide\" class=\"back-link\">← Back to Guide</a><h1>Type Chart</h1><div class=\"guide-content\"><p>Every Pokémon and move has a type. When attacking, your move's type vs the defender's type determines damage: super effective (2x), not very effective (0.5x), or immune (0x). Master a few key matchups — Water beats Fire, Fire beats Grass, Grass beats Water — and build from there.</p></div><p class=\"guide-intro\">Click a row to highlight that attacking type's matchups.</p><div class=\"type-chart-wrapper\" x-data=\"{ activeRow: null }\"><table class=\"type-chart\"><thead><tr><th class=\"type-chart-corner\">Atk ↓ / Def →</th>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -127,7 +127,7 @@ func GuideTypesPage(types []generated.Type, matrix map[int32]map[int32]int16) te
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(typeAbbrev(t.Name))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/guide.templ`, Line: 65, Col: 30}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/guide.templ`, Line: 88, Col: 30}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -150,7 +150,7 @@ func GuideTypesPage(types []generated.Type, matrix map[int32]map[int32]int16) te
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("activeRow = activeRow === %d ? null : %d", atk.ID, atk.ID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/guide.templ`, Line: 74, Col: 92}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/guide.templ`, Line: 97, Col: 92}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
@@ -163,7 +163,7 @@ func GuideTypesPage(types []generated.Type, matrix map[int32]map[int32]int16) te
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("activeRow === %d && 'type-chart-active'", atk.ID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/guide.templ`, Line: 75, Col: 79}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/guide.templ`, Line: 98, Col: 79}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -198,7 +198,7 @@ func GuideTypesPage(types []generated.Type, matrix map[int32]map[int32]int16) te
 				var templ_7745c5c3_Var12 string
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(atk.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/guide.templ`, Line: 79, Col: 79}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/guide.templ`, Line: 102, Col: 79}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 				if templ_7745c5c3_Err != nil {
@@ -234,7 +234,7 @@ func GuideTypesPage(types []generated.Type, matrix map[int32]map[int32]int16) te
 					var templ_7745c5c3_Var15 string
 					templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(efficacySymbol(matrix[atk.ID][def.ID]))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/guide.templ`, Line: 83, Col: 50}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/guide.templ`, Line: 106, Col: 50}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 					if templ_7745c5c3_Err != nil {
@@ -297,7 +297,7 @@ func GuideNaturesPage(natures []generated.Nature) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div class=\"guide\"><a href=\"/guide\" class=\"back-link\">← Back to Guide</a><h1>Natures</h1><p class=\"guide-intro\">Each Pokémon has a nature that boosts one stat by 10% and lowers another. Neutral natures have no effect.</p><table class=\"nature-table\"><thead><tr><th>Nature</th><th>Increased (+10%)</th><th>Decreased (-10%)</th></tr></thead> <tbody>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div class=\"guide\"><a href=\"/guide\" class=\"back-link\">← Back to Guide</a><h1>Natures</h1><p class=\"guide-intro\">Each Pokémon has a nature that boosts one stat by 10% and lowers another. Neutral natures have no effect.</p><div class=\"guide-content\"><p>For your first playthrough, natures make a small difference. Just avoid natures that lower your Pokémon's main attacking stat. The table below is here for reference when you're ready.</p></div><table class=\"nature-table\"><thead><tr><th>Nature</th><th>Increased (+10%)</th><th>Decreased (-10%)</th></tr></thead> <tbody>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -309,7 +309,7 @@ func GuideNaturesPage(natures []generated.Nature) templ.Component {
 				var templ_7745c5c3_Var18 string
 				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(n.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/guide.templ`, Line: 112, Col: 39}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/guide.templ`, Line: 138, Col: 39}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 				if templ_7745c5c3_Err != nil {
@@ -345,7 +345,7 @@ func GuideNaturesPage(natures []generated.Nature) templ.Component {
 					var templ_7745c5c3_Var21 string
 					templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(formatStatName(n.IncreasedStat.String))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/guide.templ`, Line: 115, Col: 49}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/guide.templ`, Line: 141, Col: 49}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 					if templ_7745c5c3_Err != nil {
@@ -387,7 +387,7 @@ func GuideNaturesPage(natures []generated.Nature) templ.Component {
 					var templ_7745c5c3_Var24 string
 					templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(formatStatName(n.DecreasedStat.String))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/guide.templ`, Line: 122, Col: 49}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/guide.templ`, Line: 148, Col: 49}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 					if templ_7745c5c3_Err != nil {
@@ -451,7 +451,7 @@ func GuideAbilitiesPage(abilities []generated.Ability) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<div class=\"guide\"><a href=\"/guide\" class=\"back-link\">← Back to Guide</a><h1>Abilities</h1><input type=\"text\" placeholder=\"Search abilities...\" hx-get=\"/guide/abilities/search\" hx-trigger=\"input changed delay:300ms\" hx-target=\"#ability-list\" hx-swap=\"innerHTML\" name=\"q\" class=\"ability-search-input\"><div id=\"ability-list\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<div class=\"guide\"><a href=\"/guide\" class=\"back-link\">← Back to Guide</a><h1>Abilities</h1><div class=\"guide-content\"><p>Every Pokémon has an ability that provides a passive effect in battle or the overworld. Most activate automatically. Some abilities are \"hidden\" and only available through special means.</p></div><input type=\"text\" placeholder=\"Search abilities...\" hx-get=\"/guide/abilities/search\" hx-trigger=\"input changed delay:300ms\" hx-target=\"#ability-list\" hx-swap=\"innerHTML\" name=\"q\" class=\"ability-search-input\"><div id=\"ability-list\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -506,7 +506,7 @@ func AbilityListPartial(abilities []generated.Ability) templ.Component {
 			var templ_7745c5c3_Var28 string
 			templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(a.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/guide.templ`, Line: 161, Col: 20}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/guide.templ`, Line: 190, Col: 20}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 			if templ_7745c5c3_Err != nil {
@@ -524,7 +524,7 @@ func AbilityListPartial(abilities []generated.Ability) templ.Component {
 				var templ_7745c5c3_Var29 string
 				templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(a.Description)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/guide.templ`, Line: 163, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/guide.templ`, Line: 192, Col: 23}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 				if templ_7745c5c3_Err != nil {
@@ -634,7 +634,7 @@ func GuideStatusPage() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "<div class=\"guide guide-content\"><a href=\"/guide\" class=\"back-link\">← Back to Guide</a><h1>Status Effects</h1><table class=\"status-table\"><thead><tr><th>Status</th><th>Effect</th><th>Cure</th></tr></thead> <tbody><tr><td><strong>Burn</strong></td><td>Loses 1/8 HP per turn. Attack halved.</td><td>Burn Heal, Full Restore</td></tr><tr><td><strong>Poison</strong></td><td>Loses 1/8 HP per turn.</td><td>Antidote, Full Restore</td></tr><tr><td><strong>Bad Poison</strong></td><td>Loses increasing HP each turn (1/16, 2/16, ...).</td><td>Antidote, Full Restore</td></tr><tr><td><strong>Paralysis</strong></td><td>Speed quartered. 25% chance of not moving.</td><td>Paralyze Heal, Full Restore</td></tr><tr><td><strong>Sleep</strong></td><td>Cannot act for 1-3 turns.</td><td>Awakening, Full Restore</td></tr><tr><td><strong>Freeze</strong></td><td>Cannot act. 20% chance to thaw each turn.</td><td>Ice Heal, Full Restore</td></tr><tr><td><strong>Confusion</strong></td><td>50% chance of hitting self for 1-4 turns.</td><td>Wears off, switch out</td></tr></tbody></table></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "<div class=\"guide guide-content\"><a href=\"/guide\" class=\"back-link\">← Back to Guide</a><h1>Status Effects</h1><p>Status moves inflict conditions on the opponent. Fire-types can't be burned, Electric-types can't be paralyzed, Steel/Poison-types can't be poisoned. Stock up on Full Heals before tough battles.</p><table class=\"status-table\"><thead><tr><th>Status</th><th>Effect</th><th>Cure</th></tr></thead> <tbody><tr><td><strong>Burn</strong></td><td>Loses 1/8 HP per turn. Attack halved.</td><td>Burn Heal, Full Restore</td></tr><tr><td><strong>Poison</strong></td><td>Loses 1/8 HP per turn.</td><td>Antidote, Full Restore</td></tr><tr><td><strong>Bad Poison</strong></td><td>Loses increasing HP each turn (1/16, 2/16, ...).</td><td>Antidote, Full Restore</td></tr><tr><td><strong>Paralysis</strong></td><td>Speed quartered. 25% chance of not moving.</td><td>Paralyze Heal, Full Restore</td></tr><tr><td><strong>Sleep</strong></td><td>Cannot act for 1-3 turns.</td><td>Awakening, Full Restore</td></tr><tr><td><strong>Freeze</strong></td><td>Cannot act. 20% chance to thaw each turn.</td><td>Ice Heal, Full Restore</td></tr><tr><td><strong>Confusion</strong></td><td>50% chance of hitting self for 1-4 turns.</td><td>Wears off, switch out</td></tr></tbody></table></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -681,7 +681,7 @@ func GuideMovesPage() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "<div class=\"guide guide-content\"><a href=\"/guide\" class=\"back-link\">← Back to Guide</a><h1>Move Categories</h1><h2>Physical vs Special</h2><p>In Gen I-III (including FireRed/LeafGreen), whether a move is Physical or Special depends on its <strong>type</strong>. In Gen IV (HeartGold/SoulSilver), each move has its own category.</p><table class=\"move-cat-table\"><thead><tr><th>Category</th><th>Uses</th><th>Resisted By</th></tr></thead> <tbody><tr><td><strong>Physical</strong></td><td>Attack stat</td><td>Defense stat</td></tr><tr><td><strong>Special</strong></td><td>Sp. Atk stat</td><td>Sp. Def stat</td></tr><tr><td><strong>Status</strong></td><td>No damage</td><td>Varies</td></tr></tbody></table><h2>Gen III Type Categories (FRLG)</h2><p><strong>Physical types:</strong> Normal, Fighting, Flying, Poison, Ground, Rock, Bug, Ghost, Steel</p><p><strong>Special types:</strong> Fire, Water, Electric, Grass, Ice, Psychic, Dragon, Dark</p><h2>Gen IV Individual Split (HGSS)</h2><p>Each move is individually classified. For example, ThunderPunch is Physical even though Electric was Special in Gen III.</p></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "<div class=\"guide guide-content\"><a href=\"/guide\" class=\"back-link\">← Back to Guide</a><h1>Move Categories</h1><p>This matters because you want to match your Pokémon's higher stat (Attack or Sp.Atk) with the right move category for maximum damage.</p><h2>Physical vs Special</h2><p>In Gen I-III (including FireRed/LeafGreen), whether a move is Physical or Special depends on its <strong>type</strong>. In Gen IV (HeartGold/SoulSilver), each move has its own category.</p><table class=\"move-cat-table\"><thead><tr><th>Category</th><th>Uses</th><th>Resisted By</th></tr></thead> <tbody><tr><td><strong>Physical</strong></td><td>Attack stat</td><td>Defense stat</td></tr><tr><td><strong>Special</strong></td><td>Sp. Atk stat</td><td>Sp. Def stat</td></tr><tr><td><strong>Status</strong></td><td>No damage</td><td>Varies</td></tr></tbody></table><h2>Gen III Type Categories (FRLG)</h2><p><strong>Physical types:</strong> Normal, Fighting, Flying, Poison, Ground, Rock, Bug, Ghost, Steel</p><p><strong>Special types:</strong> Fire, Water, Electric, Grass, Ice, Psychic, Dragon, Dark</p><h2>Gen IV Individual Split (HGSS)</h2><p>Each move is individually classified. For example, ThunderPunch is Physical even though Electric was Special in Gen III.</p></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

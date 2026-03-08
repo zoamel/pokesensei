@@ -18,6 +18,7 @@ templ TeamBuilderPage(gs generated.GameState, slots []TeamSlotData) {
 			</section>
 			<section class="coverage-section">
 				<h2>Type Coverage</h2>
+				<p class="guide-intro">This grid shows what types your team can hit with super effective damage. <strong>2×</strong> = you have a move that deals double damage. <strong>1×</strong> = neutral damage. <strong>½×</strong> = your best move is resisted. <strong>0×</strong> = you have no way to damage this type. Look for gaps — those are types that will give your team trouble.</p>
 				<div
 					id="coverage-matrix"
 					hx-get="/team/coverage"
@@ -120,6 +121,7 @@ templ TeamCoveragePartial(types []generated.Type, coverage map[int32]int16) {
 	if hasGaps(coverage) {
 		<div class="coverage-warnings">
 			<h3>Coverage Gaps</h3>
+			<p class="guide-intro">These are types your team struggles against. Consider catching a Pokémon that covers these gaps.</p>
 			<ul>
 				for _, t := range types {
 					if coverage[t.ID] < 100 {

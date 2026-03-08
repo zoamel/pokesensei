@@ -17,6 +17,29 @@ templ DashboardPage(gs generated.GameState, team []generated.ListTeamMembersRow)
 					}
 				</div>
 			</section>
+			if gs.BadgeCount <= 2 || len(team) < 3 {
+				<section class="getting-started">
+					<h2>Getting Started</h2>
+					<div class="shortcut-grid">
+						<a href="/guide/basics" class="shortcut-card">
+							<h3>How Pokémon Works</h3>
+							<p>New to Pokémon? Learn the basics here</p>
+						</a>
+						<a href="/pokemon" class="shortcut-card">
+							<h3>Pokémon Finder</h3>
+							<p>See what Pokémon are available before your next badge</p>
+						</a>
+						<a href="/battle" class="shortcut-card">
+							<h3>Battle Helper</h3>
+							<p>Prepare for your next gym battle</p>
+						</a>
+						<a href="/guide/gym-tips" class="shortcut-card">
+							<h3>Gym Strategy Tips</h3>
+							<p>Advice for beating each gym leader</p>
+						</a>
+					</div>
+				</section>
+			}
 			<section class="tool-shortcuts">
 				<h2>Tools</h2>
 				<div class="shortcut-grid">
