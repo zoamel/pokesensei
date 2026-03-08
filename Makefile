@@ -33,7 +33,12 @@ migrate:
 setup:
 	docker compose up -d
 	@echo "Waiting for Postgres..."
-	@until pg_isready -h localhost -p 5432 -q 2>/dev/null; do sleep 0.5; done
+	@if command -v pg_isready >/dev/null 2>&1; then \
+		until pg_isready -h localhost -p 5432 -q 2>/dev/null; do sleep 0.5; done; \
+	else \
+		echo "(pg_isready not found, falling back to sleep)"; \
+		sleep 3; \
+	fi
 	goose -dir db/migrations postgres "$(DATABASE_URL)" up
 	@if [ "$$(psql "$(DATABASE_URL)" -tAc "SELECT count(*) FROM pokemon" 2>/dev/null)" = "0" ] || \
 	    [ "$$(psql "$(DATABASE_URL)" -tAc "SELECT count(*) FROM pokemon" 2>/dev/null)" = "" ]; then \

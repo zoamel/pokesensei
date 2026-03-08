@@ -2,6 +2,8 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -122,9 +124,21 @@ func (h *TeamHandler) HandleAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if slot == 0 {
-		http.Error(w, "Team is full", http.StatusConflict)
+		setHXTrigger(w, map[string]any{
+			"show-toast": map[string]string{"message": "Team is full (max 6)", "variant": "error"},
+		})
+		w.WriteHeader(http.StatusConflict)
 		return
 	}
+
+	// Fetch Pokémon name for the toast message
+	rows, err := h.store.GetPokemonWithTypes(ctx, int32(pokemonID))
+	if err != nil || len(rows) == 0 {
+		h.log.Error("failed to get pokemon", "error", err)
+		http.Error(w, "Pokémon not found", http.StatusBadRequest)
+		return
+	}
+	name := rows[0].Name
 
 	if _, err := h.store.AddTeamMember(ctx, generated.AddTeamMemberParams{
 		GameStateID: gs.ID,
@@ -138,8 +152,10 @@ func (h *TeamHandler) HandleAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Return updated team partial or trigger refresh
-	w.Header().Set("HX-Trigger", "team-updated")
+	setHXTrigger(w, map[string]any{
+		"team-updated": nil,
+		"show-toast":   map[string]string{"message": fmt.Sprintf("%s added to team!", name), "variant": "success"},
+	})
 	w.WriteHeader(http.StatusCreated)
 }
 
@@ -265,6 +281,12 @@ func (h *TeamHandler) HandleCoverage(w http.ResponseWriter, r *http.Request) {
 	if err := view.TeamCoveragePartial(types, coverage).Render(ctx, w); err != nil {
 		h.log.Error("failed to render coverage", "error", err)
 	}
+}
+
+// setHXTrigger encodes multiple HTMX trigger events as a single JSON header.
+func setHXTrigger(w http.ResponseWriter, events map[string]any) {
+	b, _ := json.Marshal(events)
+	w.Header().Set("HX-Trigger", string(b))
 }
 
 // computeCoverage returns a map of defender type ID -> best coverage factor from team.

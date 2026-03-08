@@ -216,6 +216,11 @@ type APIMove struct {
 	PP          int           `json:"pp"`
 	Type        NamedResource `json:"type"`
 	DamageClass NamedResource `json:"damage_class"`
+	EffectEntries []struct {
+		Effect   string        `json:"effect"`
+		Short    string        `json:"short_effect"`
+		Language NamedResource `json:"language"`
+	} `json:"effect_entries"`
 }
 
 type APIAbility struct {

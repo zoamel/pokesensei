@@ -77,6 +77,7 @@ type Move struct {
 	Accuracy    pgtype.Int2
 	Pp          int16
 	DamageClass string
+	Effect      string
 }
 
 type Nature struct {

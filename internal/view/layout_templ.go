@@ -231,7 +231,7 @@ func AppShell(title string, activePage string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</main>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</main><div class=\"toast-container\" x-data=\"{ toasts: [] }\" @show-toast.window=\"\n\t\t\t\tlet t = { id: Date.now(), message: $event.detail.message, variant: $event.detail.variant || 'success' };\n\t\t\t\ttoasts.push(t);\n\t\t\t\tsetTimeout(() => toasts = toasts.filter(x => x.id !== t.id), 3000)\n\t\t\t\"><template x-for=\"t in toasts\" :key=\"t.id\"><div class=\"toast\" :class=\"t.variant === 'error' && 'toast--error'\" x-text=\"t.message\"></div></template></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

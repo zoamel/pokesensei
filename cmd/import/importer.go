@@ -398,9 +398,17 @@ func (imp *Importer) ImportMoves(ctx context.Context) error {
 			accuracy = m.Accuracy
 		}
 
-		batch.Queue(`INSERT INTO moves (id, name, slug, type_id, power, accuracy, pp, damage_class)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-			m.ID, formatName(m.Name), m.Name, typeID, power, accuracy, m.PP, m.DamageClass.Name)
+		effect := ""
+		for _, e := range m.EffectEntries {
+			if e.Language.Name == "en" {
+				effect = e.Short
+				break
+			}
+		}
+
+		batch.Queue(`INSERT INTO moves (id, name, slug, type_id, power, accuracy, pp, damage_class, effect)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+			m.ID, formatName(m.Name), m.Name, typeID, power, accuracy, m.PP, m.DamageClass.Name, effect)
 		imp.movesSeen[m.ID] = true
 		count++
 

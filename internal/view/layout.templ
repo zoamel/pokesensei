@@ -35,5 +35,18 @@ templ AppShell(title string, activePage string) {
 		<main class="app-main">
 			{ children... }
 		</main>
+		<div
+			class="toast-container"
+			x-data="{ toasts: [] }"
+			@show-toast.window="
+				let t = { id: Date.now(), message: $event.detail.message, variant: $event.detail.variant || 'success' };
+				toasts.push(t);
+				setTimeout(() => toasts = toasts.filter(x => x.id !== t.id), 3000)
+			"
+		>
+			<template x-for="t in toasts" :key="t.id">
+				<div class="toast" :class="t.variant === 'error' && 'toast--error'" x-text="t.message"></div>
+			</template>
+		</div>
 	}
 }

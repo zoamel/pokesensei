@@ -12,7 +12,7 @@ import (
 )
 
 const getMoveByID = `-- name: GetMoveByID :one
-SELECT id, name, slug, type_id, power, accuracy, pp, damage_class
+SELECT id, name, slug, type_id, power, accuracy, pp, damage_class, effect
 FROM moves
 WHERE id = $1
 `
@@ -29,15 +29,18 @@ func (q *Queries) GetMoveByID(ctx context.Context, id int32) (Move, error) {
 		&i.Accuracy,
 		&i.Pp,
 		&i.DamageClass,
+		&i.Effect,
 	)
 	return i, err
 }
 
 const listPokemonMoves = `-- name: ListPokemonMoves :many
 SELECT pm.move_id, m.name, m.slug, m.type_id, m.power, m.accuracy, m.pp,
-       m.damage_class, pm.learn_method, pm.level_learned_at
+       m.damage_class, m.effect, pm.learn_method, pm.level_learned_at,
+       t.name AS type_name, t.slug AS type_slug
 FROM pokemon_moves pm
 JOIN moves m ON m.id = pm.move_id
+LEFT JOIN types t ON t.id = m.type_id
 WHERE pm.pokemon_id = $1
   AND pm.version_group_id = $2
 ORDER BY pm.learn_method, pm.level_learned_at, m.name
@@ -57,8 +60,11 @@ type ListPokemonMovesRow struct {
 	Accuracy       pgtype.Int2
 	Pp             int16
 	DamageClass    string
+	Effect         string
 	LearnMethod    string
 	LevelLearnedAt int16
+	TypeName       pgtype.Text
+	TypeSlug       pgtype.Text
 }
 
 func (q *Queries) ListPokemonMoves(ctx context.Context, arg ListPokemonMovesParams) ([]ListPokemonMovesRow, error) {
@@ -79,8 +85,11 @@ func (q *Queries) ListPokemonMoves(ctx context.Context, arg ListPokemonMovesPara
 			&i.Accuracy,
 			&i.Pp,
 			&i.DamageClass,
+			&i.Effect,
 			&i.LearnMethod,
 			&i.LevelLearnedAt,
+			&i.TypeName,
+			&i.TypeSlug,
 		); err != nil {
 			return nil, err
 		}
@@ -94,9 +103,11 @@ func (q *Queries) ListPokemonMoves(ctx context.Context, arg ListPokemonMovesPara
 
 const listPokemonMovesAtLevel = `-- name: ListPokemonMovesAtLevel :many
 SELECT pm.move_id, m.name, m.slug, m.type_id, m.power, m.accuracy, m.pp,
-       m.damage_class, pm.learn_method, pm.level_learned_at
+       m.damage_class, m.effect, pm.learn_method, pm.level_learned_at,
+       t.name AS type_name, t.slug AS type_slug
 FROM pokemon_moves pm
 JOIN moves m ON m.id = pm.move_id
+LEFT JOIN types t ON t.id = m.type_id
 WHERE pm.pokemon_id = $1
   AND pm.version_group_id = $2
   AND pm.learn_method = 'level-up'
@@ -119,8 +130,11 @@ type ListPokemonMovesAtLevelRow struct {
 	Accuracy       pgtype.Int2
 	Pp             int16
 	DamageClass    string
+	Effect         string
 	LearnMethod    string
 	LevelLearnedAt int16
+	TypeName       pgtype.Text
+	TypeSlug       pgtype.Text
 }
 
 func (q *Queries) ListPokemonMovesAtLevel(ctx context.Context, arg ListPokemonMovesAtLevelParams) ([]ListPokemonMovesAtLevelRow, error) {
@@ -141,8 +155,11 @@ func (q *Queries) ListPokemonMovesAtLevel(ctx context.Context, arg ListPokemonMo
 			&i.Accuracy,
 			&i.Pp,
 			&i.DamageClass,
+			&i.Effect,
 			&i.LearnMethod,
 			&i.LevelLearnedAt,
+			&i.TypeName,
+			&i.TypeSlug,
 		); err != nil {
 			return nil, err
 		}
