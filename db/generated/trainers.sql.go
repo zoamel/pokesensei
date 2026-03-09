@@ -7,19 +7,18 @@ package generated
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
+	"database/sql"
 )
 
 const getTrainerByID = `-- name: GetTrainerByID :one
 SELECT id, name, trainer_class, game_version_id, badge_number,
        specialty_type, sprite_url, encounter_name
 FROM trainers
-WHERE id = $1
+WHERE id = ?1
 `
 
-func (q *Queries) GetTrainerByID(ctx context.Context, id int32) (Trainer, error) {
-	row := q.db.QueryRow(ctx, getTrainerByID, id)
+func (q *Queries) GetTrainerByID(ctx context.Context, id int64) (Trainer, error) {
+	row := q.db.QueryRowContext(ctx, getTrainerByID, id)
 	var i Trainer
 	err := row.Scan(
 		&i.ID,
@@ -39,23 +38,23 @@ SELECT tp.id, tp.trainer_id, tp.pokemon_id, tp.level, tp.position,
        p.name AS pokemon_name, p.slug AS pokemon_slug, p.sprite_url
 FROM trainer_pokemon tp
 JOIN pokemon p ON p.id = tp.pokemon_id
-WHERE tp.trainer_id = $1
+WHERE tp.trainer_id = ?1
 ORDER BY tp.position
 `
 
 type ListTrainerPokemonRow struct {
-	ID          int32
-	TrainerID   int32
-	PokemonID   int32
-	Level       int16
-	Position    int16
+	ID          int64
+	TrainerID   int64
+	PokemonID   int64
+	Level       int64
+	Position    int64
 	PokemonName string
 	PokemonSlug string
 	SpriteUrl   string
 }
 
-func (q *Queries) ListTrainerPokemon(ctx context.Context, trainerID int32) ([]ListTrainerPokemonRow, error) {
-	rows, err := q.db.Query(ctx, listTrainerPokemon, trainerID)
+func (q *Queries) ListTrainerPokemon(ctx context.Context, trainerID int64) ([]ListTrainerPokemonRow, error) {
+	rows, err := q.db.QueryContext(ctx, listTrainerPokemon, trainerID)
 	if err != nil {
 		return nil, err
 	}
@@ -77,6 +76,9 @@ func (q *Queries) ListTrainerPokemon(ctx context.Context, trainerID int32) ([]Li
 		}
 		items = append(items, i)
 	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -88,25 +90,25 @@ SELECT tpm.id, tpm.trainer_pokemon_id, tpm.move_id, tpm.slot,
        m.name AS move_name, m.slug AS move_slug, m.type_id, m.power, m.accuracy, m.damage_class
 FROM trainer_pokemon_moves tpm
 JOIN moves m ON m.id = tpm.move_id
-WHERE tpm.trainer_pokemon_id = $1
+WHERE tpm.trainer_pokemon_id = ?1
 ORDER BY tpm.slot
 `
 
 type ListTrainerPokemonMovesRow struct {
-	ID               int32
-	TrainerPokemonID int32
-	MoveID           int32
-	Slot             int16
+	ID               int64
+	TrainerPokemonID int64
+	MoveID           int64
+	Slot             int64
 	MoveName         string
 	MoveSlug         string
-	TypeID           pgtype.Int4
-	Power            pgtype.Int2
-	Accuracy         pgtype.Int2
+	TypeID           sql.NullInt64
+	Power            sql.NullInt64
+	Accuracy         sql.NullInt64
 	DamageClass      string
 }
 
-func (q *Queries) ListTrainerPokemonMoves(ctx context.Context, trainerPokemonID int32) ([]ListTrainerPokemonMovesRow, error) {
-	rows, err := q.db.Query(ctx, listTrainerPokemonMoves, trainerPokemonID)
+func (q *Queries) ListTrainerPokemonMoves(ctx context.Context, trainerPokemonID int64) ([]ListTrainerPokemonMovesRow, error) {
+	rows, err := q.db.QueryContext(ctx, listTrainerPokemonMoves, trainerPokemonID)
 	if err != nil {
 		return nil, err
 	}
@@ -130,6 +132,9 @@ func (q *Queries) ListTrainerPokemonMoves(ctx context.Context, trainerPokemonID 
 		}
 		items = append(items, i)
 	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -140,18 +145,18 @@ const listTrainersByBadge = `-- name: ListTrainersByBadge :many
 SELECT id, name, trainer_class, game_version_id, badge_number,
        specialty_type, sprite_url, encounter_name
 FROM trainers
-WHERE game_version_id = $1
-  AND badge_number = $2
+WHERE game_version_id = ?1
+  AND badge_number = ?2
 ORDER BY name
 `
 
 type ListTrainersByBadgeParams struct {
-	GameVersionID int32
-	BadgeNumber   int16
+	GameVersionID int64
+	BadgeNumber   int64
 }
 
 func (q *Queries) ListTrainersByBadge(ctx context.Context, arg ListTrainersByBadgeParams) ([]Trainer, error) {
-	rows, err := q.db.Query(ctx, listTrainersByBadge, arg.GameVersionID, arg.BadgeNumber)
+	rows, err := q.db.QueryContext(ctx, listTrainersByBadge, arg.GameVersionID, arg.BadgeNumber)
 	if err != nil {
 		return nil, err
 	}
@@ -172,6 +177,9 @@ func (q *Queries) ListTrainersByBadge(ctx context.Context, arg ListTrainersByBad
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -183,12 +191,12 @@ const listTrainersByGame = `-- name: ListTrainersByGame :many
 SELECT t.id, t.name, t.trainer_class, t.game_version_id, t.badge_number,
        t.specialty_type, t.sprite_url, t.encounter_name
 FROM trainers t
-WHERE t.game_version_id = $1
+WHERE t.game_version_id = ?1
 ORDER BY t.badge_number, t.name
 `
 
-func (q *Queries) ListTrainersByGame(ctx context.Context, gameVersionID int32) ([]Trainer, error) {
-	rows, err := q.db.Query(ctx, listTrainersByGame, gameVersionID)
+func (q *Queries) ListTrainersByGame(ctx context.Context, gameVersionID int64) ([]Trainer, error) {
+	rows, err := q.db.QueryContext(ctx, listTrainersByGame, gameVersionID)
 	if err != nil {
 		return nil, err
 	}
@@ -209,6 +217,9 @@ func (q *Queries) ListTrainersByGame(ctx context.Context, gameVersionID int32) (
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

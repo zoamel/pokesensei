@@ -6,6 +6,6 @@ SELECT es.id, es.chain_id, es.pokemon_id, es.evolves_from_id,
 FROM evolution_steps es
 JOIN pokemon p ON p.id = es.pokemon_id
 WHERE es.chain_id = (
-    SELECT es2.chain_id FROM evolution_steps es2 WHERE es2.pokemon_id = $1 LIMIT 1
+    SELECT es2.chain_id FROM evolution_steps es2 WHERE es2.pokemon_id = ?1 LIMIT 1
 )
 ORDER BY es.position;

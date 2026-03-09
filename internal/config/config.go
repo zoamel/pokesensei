@@ -1,21 +1,20 @@
 package config
 
 import (
-	"fmt"
 	"log/slog"
 	"os"
 )
 
 type Config struct {
-	DatabaseURL string
-	Port        string
-	LogLevel    slog.Level
+	DatabasePath string
+	Port         string
+	LogLevel     slog.Level
 }
 
 func LoadFromEnv() (*Config, error) {
-	dbURL := os.Getenv("DATABASE_URL")
-	if dbURL == "" {
-		return nil, fmt.Errorf("DATABASE_URL is required")
+	dbPath := os.Getenv("DATABASE_PATH")
+	if dbPath == "" {
+		dbPath = "data/pokesensei.db"
 	}
 
 	port := os.Getenv("PORT")
@@ -24,9 +23,9 @@ func LoadFromEnv() (*Config, error) {
 	}
 
 	return &Config{
-		DatabaseURL: dbURL,
-		Port:        port,
-		LogLevel:    parseLogLevel(os.Getenv("LOG_LEVEL")),
+		DatabasePath: dbPath,
+		Port:         port,
+		LogLevel:     parseLogLevel(os.Getenv("LOG_LEVEL")),
 	}, nil
 }
 

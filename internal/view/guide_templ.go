@@ -60,7 +60,7 @@ func GuideIndexPage() templ.Component {
 	})
 }
 
-func GuideTypesPage(types []generated.Type, matrix map[int32]map[int32]int16) templ.Component {
+func GuideTypesPage(types []generated.Type, matrix map[int64]map[int64]int64) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -764,7 +764,7 @@ func typeAbbrev(name string) string {
 	return name[:3]
 }
 
-func efficacyClass(factor int16) string {
+func efficacyClass(factor int64) string {
 	switch factor {
 	case 200:
 		return "eff-super"
@@ -777,7 +777,7 @@ func efficacyClass(factor int16) string {
 	}
 }
 
-func efficacySymbol(factor int16) string {
+func efficacySymbol(factor int64) string {
 	switch factor {
 	case 200:
 		return "2×"

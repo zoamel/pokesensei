@@ -1,6 +1,8 @@
 -include .env
 export
 
+DATABASE_PATH ?= data/pokesensei.db
+
 .PHONY: tools generate templ sqlc dev migrate setup import build clean
 
 ## Install development tools
@@ -21,36 +23,29 @@ templ:
 sqlc:
 	sqlc generate
 
-## Start dev server with hot reload (requires Docker Compose running)
+## Start dev server with hot reload
 dev:
 	air
 
 ## Run database migrations
 migrate:
-	goose -dir db/migrations postgres "$(DATABASE_URL)" up
+	goose -dir db/migrations sqlite3 "$(DATABASE_PATH)" up
 
-## One-time setup: start Postgres, run migrations, import data if needed
+## One-time setup: run migrations and import data if DB is empty
 setup:
-	docker compose up -d
-	@echo "Waiting for Postgres..."
-	@if command -v pg_isready >/dev/null 2>&1; then \
-		until pg_isready -h localhost -p 5432 -q 2>/dev/null; do sleep 0.5; done; \
-	else \
-		echo "(pg_isready not found, falling back to sleep)"; \
-		sleep 3; \
-	fi
-	goose -dir db/migrations postgres "$(DATABASE_URL)" up
-	@if [ "$$(psql "$(DATABASE_URL)" -tAc "SELECT count(*) FROM pokemon" 2>/dev/null)" = "0" ] || \
-	    [ "$$(psql "$(DATABASE_URL)" -tAc "SELECT count(*) FROM pokemon" 2>/dev/null)" = "" ]; then \
+	@mkdir -p data
+	goose -dir db/migrations sqlite3 "$(DATABASE_PATH)" up
+	@count=$$(sqlite3 "$(DATABASE_PATH)" "SELECT count(*) FROM pokemon;" 2>/dev/null || echo "0"); \
+	if [ "$$count" = "0" ] || [ "$$count" = "" ]; then \
 		echo "Database empty — importing data..."; \
-		go run ./cmd/import/ --database-url "$(DATABASE_URL)" --games frlg,hgss --seed-trainers; \
+		go run ./cmd/import/ --database-path "$(DATABASE_PATH)" --games frlg,hgss --seed-trainers; \
 	else \
 		echo "Data already imported — skipping (use 'make import' to force re-import)"; \
 	fi
 
-## Import PokéAPI data + trainer seeds (re-runnable, truncates and reloads)
+## Import PokéAPI data + trainer seeds (re-runnable, deletes and reloads)
 import:
-	go run ./cmd/import/ --database-url "$(DATABASE_URL)" --games frlg,hgss --seed-trainers
+	go run ./cmd/import/ --database-path "$(DATABASE_PATH)" --games frlg,hgss --seed-trainers
 
 ## Build production binary
 build: generate

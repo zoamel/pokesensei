@@ -9,19 +9,19 @@ func New() *Engine {
 
 // Pokemon represents a Pokémon in a matchup.
 type Pokemon struct {
-	ID        int32
+	ID        int64
 	Name      string
 	SpriteURL string
-	Types     []int32
-	Level     int16
+	Types     []int64
+	Level     int64
 }
 
 // Move represents a move a Pokémon can use.
 type Move struct {
-	ID          int32
+	ID          int64
 	Name        string
-	TypeID      int32
-	Power       int16  // 0 for status moves
+	TypeID      int64
+	Power       int64  // 0 for status moves
 	DamageClass string // physical, special, status
 }
 
@@ -34,7 +34,7 @@ type MatchupResult struct {
 }
 
 // RankTeam scores each team member against a single opponent Pokémon.
-func (e *Engine) RankTeam(team []Pokemon, teamMoves map[int32][]Move, opponent Pokemon, efficacy map[int32]map[int32]int16) []MatchupResult {
+func (e *Engine) RankTeam(team []Pokemon, teamMoves map[int64][]Move, opponent Pokemon, efficacy map[int64]map[int64]int64) []MatchupResult {
 	var results []MatchupResult
 
 	for _, member := range team {
@@ -67,7 +67,7 @@ func (e *Engine) RankTeam(team []Pokemon, teamMoves map[int32][]Move, opponent P
 	return results
 }
 
-func calcMoveScore(move *Move, attackerTypes []int32, defenderTypes []int32, efficacy map[int32]map[int32]int16) float64 {
+func calcMoveScore(move *Move, attackerTypes []int64, defenderTypes []int64, efficacy map[int64]map[int64]int64) float64 {
 	// Type effectiveness (multiply across defender types)
 	effectiveness := 1.0
 	for _, defType := range defenderTypes {

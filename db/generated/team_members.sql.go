@@ -11,20 +11,20 @@ import (
 
 const addTeamMember = `-- name: AddTeamMember :one
 INSERT INTO team_members (game_state_id, pokemon_id, level, slot, is_locked)
-VALUES ($1, $2, $3, $4, $5)
+VALUES (?1, ?2, ?3, ?4, ?5)
 RETURNING id, game_state_id, pokemon_id, level, slot, is_locked
 `
 
 type AddTeamMemberParams struct {
-	GameStateID int32
-	PokemonID   int32
-	Level       int16
-	Slot        int16
-	IsLocked    bool
+	GameStateID int64
+	PokemonID   int64
+	Level       int64
+	Slot        int64
+	IsLocked    int64
 }
 
 func (q *Queries) AddTeamMember(ctx context.Context, arg AddTeamMemberParams) (TeamMember, error) {
-	row := q.db.QueryRow(ctx, addTeamMember,
+	row := q.db.QueryRowContext(ctx, addTeamMember,
 		arg.GameStateID,
 		arg.PokemonID,
 		arg.Level,
@@ -44,11 +44,11 @@ func (q *Queries) AddTeamMember(ctx context.Context, arg AddTeamMemberParams) (T
 }
 
 const clearTeam = `-- name: ClearTeam :exec
-DELETE FROM team_members WHERE game_state_id = $1
+DELETE FROM team_members WHERE game_state_id = ?1
 `
 
-func (q *Queries) ClearTeam(ctx context.Context, gameStateID int32) error {
-	_, err := q.db.Exec(ctx, clearTeam, gameStateID)
+func (q *Queries) ClearTeam(ctx context.Context, gameStateID int64) error {
+	_, err := q.db.ExecContext(ctx, clearTeam, gameStateID)
 	return err
 }
 
@@ -57,24 +57,24 @@ SELECT tm.id, tm.game_state_id, tm.pokemon_id, tm.level, tm.slot, tm.is_locked,
        p.name AS pokemon_name, p.slug AS pokemon_slug, p.sprite_url
 FROM team_members tm
 JOIN pokemon p ON p.id = tm.pokemon_id
-WHERE tm.game_state_id = $1
+WHERE tm.game_state_id = ?1
 ORDER BY tm.slot
 `
 
 type ListTeamMembersRow struct {
-	ID          int32
-	GameStateID int32
-	PokemonID   int32
-	Level       int16
-	Slot        int16
-	IsLocked    bool
+	ID          int64
+	GameStateID int64
+	PokemonID   int64
+	Level       int64
+	Slot        int64
+	IsLocked    int64
 	PokemonName string
 	PokemonSlug string
 	SpriteUrl   string
 }
 
-func (q *Queries) ListTeamMembers(ctx context.Context, gameStateID int32) ([]ListTeamMembersRow, error) {
-	rows, err := q.db.Query(ctx, listTeamMembers, gameStateID)
+func (q *Queries) ListTeamMembers(ctx context.Context, gameStateID int64) ([]ListTeamMembersRow, error) {
+	rows, err := q.db.QueryContext(ctx, listTeamMembers, gameStateID)
 	if err != nil {
 		return nil, err
 	}
@@ -97,6 +97,9 @@ func (q *Queries) ListTeamMembers(ctx context.Context, gameStateID int32) ([]Lis
 		}
 		items = append(items, i)
 	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -104,38 +107,38 @@ func (q *Queries) ListTeamMembers(ctx context.Context, gameStateID int32) ([]Lis
 }
 
 const removeTeamMember = `-- name: RemoveTeamMember :exec
-DELETE FROM team_members WHERE id = $1
+DELETE FROM team_members WHERE id = ?1
 `
 
-func (q *Queries) RemoveTeamMember(ctx context.Context, id int32) error {
-	_, err := q.db.Exec(ctx, removeTeamMember, id)
+func (q *Queries) RemoveTeamMember(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, removeTeamMember, id)
 	return err
 }
 
 const updateTeamMemberLevel = `-- name: UpdateTeamMemberLevel :exec
-UPDATE team_members SET level = $1 WHERE id = $2
+UPDATE team_members SET level = ?1 WHERE id = ?2
 `
 
 type UpdateTeamMemberLevelParams struct {
-	Level int16
-	ID    int32
+	Level int64
+	ID    int64
 }
 
 func (q *Queries) UpdateTeamMemberLevel(ctx context.Context, arg UpdateTeamMemberLevelParams) error {
-	_, err := q.db.Exec(ctx, updateTeamMemberLevel, arg.Level, arg.ID)
+	_, err := q.db.ExecContext(ctx, updateTeamMemberLevel, arg.Level, arg.ID)
 	return err
 }
 
 const updateTeamMemberLock = `-- name: UpdateTeamMemberLock :exec
-UPDATE team_members SET is_locked = $1 WHERE id = $2
+UPDATE team_members SET is_locked = ?1 WHERE id = ?2
 `
 
 type UpdateTeamMemberLockParams struct {
-	IsLocked bool
-	ID       int32
+	IsLocked int64
+	ID       int64
 }
 
 func (q *Queries) UpdateTeamMemberLock(ctx context.Context, arg UpdateTeamMemberLockParams) error {
-	_, err := q.db.Exec(ctx, updateTeamMemberLock, arg.IsLocked, arg.ID)
+	_, err := q.db.ExecContext(ctx, updateTeamMemberLock, arg.IsLocked, arg.ID)
 	return err
 }

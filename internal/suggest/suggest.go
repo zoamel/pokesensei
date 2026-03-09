@@ -10,12 +10,12 @@ func New() *Engine {
 
 // Pokemon represents a candidate for the team.
 type Pokemon struct {
-	ID            int32
+	ID            int64
 	Name          string
 	SpriteURL     string
-	Types         []int32 // type IDs
+	Types         []int64 // type IDs
 	TradeRequired bool
-	BadgeRequired int16
+	BadgeRequired int64
 }
 
 // TeamSlot represents a current or suggested team member.
@@ -30,9 +30,9 @@ type SuggestionInput struct {
 	Starter        *Pokemon
 	CurrentTeam    []TeamSlot // existing team (locked slots respected)
 	Candidates     []Pokemon  // all available Pokémon
-	BadgeCount     int16
+	BadgeCount     int64
 	TradingEnabled bool
-	Efficacy       map[int32]map[int32]int16 // [attacker_type][defender_type] = factor
+	Efficacy       map[int64]map[int64]int64 // [attacker_type][defender_type] = factor
 }
 
 // SuggestionResult holds a suggested team.
@@ -61,7 +61,7 @@ func (e *Engine) fillTeam(input SuggestionInput, candidates []Pokemon) Suggestio
 	}
 
 	// Copy locked slots
-	teamTypes := make([]int32, 0)
+	teamTypes := make([]int64, 0)
 	for _, slot := range input.CurrentTeam {
 		if slot.IsLocked && slot.Pokemon != nil {
 			idx := slot.Slot - 1
@@ -82,7 +82,7 @@ func (e *Engine) fillTeam(input SuggestionInput, candidates []Pokemon) Suggestio
 	}
 
 	// Greedy fill remaining slots
-	used := make(map[int32]bool)
+	used := make(map[int64]bool)
 	for _, slot := range result.Slots {
 		if slot.Pokemon != nil {
 			used[slot.Pokemon.ID] = true
@@ -109,7 +109,7 @@ func (e *Engine) fillTeam(input SuggestionInput, candidates []Pokemon) Suggestio
 }
 
 // findBestCandidate scores each candidate by coverage improvement.
-func findBestCandidate(candidates []Pokemon, teamTypes []int32, used map[int32]bool, efficacy map[int32]map[int32]int16) *Pokemon {
+func findBestCandidate(candidates []Pokemon, teamTypes []int64, used map[int64]bool, efficacy map[int64]map[int64]int64) *Pokemon {
 	var best *Pokemon
 	bestScore := -1
 
@@ -140,9 +140,9 @@ func findBestCandidate(candidates []Pokemon, teamTypes []int32, used map[int32]b
 }
 
 // scoreCoverage counts how many new super-effective matchups this candidate adds.
-func scoreCoverage(candidateTypes []int32, teamTypes []int32, efficacy map[int32]map[int32]int16) int {
+func scoreCoverage(candidateTypes []int64, teamTypes []int64, efficacy map[int64]map[int64]int64) int {
 	// Find types the team can already hit super-effectively
-	covered := make(map[int32]bool)
+	covered := make(map[int64]bool)
 	for _, atkType := range teamTypes {
 		if defenders, ok := efficacy[atkType]; ok {
 			for defType, factor := range defenders {
@@ -168,7 +168,7 @@ func scoreCoverage(candidateTypes []int32, teamTypes []int32, efficacy map[int32
 	return score
 }
 
-func filterByBadge(candidates []Pokemon, badge int16, tradingEnabled bool) []Pokemon {
+func filterByBadge(candidates []Pokemon, badge int64, tradingEnabled bool) []Pokemon {
 	var result []Pokemon
 	for _, c := range candidates {
 		if c.BadgeRequired > badge {

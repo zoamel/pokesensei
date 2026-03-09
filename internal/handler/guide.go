@@ -5,8 +5,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/jackc/pgx/v5/pgtype"
-
 	"zoamel/pokesensei/db/generated"
 	"zoamel/pokesensei/internal/view"
 )
@@ -16,7 +14,7 @@ type GuideStore interface {
 	GetTypeEfficacy(ctx context.Context) ([]generated.TypeEfficacy, error)
 	ListNatures(ctx context.Context) ([]generated.Nature, error)
 	ListAbilities(ctx context.Context) ([]generated.Ability, error)
-	SearchAbilities(ctx context.Context, dollar1 pgtype.Text) ([]generated.Ability, error)
+	SearchAbilities(ctx context.Context, dollar1 string) ([]generated.Ability, error)
 }
 
 type GuideHandler struct {
@@ -54,10 +52,10 @@ func (h *GuideHandler) HandleTypes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Build matrix: [attacker_id][defender_id] = factor
-	matrix := make(map[int32]map[int32]int16)
+	matrix := make(map[int64]map[int64]int64)
 	for _, e := range efficacy {
 		if matrix[e.AttackingTypeID] == nil {
-			matrix[e.AttackingTypeID] = make(map[int32]int16)
+			matrix[e.AttackingTypeID] = make(map[int64]int64)
 		}
 		matrix[e.AttackingTypeID][e.DefendingTypeID] = e.DamageFactor
 	}
@@ -112,7 +110,7 @@ func (h *GuideHandler) HandleAbilitySearch(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	abilities, err := h.store.SearchAbilities(ctx, pgtype.Text{String: query, Valid: true})
+	abilities, err := h.store.SearchAbilities(ctx, query)
 	if err != nil {
 		h.log.Error("ability search failed", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

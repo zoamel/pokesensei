@@ -68,7 +68,7 @@ func SettingsPage(gs generated.GameState, versions []generated.GameVersion) temp
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				if gs.GameVersionID.Valid && gs.GameVersionID.Int32 == v.ID {
+				if gs.GameVersionID.Valid && gs.GameVersionID.Int64 == v.ID {
 					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, " selected")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -114,7 +114,7 @@ func SettingsPage(gs generated.GameState, versions []generated.GameVersion) temp
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				if int16(i) == gs.BadgeCount {
+				if int64(i) == gs.BadgeCount {
 					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, " checked")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -149,7 +149,7 @@ func SettingsPage(gs generated.GameState, versions []generated.GameVersion) temp
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if gs.TradingEnabled {
+			if gs.TradingEnabled != 0 {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, " checked")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

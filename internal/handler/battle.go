@@ -2,11 +2,10 @@ package handler
 
 import (
 	"context"
+	"database/sql"
 	"log/slog"
 	"net/http"
 	"strconv"
-
-	"github.com/jackc/pgx/v5/pgtype"
 
 	"zoamel/pokesensei/db/generated"
 	"zoamel/pokesensei/internal/matchup"
@@ -15,13 +14,13 @@ import (
 
 type BattleStore interface {
 	GetGameState(ctx context.Context) (generated.GameState, error)
-	ListTeamMembers(ctx context.Context, gameStateID int32) ([]generated.ListTeamMembersRow, error)
-	ListTrainersByGame(ctx context.Context, gameVersionID int32) ([]generated.Trainer, error)
-	GetTrainerByID(ctx context.Context, id int32) (generated.Trainer, error)
-	ListTrainerPokemon(ctx context.Context, trainerID int32) ([]generated.ListTrainerPokemonRow, error)
-	ListTrainerPokemonMoves(ctx context.Context, trainerPokemonID int32) ([]generated.ListTrainerPokemonMovesRow, error)
-	GetPokemonByID(ctx context.Context, id int32) (generated.Pokemon, error)
-	GetPokemonWithTypes(ctx context.Context, id int32) ([]generated.GetPokemonWithTypesRow, error)
+	ListTeamMembers(ctx context.Context, gameStateID int64) ([]generated.ListTeamMembersRow, error)
+	ListTrainersByGame(ctx context.Context, gameVersionID int64) ([]generated.Trainer, error)
+	GetTrainerByID(ctx context.Context, id int64) (generated.Trainer, error)
+	ListTrainerPokemon(ctx context.Context, trainerID int64) ([]generated.ListTrainerPokemonRow, error)
+	ListTrainerPokemonMoves(ctx context.Context, trainerPokemonID int64) ([]generated.ListTrainerPokemonMovesRow, error)
+	GetPokemonByID(ctx context.Context, id int64) (generated.Pokemon, error)
+	GetPokemonWithTypes(ctx context.Context, id int64) ([]generated.GetPokemonWithTypesRow, error)
 	ListPokemonMovesAtLevel(ctx context.Context, arg generated.ListPokemonMovesAtLevelParams) ([]generated.ListPokemonMovesAtLevelRow, error)
 	GetTypeEfficacy(ctx context.Context) ([]generated.TypeEfficacy, error)
 	SearchPokemonFiltered(ctx context.Context, arg generated.SearchPokemonFilteredParams) ([]generated.Pokemon, error)
@@ -53,7 +52,7 @@ func (h *BattleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	var trainers []generated.Trainer
 	if gs.GameVersionID.Valid {
-		trainers, _ = h.store.ListTrainersByGame(ctx, gs.GameVersionID.Int32)
+		trainers, _ = h.store.ListTrainersByGame(ctx, gs.GameVersionID.Int64)
 	}
 
 	if err := view.BattlePage(trainers).Render(ctx, w); err != nil {
@@ -65,19 +64,19 @@ func (h *BattleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *BattleHandler) HandleTrainerMatchup(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	trainerID, err := strconv.Atoi(r.PathValue("id"))
+	trainerID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid trainer ID", http.StatusBadRequest)
 		return
 	}
 
-	trainer, err := h.store.GetTrainerByID(ctx, int32(trainerID))
+	trainer, err := h.store.GetTrainerByID(ctx, trainerID)
 	if err != nil {
 		http.Error(w, "Trainer not found", http.StatusNotFound)
 		return
 	}
 
-	trainerPokemon, err := h.store.ListTrainerPokemon(ctx, int32(trainerID))
+	trainerPokemon, err := h.store.ListTrainerPokemon(ctx, trainerID)
 	if err != nil {
 		h.log.Error("failed to list trainer pokemon", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -90,7 +89,7 @@ func (h *BattleHandler) HandleTrainerMatchup(w http.ResponseWriter, r *http.Requ
 	var matchups []view.BattleMatchup
 	for _, tp := range trainerPokemon {
 		types, _ := h.store.GetPokemonWithTypes(ctx, tp.PokemonID)
-		var typeIDs []int32
+		var typeIDs []int64
 		for _, t := range types {
 			typeIDs = append(typeIDs, t.TypeID)
 		}
@@ -120,20 +119,20 @@ func (h *BattleHandler) HandleTrainerMatchup(w http.ResponseWriter, r *http.Requ
 func (h *BattleHandler) HandlePokemonMatchup(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	pokemonID, err := strconv.Atoi(r.PathValue("id"))
+	pokemonID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid Pokémon ID", http.StatusBadRequest)
 		return
 	}
 
-	pokemon, err := h.store.GetPokemonByID(ctx, int32(pokemonID))
+	pokemon, err := h.store.GetPokemonByID(ctx, pokemonID)
 	if err != nil {
 		http.Error(w, "Pokémon not found", http.StatusNotFound)
 		return
 	}
 
-	types, _ := h.store.GetPokemonWithTypes(ctx, int32(pokemonID))
-	var typeIDs []int32
+	types, _ := h.store.GetPokemonWithTypes(ctx, pokemonID)
+	var typeIDs []int64
 	for _, t := range types {
 		typeIDs = append(typeIDs, t.TypeID)
 	}
@@ -169,7 +168,7 @@ func (h *BattleHandler) HandleSearch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	params := generated.SearchPokemonFilteredParams{
-		Name: pgtype.Text{String: name, Valid: true},
+		Name: sql.NullString{String: name, Valid: true},
 	}
 
 	results, err := h.store.SearchPokemonFiltered(ctx, params)
@@ -184,7 +183,7 @@ func (h *BattleHandler) HandleSearch(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *BattleHandler) loadTeamAndEfficacy(ctx context.Context) ([]matchup.Pokemon, map[int32]map[int32]int16) {
+func (h *BattleHandler) loadTeamAndEfficacy(ctx context.Context) ([]matchup.Pokemon, map[int64]map[int64]int64) {
 	gs, err := h.store.GetGameState(ctx)
 	if err != nil {
 		return nil, nil
@@ -194,7 +193,7 @@ func (h *BattleHandler) loadTeamAndEfficacy(ctx context.Context) ([]matchup.Poke
 	var team []matchup.Pokemon
 	for _, m := range members {
 		types, _ := h.store.GetPokemonWithTypes(ctx, m.PokemonID)
-		var typeIDs []int32
+		var typeIDs []int64
 		for _, t := range types {
 			typeIDs = append(typeIDs, t.TypeID)
 		}
@@ -208,10 +207,10 @@ func (h *BattleHandler) loadTeamAndEfficacy(ctx context.Context) ([]matchup.Poke
 	}
 
 	efficacyRows, _ := h.store.GetTypeEfficacy(ctx)
-	efficacy := make(map[int32]map[int32]int16)
+	efficacy := make(map[int64]map[int64]int64)
 	for _, e := range efficacyRows {
 		if efficacy[e.AttackingTypeID] == nil {
-			efficacy[e.AttackingTypeID] = make(map[int32]int16)
+			efficacy[e.AttackingTypeID] = make(map[int64]int64)
 		}
 		efficacy[e.AttackingTypeID][e.DefendingTypeID] = e.DamageFactor
 	}
@@ -219,14 +218,14 @@ func (h *BattleHandler) loadTeamAndEfficacy(ctx context.Context) ([]matchup.Poke
 	return team, efficacy
 }
 
-func (h *BattleHandler) loadTeamMoves(ctx context.Context, team []matchup.Pokemon) map[int32][]matchup.Move {
+func (h *BattleHandler) loadTeamMoves(ctx context.Context, team []matchup.Pokemon) map[int64][]matchup.Move {
 	gs, _ := h.store.GetGameState(ctx)
-	vgID := int32(7)
+	vgID := int64(7)
 	if gs.GameVersionID.Valid {
-		vgID = int32(versionGroupForGame(gs.GameVersionID.Int32))
+		vgID = int64(versionGroupForGame(gs.GameVersionID.Int64))
 	}
 
-	moves := make(map[int32][]matchup.Move)
+	moves := make(map[int64][]matchup.Move)
 	for _, member := range team {
 		level := member.Level
 		if level == 0 {
@@ -238,13 +237,13 @@ func (h *BattleHandler) loadTeamMoves(ctx context.Context, team []matchup.Pokemo
 			LevelLearnedAt: level,
 		})
 		for _, r := range rows {
-			power := int16(0)
+			power := int64(0)
 			if r.Power.Valid {
-				power = r.Power.Int16
+				power = r.Power.Int64
 			}
-			var typeID int32
+			var typeID int64
 			if r.TypeID.Valid {
-				typeID = r.TypeID.Int32
+				typeID = r.TypeID.Int64
 			}
 			moves[member.ID] = append(moves[member.ID], matchup.Move{
 				ID:          r.MoveID,

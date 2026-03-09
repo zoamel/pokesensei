@@ -14,12 +14,12 @@ import (
 
 type TeamStore interface {
 	GetGameState(ctx context.Context) (generated.GameState, error)
-	ListTeamMembers(ctx context.Context, gameStateID int32) ([]generated.ListTeamMembersRow, error)
+	ListTeamMembers(ctx context.Context, gameStateID int64) ([]generated.ListTeamMembersRow, error)
 	AddTeamMember(ctx context.Context, arg generated.AddTeamMemberParams) (generated.TeamMember, error)
-	RemoveTeamMember(ctx context.Context, id int32) error
+	RemoveTeamMember(ctx context.Context, id int64) error
 	UpdateTeamMemberLevel(ctx context.Context, arg generated.UpdateTeamMemberLevelParams) error
 	UpdateTeamMemberLock(ctx context.Context, arg generated.UpdateTeamMemberLockParams) error
-	GetPokemonWithTypes(ctx context.Context, id int32) ([]generated.GetPokemonWithTypesRow, error)
+	GetPokemonWithTypes(ctx context.Context, id int64) ([]generated.GetPokemonWithTypesRow, error)
 	ListTypes(ctx context.Context) ([]generated.Type, error)
 	GetTypeEfficacy(ctx context.Context) ([]generated.TypeEfficacy, error)
 }
@@ -91,15 +91,15 @@ func (h *TeamHandler) HandleAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pokemonID, err := strconv.Atoi(r.FormValue("pokemon_id"))
+	pokemonID, err := strconv.ParseInt(r.FormValue("pokemon_id"), 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid Pokémon ID", http.StatusBadRequest)
 		return
 	}
 
-	level := 5
+	level := int64(5)
 	if l, err := strconv.Atoi(r.FormValue("level")); err == nil && l >= 1 && l <= 100 {
-		level = l
+		level = int64(l)
 	}
 
 	// Find next available slot
@@ -132,7 +132,7 @@ func (h *TeamHandler) HandleAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fetch Pokémon name for the toast message
-	rows, err := h.store.GetPokemonWithTypes(ctx, int32(pokemonID))
+	rows, err := h.store.GetPokemonWithTypes(ctx, pokemonID)
 	if err != nil || len(rows) == 0 {
 		h.log.Error("failed to get pokemon", "error", err)
 		http.Error(w, "Pokémon not found", http.StatusBadRequest)
@@ -142,10 +142,10 @@ func (h *TeamHandler) HandleAdd(w http.ResponseWriter, r *http.Request) {
 
 	if _, err := h.store.AddTeamMember(ctx, generated.AddTeamMemberParams{
 		GameStateID: gs.ID,
-		PokemonID:   int32(pokemonID),
-		Level:       int16(level),
-		Slot:        int16(slot),
-		IsLocked:    false,
+		PokemonID:   pokemonID,
+		Level:       level,
+		Slot:        int64(slot),
+		IsLocked:    0,
 	}); err != nil {
 		h.log.Error("failed to add team member", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -161,14 +161,13 @@ func (h *TeamHandler) HandleAdd(w http.ResponseWriter, r *http.Request) {
 
 // DELETE /team/members/{id} — remove from team
 func (h *TeamHandler) HandleRemove(w http.ResponseWriter, r *http.Request) {
-	idStr := r.PathValue("id")
-	id, err := strconv.Atoi(idStr)
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid member ID", http.StatusBadRequest)
 		return
 	}
 
-	if err := h.store.RemoveTeamMember(r.Context(), int32(id)); err != nil {
+	if err := h.store.RemoveTeamMember(r.Context(), id); err != nil {
 		h.log.Error("failed to remove team member", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -185,8 +184,7 @@ func (h *TeamHandler) HandleUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	idStr := r.PathValue("id")
-	id, err := strconv.Atoi(idStr)
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid member ID", http.StatusBadRequest)
 		return
@@ -201,8 +199,8 @@ func (h *TeamHandler) HandleUpdate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if err := h.store.UpdateTeamMemberLevel(ctx, generated.UpdateTeamMemberLevelParams{
-			Level: int16(level),
-			ID:    int32(id),
+			Level: int64(level),
+			ID:    id,
 		}); err != nil {
 			h.log.Error("failed to update level", "error", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -212,9 +210,13 @@ func (h *TeamHandler) HandleUpdate(w http.ResponseWriter, r *http.Request) {
 
 	if lockStr := r.FormValue("is_locked"); lockStr != "" {
 		locked := lockStr == "true" || lockStr == "on"
+		var lockedVal int64
+		if locked {
+			lockedVal = 1
+		}
 		if err := h.store.UpdateTeamMemberLock(ctx, generated.UpdateTeamMemberLockParams{
-			IsLocked: locked,
-			ID:       int32(id),
+			IsLocked: lockedVal,
+			ID:       id,
 		}); err != nil {
 			h.log.Error("failed to update lock", "error", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -258,19 +260,19 @@ func (h *TeamHandler) HandleCoverage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Build efficacy lookup: [attacker][defender] = factor
-	efficacyMap := make(map[int32]map[int32]int16)
+	efficacyMap := make(map[int64]map[int64]int64)
 	for _, e := range efficacy {
 		if efficacyMap[e.AttackingTypeID] == nil {
-			efficacyMap[e.AttackingTypeID] = make(map[int32]int16)
+			efficacyMap[e.AttackingTypeID] = make(map[int64]int64)
 		}
 		efficacyMap[e.AttackingTypeID][e.DefendingTypeID] = e.DamageFactor
 	}
 
 	// Get team types
-	teamTypes := make([][]int32, 0)
+	teamTypes := make([][]int64, 0)
 	for _, m := range team {
 		pokemonTypes, _ := h.store.GetPokemonWithTypes(ctx, m.PokemonID)
-		var typeIDs []int32
+		var typeIDs []int64
 		for _, pt := range pokemonTypes {
 			typeIDs = append(typeIDs, pt.TypeID)
 		}
@@ -291,10 +293,10 @@ func setHXTrigger(w http.ResponseWriter, events map[string]any) {
 
 // computeCoverage returns a map of defender type ID -> best coverage factor from team.
 // Factor > 100 means the team has a super-effective option.
-func computeCoverage(types []generated.Type, teamTypes [][]int32, efficacy map[int32]map[int32]int16) map[int32]int16 {
-	coverage := make(map[int32]int16)
+func computeCoverage(types []generated.Type, teamTypes [][]int64, efficacy map[int64]map[int64]int64) map[int64]int64 {
+	coverage := make(map[int64]int64)
 	for _, t := range types {
-		best := int16(0)
+		best := int64(0)
 		for _, memberTypes := range teamTypes {
 			for _, atkType := range memberTypes {
 				if factor, ok := efficacy[atkType][t.ID]; ok && factor > best {

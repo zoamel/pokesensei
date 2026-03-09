@@ -56,7 +56,7 @@ func PokemonFinderPage(types []generated.Type, gs generated.GameState) templ.Com
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var3 string
-				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(gs.GameVersionID.Int32))
+				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(gs.GameVersionID.Int64))
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pokemon.templ`, Line: 17, Col: 93}
 				}
@@ -132,7 +132,7 @@ func PokemonFinderPage(types []generated.Type, gs generated.GameState) templ.Com
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					if int16(i) == gs.BadgeCount {
+					if int64(i) == gs.BadgeCount {
 						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, " selected")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
@@ -528,7 +528,7 @@ func PokemonDetailPage(detail PokemonDetail) templ.Component {
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					if a.IsHidden {
+					if a.IsHidden != 0 {
 						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "<span class=\"badge-hidden\">Hidden</span> ")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
@@ -643,7 +643,7 @@ func PokemonDetailPage(detail PokemonDetail) templ.Component {
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					if evo.TradeRequired {
+					if evo.TradeRequired != 0 {
 						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "<span class=\"badge-trade\">Trade</span> ")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
@@ -655,7 +655,7 @@ func PokemonDetailPage(detail PokemonDetail) templ.Component {
 							return templ_7745c5c3_Err
 						}
 						var templ_7745c5c3_Var35 string
-						templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("Lv. %d", evo.MinLevel.Int16))
+						templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("Lv. %d", evo.MinLevel.Int64))
 						if templ_7745c5c3_Err != nil {
 							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pokemon.templ`, Line: 186, Col: 77}
 						}
@@ -930,7 +930,7 @@ func PokemonDetailPage(detail PokemonDetail) templ.Component {
 					}
 					if m.Power.Valid {
 						var templ_7745c5c3_Var51 string
-						templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(m.Power.Int16))
+						templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(m.Power.Int64))
 						if templ_7745c5c3_Err != nil {
 							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pokemon.templ`, Line: 275, Col: 39}
 						}
@@ -950,7 +950,7 @@ func PokemonDetailPage(detail PokemonDetail) templ.Component {
 					}
 					if m.Accuracy.Valid {
 						var templ_7745c5c3_Var52 string
-						templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d%%", m.Accuracy.Int16))
+						templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d%%", m.Accuracy.Int64))
 						if templ_7745c5c3_Err != nil {
 							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/pokemon.templ`, Line: 282, Col: 51}
 						}

@@ -2,11 +2,10 @@ package handler
 
 import (
 	"context"
+	"database/sql"
 	"log/slog"
 	"net/http"
 	"strconv"
-
-	"github.com/jackc/pgx/v5/pgtype"
 
 	"zoamel/pokesensei/db/generated"
 	"zoamel/pokesensei/internal/view"
@@ -65,7 +64,7 @@ func (h *OnboardingHandler) HandleGameStep(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		// No game state yet — create one
 		gs, err = h.store.CreateGameState(ctx, generated.CreateGameStateParams{
-			GameVersionID: pgtype.Int4{Int32: int32(gameVersionID), Valid: true},
+			GameVersionID: sql.NullInt64{Int64: int64(gameVersionID), Valid: true},
 		})
 		if err != nil {
 			h.log.Error("failed to create game state", "error", err)
@@ -75,7 +74,7 @@ func (h *OnboardingHandler) HandleGameStep(w http.ResponseWriter, r *http.Reques
 	} else {
 		// Update existing
 		err = h.store.UpdateGameVersion(ctx, generated.UpdateGameVersionParams{
-			GameVersionID: pgtype.Int4{Int32: int32(gameVersionID), Valid: true},
+			GameVersionID: sql.NullInt64{Int64: int64(gameVersionID), Valid: true},
 			ID:            gs.ID,
 		})
 		if err != nil {
@@ -113,7 +112,7 @@ func (h *OnboardingHandler) HandleStarterStep(w http.ResponseWriter, r *http.Req
 	}
 
 	if err := h.store.UpdateStarter(ctx, generated.UpdateStarterParams{
-		StarterPokemonID: pgtype.Int4{Int32: int32(starterID), Valid: true},
+		StarterPokemonID: sql.NullInt64{Int64: int64(starterID), Valid: true},
 		ID:               gs.ID,
 	}); err != nil {
 		h.log.Error("failed to update starter", "error", err)
@@ -147,7 +146,7 @@ func (h *OnboardingHandler) HandleBadgeStep(w http.ResponseWriter, r *http.Reque
 	}
 
 	if err := h.store.UpdateBadgeCount(ctx, generated.UpdateBadgeCountParams{
-		BadgeCount: int16(badgeCount),
+		BadgeCount: int64(badgeCount),
 		ID:         gs.ID,
 	}); err != nil {
 		h.log.Error("failed to update badge count", "error", err)

@@ -7,18 +7,17 @@ package generated
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
+	"database/sql"
 )
 
 const getMoveByID = `-- name: GetMoveByID :one
 SELECT id, name, slug, type_id, power, accuracy, pp, damage_class, effect
 FROM moves
-WHERE id = $1
+WHERE id = ?1
 `
 
-func (q *Queries) GetMoveByID(ctx context.Context, id int32) (Move, error) {
-	row := q.db.QueryRow(ctx, getMoveByID, id)
+func (q *Queries) GetMoveByID(ctx context.Context, id int64) (Move, error) {
+	row := q.db.QueryRowContext(ctx, getMoveByID, id)
 	var i Move
 	err := row.Scan(
 		&i.ID,
@@ -41,34 +40,34 @@ SELECT pm.move_id, m.name, m.slug, m.type_id, m.power, m.accuracy, m.pp,
 FROM pokemon_moves pm
 JOIN moves m ON m.id = pm.move_id
 LEFT JOIN types t ON t.id = m.type_id
-WHERE pm.pokemon_id = $1
-  AND pm.version_group_id = $2
+WHERE pm.pokemon_id = ?1
+  AND pm.version_group_id = ?2
 ORDER BY pm.learn_method, pm.level_learned_at, m.name
 `
 
 type ListPokemonMovesParams struct {
-	PokemonID      int32
-	VersionGroupID int32
+	PokemonID      int64
+	VersionGroupID int64
 }
 
 type ListPokemonMovesRow struct {
-	MoveID         int32
+	MoveID         int64
 	Name           string
 	Slug           string
-	TypeID         pgtype.Int4
-	Power          pgtype.Int2
-	Accuracy       pgtype.Int2
-	Pp             int16
+	TypeID         sql.NullInt64
+	Power          sql.NullInt64
+	Accuracy       sql.NullInt64
+	Pp             int64
 	DamageClass    string
 	Effect         string
 	LearnMethod    string
-	LevelLearnedAt int16
-	TypeName       pgtype.Text
-	TypeSlug       pgtype.Text
+	LevelLearnedAt int64
+	TypeName       sql.NullString
+	TypeSlug       sql.NullString
 }
 
 func (q *Queries) ListPokemonMoves(ctx context.Context, arg ListPokemonMovesParams) ([]ListPokemonMovesRow, error) {
-	rows, err := q.db.Query(ctx, listPokemonMoves, arg.PokemonID, arg.VersionGroupID)
+	rows, err := q.db.QueryContext(ctx, listPokemonMoves, arg.PokemonID, arg.VersionGroupID)
 	if err != nil {
 		return nil, err
 	}
@@ -95,6 +94,9 @@ func (q *Queries) ListPokemonMoves(ctx context.Context, arg ListPokemonMovesPara
 		}
 		items = append(items, i)
 	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -108,37 +110,37 @@ SELECT pm.move_id, m.name, m.slug, m.type_id, m.power, m.accuracy, m.pp,
 FROM pokemon_moves pm
 JOIN moves m ON m.id = pm.move_id
 LEFT JOIN types t ON t.id = m.type_id
-WHERE pm.pokemon_id = $1
-  AND pm.version_group_id = $2
+WHERE pm.pokemon_id = ?1
+  AND pm.version_group_id = ?2
   AND pm.learn_method = 'level-up'
-  AND pm.level_learned_at <= $3
+  AND pm.level_learned_at <= ?3
 ORDER BY pm.level_learned_at DESC, m.name
 `
 
 type ListPokemonMovesAtLevelParams struct {
-	PokemonID      int32
-	VersionGroupID int32
-	LevelLearnedAt int16
+	PokemonID      int64
+	VersionGroupID int64
+	LevelLearnedAt int64
 }
 
 type ListPokemonMovesAtLevelRow struct {
-	MoveID         int32
+	MoveID         int64
 	Name           string
 	Slug           string
-	TypeID         pgtype.Int4
-	Power          pgtype.Int2
-	Accuracy       pgtype.Int2
-	Pp             int16
+	TypeID         sql.NullInt64
+	Power          sql.NullInt64
+	Accuracy       sql.NullInt64
+	Pp             int64
 	DamageClass    string
 	Effect         string
 	LearnMethod    string
-	LevelLearnedAt int16
-	TypeName       pgtype.Text
-	TypeSlug       pgtype.Text
+	LevelLearnedAt int64
+	TypeName       sql.NullString
+	TypeSlug       sql.NullString
 }
 
 func (q *Queries) ListPokemonMovesAtLevel(ctx context.Context, arg ListPokemonMovesAtLevelParams) ([]ListPokemonMovesAtLevelRow, error) {
-	rows, err := q.db.Query(ctx, listPokemonMovesAtLevel, arg.PokemonID, arg.VersionGroupID, arg.LevelLearnedAt)
+	rows, err := q.db.QueryContext(ctx, listPokemonMovesAtLevel, arg.PokemonID, arg.VersionGroupID, arg.LevelLearnedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -164,6 +166,9 @@ func (q *Queries) ListPokemonMovesAtLevel(ctx context.Context, arg ListPokemonMo
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

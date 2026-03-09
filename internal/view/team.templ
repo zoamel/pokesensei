@@ -79,7 +79,7 @@ templ teamBuilderSlot(slotNum int, slot TeamSlotData) {
 							<input
 								type="checkbox"
 								name="is_locked"
-								if slot.Member.IsLocked {
+								if slot.Member.IsLocked != 0 {
 									checked
 								}
 								hx-patch={ fmt.Sprintf("/team/members/%d", slot.Member.ID) }
@@ -109,7 +109,7 @@ templ teamBuilderSlot(slotNum int, slot TeamSlotData) {
 	</div>
 }
 
-templ TeamCoveragePartial(types []generated.Type, coverage map[int32]int16) {
+templ TeamCoveragePartial(types []generated.Type, coverage map[int64]int64) {
 	<div class="coverage-grid">
 		for _, t := range types {
 			<div class={ "coverage-cell", coverageClass(coverage[t.ID]) }>
@@ -137,7 +137,7 @@ templ TeamCoveragePartial(types []generated.Type, coverage map[int32]int16) {
 	}
 }
 
-func coverageClass(factor int16) string {
+func coverageClass(factor int64) string {
 	switch {
 	case factor >= 200:
 		return "coverage-super"
@@ -150,7 +150,7 @@ func coverageClass(factor int16) string {
 	}
 }
 
-func coverageLabel(factor int16) string {
+func coverageLabel(factor int64) string {
 	switch {
 	case factor >= 200:
 		return "2×"
@@ -165,7 +165,7 @@ func coverageLabel(factor int16) string {
 	}
 }
 
-func hasGaps(coverage map[int32]int16) bool {
+func hasGaps(coverage map[int64]int64) bool {
 	for _, factor := range coverage {
 		if factor < 100 {
 			return true

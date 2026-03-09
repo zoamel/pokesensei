@@ -2,11 +2,10 @@ package handler
 
 import (
 	"context"
+	"database/sql"
 	"log/slog"
 	"net/http"
 	"strconv"
-
-	"github.com/jackc/pgx/v5/pgtype"
 
 	"zoamel/pokesensei/db/generated"
 	"zoamel/pokesensei/internal/view"
@@ -19,7 +18,7 @@ type SettingsStore interface {
 	UpdateBadgeCount(ctx context.Context, arg generated.UpdateBadgeCountParams) error
 	UpdateTradingEnabled(ctx context.Context, arg generated.UpdateTradingEnabledParams) error
 	ListGameVersions(ctx context.Context) ([]generated.GameVersion, error)
-	ClearTeam(ctx context.Context, gameStateID int32) error
+	ClearTeam(ctx context.Context, gameStateID int64) error
 }
 
 type SettingsHandler struct {
@@ -74,7 +73,7 @@ func (h *SettingsHandler) HandleGameUpdate(w http.ResponseWriter, r *http.Reques
 	}
 
 	if err := h.store.UpdateGameVersion(ctx, generated.UpdateGameVersionParams{
-		GameVersionID: pgtype.Int4{Int32: int32(gameVersionID), Valid: true},
+		GameVersionID: sql.NullInt64{Int64: int64(gameVersionID), Valid: true},
 		ID:            gs.ID,
 	}); err != nil {
 		h.log.Error("failed to update game", "error", err)
@@ -112,7 +111,7 @@ func (h *SettingsHandler) HandleStarterUpdate(w http.ResponseWriter, r *http.Req
 	}
 
 	if err := h.store.UpdateStarter(ctx, generated.UpdateStarterParams{
-		StarterPokemonID: pgtype.Int4{Int32: int32(starterID), Valid: true},
+		StarterPokemonID: sql.NullInt64{Int64: int64(starterID), Valid: true},
 		ID:               gs.ID,
 	}); err != nil {
 		h.log.Error("failed to update starter", "error", err)
@@ -145,7 +144,7 @@ func (h *SettingsHandler) HandleBadgeUpdate(w http.ResponseWriter, r *http.Reque
 	}
 
 	if err := h.store.UpdateBadgeCount(ctx, generated.UpdateBadgeCountParams{
-		BadgeCount: int16(badgeCount),
+		BadgeCount: int64(badgeCount),
 		ID:         gs.ID,
 	}); err != nil {
 		h.log.Error("failed to update badge", "error", err)
@@ -171,9 +170,13 @@ func (h *SettingsHandler) HandleTradingUpdate(w http.ResponseWriter, r *http.Req
 	}
 
 	tradingEnabled := r.FormValue("trading_enabled") == "on" || r.FormValue("trading_enabled") == "true"
+	var tradingVal int64
+	if tradingEnabled {
+		tradingVal = 1
+	}
 
 	if err := h.store.UpdateTradingEnabled(ctx, generated.UpdateTradingEnabledParams{
-		TradingEnabled: tradingEnabled,
+		TradingEnabled: tradingVal,
 		ID:             gs.ID,
 	}); err != nil {
 		h.log.Error("failed to update trading", "error", err)

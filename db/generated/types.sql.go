@@ -12,11 +12,11 @@ import (
 const getTypeByID = `-- name: GetTypeByID :one
 SELECT id, name, slug
 FROM types
-WHERE id = $1
+WHERE id = ?1
 `
 
-func (q *Queries) GetTypeByID(ctx context.Context, id int32) (Type, error) {
-	row := q.db.QueryRow(ctx, getTypeByID, id)
+func (q *Queries) GetTypeByID(ctx context.Context, id int64) (Type, error) {
+	row := q.db.QueryRowContext(ctx, getTypeByID, id)
 	var i Type
 	err := row.Scan(&i.ID, &i.Name, &i.Slug)
 	return i, err
@@ -29,7 +29,7 @@ ORDER BY attacking_type_id, defending_type_id
 `
 
 func (q *Queries) GetTypeEfficacy(ctx context.Context) ([]TypeEfficacy, error) {
-	rows, err := q.db.Query(ctx, getTypeEfficacy)
+	rows, err := q.db.QueryContext(ctx, getTypeEfficacy)
 	if err != nil {
 		return nil, err
 	}
@@ -42,6 +42,9 @@ func (q *Queries) GetTypeEfficacy(ctx context.Context) ([]TypeEfficacy, error) {
 		}
 		items = append(items, i)
 	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -51,16 +54,16 @@ func (q *Queries) GetTypeEfficacy(ctx context.Context) ([]TypeEfficacy, error) {
 const getTypeEfficacyForAttacker = `-- name: GetTypeEfficacyForAttacker :many
 SELECT defending_type_id, damage_factor
 FROM type_efficacy
-WHERE attacking_type_id = $1
+WHERE attacking_type_id = ?1
 `
 
 type GetTypeEfficacyForAttackerRow struct {
-	DefendingTypeID int32
-	DamageFactor    int16
+	DefendingTypeID int64
+	DamageFactor    int64
 }
 
-func (q *Queries) GetTypeEfficacyForAttacker(ctx context.Context, attackingTypeID int32) ([]GetTypeEfficacyForAttackerRow, error) {
-	rows, err := q.db.Query(ctx, getTypeEfficacyForAttacker, attackingTypeID)
+func (q *Queries) GetTypeEfficacyForAttacker(ctx context.Context, attackingTypeID int64) ([]GetTypeEfficacyForAttackerRow, error) {
+	rows, err := q.db.QueryContext(ctx, getTypeEfficacyForAttacker, attackingTypeID)
 	if err != nil {
 		return nil, err
 	}
@@ -72,6 +75,9 @@ func (q *Queries) GetTypeEfficacyForAttacker(ctx context.Context, attackingTypeI
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -86,7 +92,7 @@ ORDER BY id
 `
 
 func (q *Queries) ListTypes(ctx context.Context) ([]Type, error) {
-	rows, err := q.db.Query(ctx, listTypes)
+	rows, err := q.db.QueryContext(ctx, listTypes)
 	if err != nil {
 		return nil, err
 	}
@@ -98,6 +104,9 @@ func (q *Queries) ListTypes(ctx context.Context) ([]Type, error) {
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

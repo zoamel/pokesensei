@@ -13,9 +13,9 @@ const ping = `-- name: Ping :one
 SELECT 1 AS ok
 `
 
-func (q *Queries) Ping(ctx context.Context) (int32, error) {
-	row := q.db.QueryRow(ctx, ping)
-	var ok int32
+func (q *Queries) Ping(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, ping)
+	var ok int64
 	err := row.Scan(&ok)
 	return ok, err
 }

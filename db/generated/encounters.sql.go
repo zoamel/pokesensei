@@ -10,19 +10,19 @@ import (
 )
 
 const getMinBadgeByPokemon = `-- name: GetMinBadgeByPokemon :many
-SELECT pokemon_id, MIN(badge_required)::smallint AS min_badge
+SELECT pokemon_id, CAST(MIN(badge_required) AS INTEGER) AS min_badge
 FROM encounters
-WHERE game_version_id = $1
+WHERE game_version_id = ?1
 GROUP BY pokemon_id
 `
 
 type GetMinBadgeByPokemonRow struct {
-	PokemonID int32
-	MinBadge  int16
+	PokemonID int64
+	MinBadge  int64
 }
 
-func (q *Queries) GetMinBadgeByPokemon(ctx context.Context, gameVersionID int32) ([]GetMinBadgeByPokemonRow, error) {
-	rows, err := q.db.Query(ctx, getMinBadgeByPokemon, gameVersionID)
+func (q *Queries) GetMinBadgeByPokemon(ctx context.Context, gameVersionID int64) ([]GetMinBadgeByPokemonRow, error) {
+	rows, err := q.db.QueryContext(ctx, getMinBadgeByPokemon, gameVersionID)
 	if err != nil {
 		return nil, err
 	}
@@ -34,6 +34,9 @@ func (q *Queries) GetMinBadgeByPokemon(ctx context.Context, gameVersionID int32)
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -47,26 +50,26 @@ SELECT e.id, e.pokemon_id, e.game_version_id,
        p.name AS pokemon_name, p.slug AS pokemon_slug, p.sprite_url
 FROM encounters e
 JOIN pokemon p ON p.id = e.pokemon_id
-WHERE e.location_id = $1
+WHERE e.location_id = ?1
 ORDER BY e.chance DESC
 `
 
 type ListEncountersByLocationRow struct {
-	ID            int32
-	PokemonID     int32
-	GameVersionID int32
+	ID            int64
+	PokemonID     int64
+	GameVersionID int64
 	Method        string
-	Chance        int16
-	MinLevel      int16
-	MaxLevel      int16
-	BadgeRequired int16
+	Chance        int64
+	MinLevel      int64
+	MaxLevel      int64
+	BadgeRequired int64
 	PokemonName   string
 	PokemonSlug   string
 	SpriteUrl     string
 }
 
-func (q *Queries) ListEncountersByLocation(ctx context.Context, locationID int32) ([]ListEncountersByLocationRow, error) {
-	rows, err := q.db.Query(ctx, listEncountersByLocation, locationID)
+func (q *Queries) ListEncountersByLocation(ctx context.Context, locationID int64) ([]ListEncountersByLocationRow, error) {
+	rows, err := q.db.QueryContext(ctx, listEncountersByLocation, locationID)
 	if err != nil {
 		return nil, err
 	}
@@ -91,6 +94,9 @@ func (q *Queries) ListEncountersByLocation(ctx context.Context, locationID int32
 		}
 		items = append(items, i)
 	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -103,32 +109,32 @@ SELECT e.id, e.pokemon_id, e.location_id, e.game_version_id,
        l.name AS location_name, l.area_name
 FROM encounters e
 JOIN locations l ON l.id = e.location_id
-WHERE e.pokemon_id = $1
-  AND e.game_version_id = $2
+WHERE e.pokemon_id = ?1
+  AND e.game_version_id = ?2
 ORDER BY e.badge_required, l.name
 `
 
 type ListEncountersByPokemonParams struct {
-	PokemonID     int32
-	GameVersionID int32
+	PokemonID     int64
+	GameVersionID int64
 }
 
 type ListEncountersByPokemonRow struct {
-	ID            int32
-	PokemonID     int32
-	LocationID    int32
-	GameVersionID int32
+	ID            int64
+	PokemonID     int64
+	LocationID    int64
+	GameVersionID int64
 	Method        string
-	Chance        int16
-	MinLevel      int16
-	MaxLevel      int16
-	BadgeRequired int16
+	Chance        int64
+	MinLevel      int64
+	MaxLevel      int64
+	BadgeRequired int64
 	LocationName  string
 	AreaName      string
 }
 
 func (q *Queries) ListEncountersByPokemon(ctx context.Context, arg ListEncountersByPokemonParams) ([]ListEncountersByPokemonRow, error) {
-	rows, err := q.db.Query(ctx, listEncountersByPokemon, arg.PokemonID, arg.GameVersionID)
+	rows, err := q.db.QueryContext(ctx, listEncountersByPokemon, arg.PokemonID, arg.GameVersionID)
 	if err != nil {
 		return nil, err
 	}
@@ -153,6 +159,9 @@ func (q *Queries) ListEncountersByPokemon(ctx context.Context, arg ListEncounter
 		}
 		items = append(items, i)
 	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -162,12 +171,12 @@ func (q *Queries) ListEncountersByPokemon(ctx context.Context, arg ListEncounter
 const listLocationsByGame = `-- name: ListLocationsByGame :many
 SELECT id, pokeapi_id, name, slug, game_version_id, area_name
 FROM locations
-WHERE game_version_id = $1
+WHERE game_version_id = ?1
 ORDER BY name, area_name
 `
 
-func (q *Queries) ListLocationsByGame(ctx context.Context, gameVersionID int32) ([]Location, error) {
-	rows, err := q.db.Query(ctx, listLocationsByGame, gameVersionID)
+func (q *Queries) ListLocationsByGame(ctx context.Context, gameVersionID int64) ([]Location, error) {
+	rows, err := q.db.QueryContext(ctx, listLocationsByGame, gameVersionID)
 	if err != nil {
 		return nil, err
 	}
@@ -186,6 +195,9 @@ func (q *Queries) ListLocationsByGame(ctx context.Context, gameVersionID int32) 
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

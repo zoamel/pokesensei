@@ -7,8 +7,7 @@ package generated
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
+	"database/sql"
 )
 
 const getEvolutionChainByPokemon = `-- name: GetEvolutionChainByPokemon :many
@@ -19,28 +18,28 @@ SELECT es.id, es.chain_id, es.pokemon_id, es.evolves_from_id,
 FROM evolution_steps es
 JOIN pokemon p ON p.id = es.pokemon_id
 WHERE es.chain_id = (
-    SELECT es2.chain_id FROM evolution_steps es2 WHERE es2.pokemon_id = $1 LIMIT 1
+    SELECT es2.chain_id FROM evolution_steps es2 WHERE es2.pokemon_id = ?1 LIMIT 1
 )
 ORDER BY es.position
 `
 
 type GetEvolutionChainByPokemonRow struct {
-	ID               int32
-	ChainID          int32
-	PokemonID        int32
-	EvolvesFromID    pgtype.Int4
-	EvolutionTrigger pgtype.Text
-	MinLevel         pgtype.Int2
-	TriggerItem      pgtype.Text
-	TradeRequired    bool
-	Position         int16
+	ID               int64
+	ChainID          int64
+	PokemonID        int64
+	EvolvesFromID    sql.NullInt64
+	EvolutionTrigger sql.NullString
+	MinLevel         sql.NullInt64
+	TriggerItem      sql.NullString
+	TradeRequired    int64
+	Position         int64
 	PokemonName      string
 	PokemonSlug      string
 	SpriteUrl        string
 }
 
-func (q *Queries) GetEvolutionChainByPokemon(ctx context.Context, pokemonID int32) ([]GetEvolutionChainByPokemonRow, error) {
-	rows, err := q.db.Query(ctx, getEvolutionChainByPokemon, pokemonID)
+func (q *Queries) GetEvolutionChainByPokemon(ctx context.Context, pokemonID int64) ([]GetEvolutionChainByPokemonRow, error) {
+	rows, err := q.db.QueryContext(ctx, getEvolutionChainByPokemon, pokemonID)
 	if err != nil {
 		return nil, err
 	}
@@ -65,6 +64,9 @@ func (q *Queries) GetEvolutionChainByPokemon(ctx context.Context, pokemonID int3
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

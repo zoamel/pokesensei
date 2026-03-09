@@ -8,7 +8,7 @@ import (
 )
 
 type HealthChecker interface {
-	Ping(ctx context.Context) (int32, error)
+	Ping(ctx context.Context) (int64, error)
 }
 
 type HealthHandler struct {

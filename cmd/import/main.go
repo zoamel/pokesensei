@@ -21,20 +21,20 @@ func main() {
 
 func run() error {
 	var (
-		databaseURL  string
+		databasePath string
 		games        string
 		maxDex       int
 		seedTrainers bool
 	)
 
-	flag.StringVar(&databaseURL, "database-url", os.Getenv("DATABASE_URL"), "PostgreSQL connection string")
+	flag.StringVar(&databasePath, "database-path", os.Getenv("DATABASE_PATH"), "SQLite database file path")
 	flag.StringVar(&games, "games", "frlg,hgss", "Comma-separated game groups to import (frlg, hgss)")
 	flag.IntVar(&maxDex, "max-dex", 493, "Maximum national dex number to import (default: 493 for Gen IV)")
 	flag.BoolVar(&seedTrainers, "seed-trainers", false, "Import trainer seed data from db/seed/ JSON files")
 	flag.Parse()
 
-	if databaseURL == "" {
-		return fmt.Errorf("--database-url or DATABASE_URL is required")
+	if databasePath == "" {
+		databasePath = "data/pokesensei.db"
 	}
 
 	log := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
@@ -44,19 +44,19 @@ func run() error {
 	ctx := context.Background()
 
 	// Run migrations first
-	if err := database.RunMigrations(databaseURL, db.EmbedMigrations); err != nil {
+	if err := database.RunMigrations(databasePath, db.EmbedMigrations); err != nil {
 		return fmt.Errorf("running migrations: %w", err)
 	}
 	log.Info("migrations completed")
 
-	pool, err := database.NewPool(ctx, databaseURL)
+	sqlDB, err := database.NewDB(ctx, databasePath)
 	if err != nil {
-		return fmt.Errorf("creating pool: %w", err)
+		return fmt.Errorf("creating database: %w", err)
 	}
-	defer pool.Close()
+	defer sqlDB.Close()
 
 	client := NewPokeAPIClient(log)
-	importer := NewImporter(pool, client, log)
+	importer := NewImporter(sqlDB, client, log)
 
 	// Parse game groups
 	gameGroups := strings.Split(games, ",")
@@ -125,7 +125,7 @@ func run() error {
 
 	// Seed trainer data from JSON files
 	if seedTrainers {
-		seedImporter := NewSeedImporter(pool, log)
+		seedImporter := NewSeedImporter(sqlDB, log)
 		seedFiles := map[string]string{
 			"frlg": "db/seed/frlg_trainers.json",
 			"hgss": "db/seed/hgss_trainers.json",

@@ -14,7 +14,7 @@ templ PokemonFinderPage(types []generated.Type, gs generated.GameState) {
 					<h2>Filters</h2>
 					<form id="pokemon-filters">
 						if gs.GameVersionID.Valid {
-							<input type="hidden" name="game_version_id" value={ fmt.Sprint(gs.GameVersionID.Int32) }/>
+							<input type="hidden" name="game_version_id" value={ fmt.Sprint(gs.GameVersionID.Int64) }/>
 						}
 						<div class="filter-group">
 							<label for="name-search">Name</label>
@@ -60,7 +60,7 @@ templ PokemonFinderPage(types []generated.Type, gs generated.GameState) {
 									for i := 0; i <= 8; i++ {
 										<option
 											value={ fmt.Sprint(i) }
-											if int16(i) == gs.BadgeCount {
+											if int64(i) == gs.BadgeCount {
 												selected
 											}
 										>
@@ -158,7 +158,7 @@ templ PokemonDetailPage(detail PokemonDetail) {
 							for _, a := range detail.Abilities {
 								<li>
 									<strong>{ a.Name }</strong>
-									if a.IsHidden {
+									if a.IsHidden != 0 {
 										<span class="badge-hidden">Hidden</span>
 									}
 									if a.Description != "" {
@@ -179,11 +179,11 @@ templ PokemonDetailPage(detail PokemonDetail) {
 										<img src={ evo.SpriteUrl } alt={ evo.PokemonName } width="64" height="64"/>
 										<span>{ evo.PokemonName }</span>
 									</a>
-									if evo.TradeRequired {
+									if evo.TradeRequired != 0 {
 										<span class="badge-trade">Trade</span>
 									}
 									if evo.MinLevel.Valid {
-										<span class="evo-level">{ fmt.Sprintf("Lv. %d", evo.MinLevel.Int16) }</span>
+										<span class="evo-level">{ fmt.Sprintf("Lv. %d", evo.MinLevel.Int64) }</span>
 									}
 								</div>
 							}
@@ -272,14 +272,14 @@ templ PokemonDetailPage(detail PokemonDetail) {
 										</td>
 										<td>
 											if m.Power.Valid {
-												{ fmt.Sprint(m.Power.Int16) }
+												{ fmt.Sprint(m.Power.Int64) }
 											} else {
 												–
 											}
 										</td>
 										<td>
 											if m.Accuracy.Valid {
-												{ fmt.Sprintf("%d%%", m.Accuracy.Int16) }
+												{ fmt.Sprintf("%d%%", m.Accuracy.Int64) }
 											} else {
 												–
 											}

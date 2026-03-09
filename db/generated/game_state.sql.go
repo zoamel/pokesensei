@@ -7,25 +7,24 @@ package generated
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
+	"database/sql"
 )
 
 const createGameState = `-- name: CreateGameState :one
 INSERT INTO game_state (game_version_id, starter_pokemon_id, badge_count, trading_enabled)
-VALUES ($1, $2, $3, $4)
+VALUES (?1, ?2, ?3, ?4)
 RETURNING id, game_version_id, starter_pokemon_id, badge_count, trading_enabled, created_at, updated_at
 `
 
 type CreateGameStateParams struct {
-	GameVersionID    pgtype.Int4
-	StarterPokemonID pgtype.Int4
-	BadgeCount       int16
-	TradingEnabled   bool
+	GameVersionID    sql.NullInt64
+	StarterPokemonID sql.NullInt64
+	BadgeCount       int64
+	TradingEnabled   int64
 }
 
 func (q *Queries) CreateGameState(ctx context.Context, arg CreateGameStateParams) (GameState, error) {
-	row := q.db.QueryRow(ctx, createGameState,
+	row := q.db.QueryRowContext(ctx, createGameState,
 		arg.GameVersionID,
 		arg.StarterPokemonID,
 		arg.BadgeCount,
@@ -45,11 +44,11 @@ func (q *Queries) CreateGameState(ctx context.Context, arg CreateGameStateParams
 }
 
 const deleteGameState = `-- name: DeleteGameState :exec
-DELETE FROM game_state WHERE id = $1
+DELETE FROM game_state WHERE id = ?1
 `
 
-func (q *Queries) DeleteGameState(ctx context.Context, id int32) error {
-	_, err := q.db.Exec(ctx, deleteGameState, id)
+func (q *Queries) DeleteGameState(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteGameState, id)
 	return err
 }
 
@@ -62,7 +61,7 @@ LIMIT 1
 `
 
 func (q *Queries) GetGameState(ctx context.Context) (GameState, error) {
-	row := q.db.QueryRow(ctx, getGameState)
+	row := q.db.QueryRowContext(ctx, getGameState)
 	var i GameState
 	err := row.Scan(
 		&i.ID,
@@ -77,57 +76,57 @@ func (q *Queries) GetGameState(ctx context.Context) (GameState, error) {
 }
 
 const updateBadgeCount = `-- name: UpdateBadgeCount :exec
-UPDATE game_state SET badge_count = $1, updated_at = NOW() WHERE id = $2
+UPDATE game_state SET badge_count = ?1, updated_at = datetime('now') WHERE id = ?2
 `
 
 type UpdateBadgeCountParams struct {
-	BadgeCount int16
-	ID         int32
+	BadgeCount int64
+	ID         int64
 }
 
 func (q *Queries) UpdateBadgeCount(ctx context.Context, arg UpdateBadgeCountParams) error {
-	_, err := q.db.Exec(ctx, updateBadgeCount, arg.BadgeCount, arg.ID)
+	_, err := q.db.ExecContext(ctx, updateBadgeCount, arg.BadgeCount, arg.ID)
 	return err
 }
 
 const updateGameVersion = `-- name: UpdateGameVersion :exec
-UPDATE game_state SET game_version_id = $1, updated_at = NOW() WHERE id = $2
+UPDATE game_state SET game_version_id = ?1, updated_at = datetime('now') WHERE id = ?2
 `
 
 type UpdateGameVersionParams struct {
-	GameVersionID pgtype.Int4
-	ID            int32
+	GameVersionID sql.NullInt64
+	ID            int64
 }
 
 func (q *Queries) UpdateGameVersion(ctx context.Context, arg UpdateGameVersionParams) error {
-	_, err := q.db.Exec(ctx, updateGameVersion, arg.GameVersionID, arg.ID)
+	_, err := q.db.ExecContext(ctx, updateGameVersion, arg.GameVersionID, arg.ID)
 	return err
 }
 
 const updateStarter = `-- name: UpdateStarter :exec
-UPDATE game_state SET starter_pokemon_id = $1, updated_at = NOW() WHERE id = $2
+UPDATE game_state SET starter_pokemon_id = ?1, updated_at = datetime('now') WHERE id = ?2
 `
 
 type UpdateStarterParams struct {
-	StarterPokemonID pgtype.Int4
-	ID               int32
+	StarterPokemonID sql.NullInt64
+	ID               int64
 }
 
 func (q *Queries) UpdateStarter(ctx context.Context, arg UpdateStarterParams) error {
-	_, err := q.db.Exec(ctx, updateStarter, arg.StarterPokemonID, arg.ID)
+	_, err := q.db.ExecContext(ctx, updateStarter, arg.StarterPokemonID, arg.ID)
 	return err
 }
 
 const updateTradingEnabled = `-- name: UpdateTradingEnabled :exec
-UPDATE game_state SET trading_enabled = $1, updated_at = NOW() WHERE id = $2
+UPDATE game_state SET trading_enabled = ?1, updated_at = datetime('now') WHERE id = ?2
 `
 
 type UpdateTradingEnabledParams struct {
-	TradingEnabled bool
-	ID             int32
+	TradingEnabled int64
+	ID             int64
 }
 
 func (q *Queries) UpdateTradingEnabled(ctx context.Context, arg UpdateTradingEnabledParams) error {
-	_, err := q.db.Exec(ctx, updateTradingEnabled, arg.TradingEnabled, arg.ID)
+	_, err := q.db.ExecContext(ctx, updateTradingEnabled, arg.TradingEnabled, arg.ID)
 	return err
 }

@@ -12,12 +12,12 @@ import (
 
 type SuggestionStore interface {
 	GetGameState(ctx context.Context) (generated.GameState, error)
-	ListTeamMembers(ctx context.Context, gameStateID int32) ([]generated.ListTeamMembersRow, error)
+	ListTeamMembers(ctx context.Context, gameStateID int64) ([]generated.ListTeamMembersRow, error)
 	ListAllPokemon(ctx context.Context) ([]generated.Pokemon, error)
-	GetPokemonWithTypes(ctx context.Context, id int32) ([]generated.GetPokemonWithTypesRow, error)
+	GetPokemonWithTypes(ctx context.Context, id int64) ([]generated.GetPokemonWithTypesRow, error)
 	GetTypeEfficacy(ctx context.Context) ([]generated.TypeEfficacy, error)
-	GetEvolutionChainByPokemon(ctx context.Context, pokemonID int32) ([]generated.GetEvolutionChainByPokemonRow, error)
-	GetMinBadgeByPokemon(ctx context.Context, gameVersionID int32) ([]generated.GetMinBadgeByPokemonRow, error)
+	GetEvolutionChainByPokemon(ctx context.Context, pokemonID int64) ([]generated.GetEvolutionChainByPokemonRow, error)
+	GetMinBadgeByPokemon(ctx context.Context, gameVersionID int64) ([]generated.GetMinBadgeByPokemonRow, error)
 }
 
 type SuggestionHandler struct {
@@ -49,10 +49,10 @@ func (h *SuggestionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	efficacyRows, _ := h.store.GetTypeEfficacy(ctx)
 
 	// Build efficacy map
-	efficacy := make(map[int32]map[int32]int16)
+	efficacy := make(map[int64]map[int64]int64)
 	for _, e := range efficacyRows {
 		if efficacy[e.AttackingTypeID] == nil {
-			efficacy[e.AttackingTypeID] = make(map[int32]int16)
+			efficacy[e.AttackingTypeID] = make(map[int64]int64)
 		}
 		efficacy[e.AttackingTypeID][e.DefendingTypeID] = e.DamageFactor
 	}
@@ -60,14 +60,14 @@ func (h *SuggestionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Build badge requirement lookup.
 	// Pokémon with encounters get their minimum badge; Pokémon without encounters
 	// are not catchable in the wild, so they get badge 9 (effectively unavailable).
-	badgeMap := make(map[int32]int16)
+	badgeMap := make(map[int64]int64)
 	if gs.GameVersionID.Valid {
-		badgeRows, _ := h.store.GetMinBadgeByPokemon(ctx, gs.GameVersionID.Int32)
+		badgeRows, _ := h.store.GetMinBadgeByPokemon(ctx, gs.GameVersionID.Int64)
 		for _, row := range badgeRows {
 			badgeMap[row.PokemonID] = row.MinBadge
 		}
 	}
-	const uncatchableBadge int16 = 9
+	const uncatchableBadge int64 = 9
 
 	// Build candidates with types
 	candidates := make([]suggest.Pokemon, 0, len(allPokemon))
@@ -90,7 +90,7 @@ func (h *SuggestionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// Check trade requirement from evolution chain
 		evoChain, _ := h.store.GetEvolutionChainByPokemon(ctx, p.ID)
 		for _, step := range evoChain {
-			if step.PokemonID == p.ID && step.TradeRequired {
+			if step.PokemonID == p.ID && step.TradeRequired != 0 {
 				candidate.TradeRequired = true
 			}
 		}
@@ -102,7 +102,7 @@ func (h *SuggestionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	currentTeam := make([]suggest.TeamSlot, 0)
 	for _, m := range team {
 		types, _ := h.store.GetPokemonWithTypes(ctx, m.PokemonID)
-		var typeIDs []int32
+		var typeIDs []int64
 		for _, t := range types {
 			typeIDs = append(typeIDs, t.TypeID)
 		}
@@ -113,7 +113,7 @@ func (h *SuggestionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				SpriteURL: m.SpriteUrl,
 				Types:     typeIDs,
 			},
-			IsLocked: m.IsLocked,
+			IsLocked: m.IsLocked != 0,
 			Slot:     int(m.Slot),
 		})
 	}
@@ -122,7 +122,7 @@ func (h *SuggestionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var starter *suggest.Pokemon
 	if gs.StarterPokemonID.Valid {
 		for _, c := range candidates {
-			if c.ID == gs.StarterPokemonID.Int32 {
+			if c.ID == gs.StarterPokemonID.Int64 {
 				cp := c
 				starter = &cp
 				break
@@ -135,7 +135,7 @@ func (h *SuggestionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		CurrentTeam:    currentTeam,
 		Candidates:     candidates,
 		BadgeCount:     gs.BadgeCount,
-		TradingEnabled: gs.TradingEnabled,
+		TradingEnabled: gs.TradingEnabled != 0,
 		Efficacy:       efficacy,
 	}
 

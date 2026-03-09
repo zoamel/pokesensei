@@ -11,7 +11,7 @@ import (
 
 type DashboardStore interface {
 	GetGameState(ctx context.Context) (generated.GameState, error)
-	ListTeamMembers(ctx context.Context, gameStateID int32) ([]generated.ListTeamMembersRow, error)
+	ListTeamMembers(ctx context.Context, gameStateID int64) ([]generated.ListTeamMembersRow, error)
 }
 
 type DashboardHandler struct {

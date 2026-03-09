@@ -2,11 +2,10 @@ package handler
 
 import (
 	"context"
+	"database/sql"
 	"log/slog"
 	"net/http"
 	"strconv"
-
-	"github.com/jackc/pgx/v5/pgtype"
 
 	"zoamel/pokesensei/db/generated"
 	"zoamel/pokesensei/internal/view"
@@ -16,11 +15,11 @@ type PokemonStore interface {
 	GetGameState(ctx context.Context) (generated.GameState, error)
 	SearchPokemonFiltered(ctx context.Context, arg generated.SearchPokemonFilteredParams) ([]generated.Pokemon, error)
 	ListTypes(ctx context.Context) ([]generated.Type, error)
-	GetPokemonByID(ctx context.Context, id int32) (generated.Pokemon, error)
-	GetPokemonWithTypes(ctx context.Context, id int32) ([]generated.GetPokemonWithTypesRow, error)
-	ListPokemonAbilities(ctx context.Context, pokemonID int32) ([]generated.ListPokemonAbilitiesRow, error)
+	GetPokemonByID(ctx context.Context, id int64) (generated.Pokemon, error)
+	GetPokemonWithTypes(ctx context.Context, id int64) ([]generated.GetPokemonWithTypesRow, error)
+	ListPokemonAbilities(ctx context.Context, pokemonID int64) ([]generated.ListPokemonAbilitiesRow, error)
 	ListEncountersByPokemon(ctx context.Context, arg generated.ListEncountersByPokemonParams) ([]generated.ListEncountersByPokemonRow, error)
-	GetEvolutionChainByPokemon(ctx context.Context, pokemonID int32) ([]generated.GetEvolutionChainByPokemonRow, error)
+	GetEvolutionChainByPokemon(ctx context.Context, pokemonID int64) ([]generated.GetEvolutionChainByPokemonRow, error)
 	ListPokemonMoves(ctx context.Context, arg generated.ListPokemonMovesParams) ([]generated.ListPokemonMovesRow, error)
 }
 
@@ -58,21 +57,21 @@ func (h *PokemonHandler) HandleSearch(w http.ResponseWriter, r *http.Request) {
 	params := generated.SearchPokemonFilteredParams{}
 
 	if name := r.URL.Query().Get("name"); name != "" {
-		params.Name = pgtype.Text{String: name, Valid: true}
+		params.Name = sql.NullString{String: name, Valid: true}
 	}
 	if typeID := r.URL.Query().Get("type_id"); typeID != "" {
 		if id, err := strconv.Atoi(typeID); err == nil && id > 0 {
-			params.TypeID = pgtype.Int4{Int32: int32(id), Valid: true}
+			params.TypeID = sql.NullInt64{Int64: int64(id), Valid: true}
 		}
 	}
 	if badge := r.URL.Query().Get("max_badge"); badge != "" {
 		if b, err := strconv.Atoi(badge); err == nil {
-			params.MaxBadge = pgtype.Int2{Int16: int16(b), Valid: true}
+			params.MaxBadge = sql.NullInt64{Int64: int64(b), Valid: true}
 		}
 	}
 	if gvID := r.URL.Query().Get("game_version_id"); gvID != "" {
 		if id, err := strconv.Atoi(gvID); err == nil {
-			params.GameVersionID = pgtype.Int4{Int32: int32(id), Valid: true}
+			params.GameVersionID = sql.NullInt64{Int64: int64(id), Valid: true}
 		}
 	}
 
@@ -108,39 +107,39 @@ func (h *PokemonHandler) HandleDetail(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	idStr := r.PathValue("id")
-	id, err := strconv.Atoi(idStr)
+	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid Pokémon ID", http.StatusBadRequest)
 		return
 	}
 
-	pokemon, err := h.store.GetPokemonByID(ctx, int32(id))
+	pokemon, err := h.store.GetPokemonByID(ctx, id)
 	if err != nil {
 		http.Error(w, "Pokémon not found", http.StatusNotFound)
 		return
 	}
 
-	types, _ := h.store.GetPokemonWithTypes(ctx, int32(id))
-	abilities, _ := h.store.ListPokemonAbilities(ctx, int32(id))
-	evoChain, _ := h.store.GetEvolutionChainByPokemon(ctx, int32(id))
+	types, _ := h.store.GetPokemonWithTypes(ctx, id)
+	abilities, _ := h.store.ListPokemonAbilities(ctx, id)
+	evoChain, _ := h.store.GetEvolutionChainByPokemon(ctx, id)
 
 	gs, _ := h.store.GetGameState(ctx)
 
 	var encounters []generated.ListEncountersByPokemonRow
 	if gs.GameVersionID.Valid {
 		encounters, _ = h.store.ListEncountersByPokemon(ctx, generated.ListEncountersByPokemonParams{
-			PokemonID:     int32(id),
-			GameVersionID: gs.GameVersionID.Int32,
+			PokemonID:     id,
+			GameVersionID: gs.GameVersionID.Int64,
 		})
 	}
 
 	// Get moves for current game version group
 	var moves []generated.ListPokemonMovesRow
 	if gs.GameVersionID.Valid {
-		vgID := versionGroupForGame(gs.GameVersionID.Int32)
+		vgID := versionGroupForGame(gs.GameVersionID.Int64)
 		moves, _ = h.store.ListPokemonMoves(ctx, generated.ListPokemonMovesParams{
-			PokemonID:      int32(id),
-			VersionGroupID: int32(vgID),
+			PokemonID:      id,
+			VersionGroupID: int64(vgID),
 		})
 	}
 
@@ -164,7 +163,7 @@ func (h *PokemonHandler) HandleDetail(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func versionGroupForGame(gameVersionID int32) int {
+func versionGroupForGame(gameVersionID int64) int {
 	switch gameVersionID {
 	case 10, 11:
 		return 7 // FRLG

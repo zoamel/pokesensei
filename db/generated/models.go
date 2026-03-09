@@ -5,167 +5,167 @@
 package generated
 
 import (
-	"github.com/jackc/pgx/v5/pgtype"
+	"database/sql"
 )
 
 type Ability struct {
-	ID          int32
+	ID          int64
 	Name        string
 	Slug        string
 	Description string
 }
 
 type Encounter struct {
-	ID            int32
-	PokemonID     int32
-	LocationID    int32
-	GameVersionID int32
+	ID            int64
+	PokemonID     int64
+	LocationID    int64
+	GameVersionID int64
 	Method        string
-	Chance        int16
-	MinLevel      int16
-	MaxLevel      int16
-	BadgeRequired int16
+	Chance        int64
+	MinLevel      int64
+	MaxLevel      int64
+	BadgeRequired int64
 }
 
 type EvolutionChain struct {
-	ID int32
+	ID int64
 }
 
 type EvolutionStep struct {
-	ID               int32
-	ChainID          int32
-	PokemonID        int32
-	EvolvesFromID    pgtype.Int4
-	EvolutionTrigger pgtype.Text
-	MinLevel         pgtype.Int2
-	TriggerItem      pgtype.Text
-	TradeRequired    bool
-	Position         int16
+	ID               int64
+	ChainID          int64
+	PokemonID        int64
+	EvolvesFromID    sql.NullInt64
+	EvolutionTrigger sql.NullString
+	MinLevel         sql.NullInt64
+	TriggerItem      sql.NullString
+	TradeRequired    int64
+	Position         int64
 }
 
 type GameState struct {
-	ID               int32
-	GameVersionID    pgtype.Int4
-	StarterPokemonID pgtype.Int4
-	BadgeCount       int16
-	TradingEnabled   bool
-	CreatedAt        pgtype.Timestamptz
-	UpdatedAt        pgtype.Timestamptz
+	ID               int64
+	GameVersionID    sql.NullInt64
+	StarterPokemonID sql.NullInt64
+	BadgeCount       int64
+	TradingEnabled   int64
+	CreatedAt        string
+	UpdatedAt        string
 }
 
 type GameVersion struct {
-	ID   int32
+	ID   int64
 	Name string
 	Slug string
 }
 
 type Location struct {
-	ID            int32
-	PokeapiID     int32
+	ID            int64
+	PokeapiID     int64
 	Name          string
 	Slug          string
-	GameVersionID int32
+	GameVersionID int64
 	AreaName      string
 }
 
 type Move struct {
-	ID          int32
+	ID          int64
 	Name        string
 	Slug        string
-	TypeID      pgtype.Int4
-	Power       pgtype.Int2
-	Accuracy    pgtype.Int2
-	Pp          int16
+	TypeID      sql.NullInt64
+	Power       sql.NullInt64
+	Accuracy    sql.NullInt64
+	Pp          int64
 	DamageClass string
 	Effect      string
 }
 
 type Nature struct {
-	ID            int32
+	ID            int64
 	Name          string
 	Slug          string
-	IncreasedStat pgtype.Text
-	DecreasedStat pgtype.Text
+	IncreasedStat sql.NullString
+	DecreasedStat sql.NullString
 }
 
 type Pokemon struct {
-	ID          int32
+	ID          int64
 	Name        string
 	Slug        string
-	Generation  int16
+	Generation  int64
 	SpriteUrl   string
-	BaseHp      int16
-	BaseAttack  int16
-	BaseDefense int16
-	BaseSpAtk   int16
-	BaseSpDef   int16
-	BaseSpeed   int16
+	BaseHp      int64
+	BaseAttack  int64
+	BaseDefense int64
+	BaseSpAtk   int64
+	BaseSpDef   int64
+	BaseSpeed   int64
 }
 
 type PokemonAbility struct {
-	PokemonID int32
-	AbilityID int32
-	IsHidden  bool
-	Slot      int16
+	PokemonID int64
+	AbilityID int64
+	IsHidden  int64
+	Slot      int64
 }
 
 type PokemonMove struct {
-	PokemonID      int32
-	MoveID         int32
-	VersionGroupID int32
+	PokemonID      int64
+	MoveID         int64
+	VersionGroupID int64
 	LearnMethod    string
-	LevelLearnedAt int16
+	LevelLearnedAt int64
 }
 
 type PokemonType struct {
-	PokemonID int32
-	TypeID    int32
-	Slot      int16
+	PokemonID int64
+	TypeID    int64
+	Slot      int64
 }
 
 type TeamMember struct {
-	ID          int32
-	GameStateID int32
-	PokemonID   int32
-	Level       int16
-	Slot        int16
-	IsLocked    bool
+	ID          int64
+	GameStateID int64
+	PokemonID   int64
+	Level       int64
+	Slot        int64
+	IsLocked    int64
 }
 
 type Trainer struct {
-	ID            int32
+	ID            int64
 	Name          string
 	TrainerClass  string
-	GameVersionID int32
-	BadgeNumber   int16
-	SpecialtyType pgtype.Text
+	GameVersionID int64
+	BadgeNumber   int64
+	SpecialtyType sql.NullString
 	SpriteUrl     string
 	EncounterName string
 }
 
 type TrainerPokemon struct {
-	ID        int32
-	TrainerID int32
-	PokemonID int32
-	Level     int16
-	Position  int16
+	ID        int64
+	TrainerID int64
+	PokemonID int64
+	Level     int64
+	Position  int64
 }
 
 type TrainerPokemonMove struct {
-	ID               int32
-	TrainerPokemonID int32
-	MoveID           int32
-	Slot             int16
+	ID               int64
+	TrainerPokemonID int64
+	MoveID           int64
+	Slot             int64
 }
 
 type Type struct {
-	ID   int32
+	ID   int64
 	Name string
 	Slug string
 }
 
 type TypeEfficacy struct {
-	AttackingTypeID int32
-	DefendingTypeID int32
-	DamageFactor    int16
+	AttackingTypeID int64
+	DefendingTypeID int64
+	DamageFactor    int64
 }

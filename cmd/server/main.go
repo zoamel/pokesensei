@@ -41,21 +41,21 @@ func run() error {
 	}))
 
 	// Run database migrations
-	if err := database.RunMigrations(cfg.DatabaseURL, db.EmbedMigrations); err != nil {
+	if err := database.RunMigrations(cfg.DatabasePath, db.EmbedMigrations); err != nil {
 		return fmt.Errorf("running migrations: %w", err)
 	}
 	log.Info("migrations completed")
 
-	// Create database connection pool
-	pool, err := database.NewPool(ctx, cfg.DatabaseURL)
+	// Create database connection
+	sqlDB, err := database.NewDB(ctx, cfg.DatabasePath)
 	if err != nil {
-		return fmt.Errorf("creating database pool: %w", err)
+		return fmt.Errorf("creating database connection: %w", err)
 	}
-	defer pool.Close()
+	defer sqlDB.Close()
 	log.Info("database connected")
 
 	// Wire dependencies
-	queries := generated.New(pool)
+	queries := generated.New(sqlDB)
 
 	rootHandler := handler.NewRoot(queries, log)
 	healthHandler := handler.NewHealth(queries, log)

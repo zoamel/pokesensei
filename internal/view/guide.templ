@@ -68,7 +68,7 @@ templ GuideIndexPage() {
 	}
 }
 
-templ GuideTypesPage(types []generated.Type, matrix map[int32]map[int32]int16) {
+templ GuideTypesPage(types []generated.Type, matrix map[int64]map[int64]int64) {
 	@AppShell("Type Chart", "guide") {
 		<div class="guide">
 			<a href="/guide" class="back-link">← Back to Guide</a>
@@ -314,7 +314,7 @@ func typeAbbrev(name string) string {
 	return name[:3]
 }
 
-func efficacyClass(factor int16) string {
+func efficacyClass(factor int64) string {
 	switch factor {
 	case 200:
 		return "eff-super"
@@ -327,7 +327,7 @@ func efficacyClass(factor int16) string {
 	}
 }
 
-func efficacySymbol(factor int16) string {
+func efficacySymbol(factor int64) string {
 	switch factor {
 	case 200:
 		return "2×"

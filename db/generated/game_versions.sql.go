@@ -12,11 +12,11 @@ import (
 const getGameVersionBySlug = `-- name: GetGameVersionBySlug :one
 SELECT id, name, slug
 FROM game_versions
-WHERE slug = $1
+WHERE slug = ?1
 `
 
 func (q *Queries) GetGameVersionBySlug(ctx context.Context, slug string) (GameVersion, error) {
-	row := q.db.QueryRow(ctx, getGameVersionBySlug, slug)
+	row := q.db.QueryRowContext(ctx, getGameVersionBySlug, slug)
 	var i GameVersion
 	err := row.Scan(&i.ID, &i.Name, &i.Slug)
 	return i, err
@@ -29,7 +29,7 @@ ORDER BY id
 `
 
 func (q *Queries) ListGameVersions(ctx context.Context) ([]GameVersion, error) {
-	rows, err := q.db.Query(ctx, listGameVersions)
+	rows, err := q.db.QueryContext(ctx, listGameVersions)
 	if err != nil {
 		return nil, err
 	}
@@ -41,6 +41,9 @@ func (q *Queries) ListGameVersions(ctx context.Context) ([]GameVersion, error) {
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

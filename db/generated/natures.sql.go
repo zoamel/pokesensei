@@ -16,7 +16,7 @@ ORDER BY name
 `
 
 func (q *Queries) ListNatures(ctx context.Context) ([]Nature, error) {
-	rows, err := q.db.Query(ctx, listNatures)
+	rows, err := q.db.QueryContext(ctx, listNatures)
 	if err != nil {
 		return nil, err
 	}
@@ -34,6 +34,9 @@ func (q *Queries) ListNatures(ctx context.Context) ([]Nature, error) {
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

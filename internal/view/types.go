@@ -17,7 +17,7 @@ type StarterInfo struct {
 
 // TypeInfo holds display data for a Pokémon type.
 type TypeInfo struct {
-	ID   int32
+	ID   int64
 	Name string
 	Slug string
 }

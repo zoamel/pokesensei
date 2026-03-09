@@ -7,8 +7,7 @@ package generated
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
+	"database/sql"
 )
 
 const getPokemonByID = `-- name: GetPokemonByID :one
@@ -16,11 +15,11 @@ SELECT p.id, p.name, p.slug, p.generation, p.sprite_url,
        p.base_hp, p.base_attack, p.base_defense,
        p.base_sp_atk, p.base_sp_def, p.base_speed
 FROM pokemon p
-WHERE p.id = $1
+WHERE p.id = ?1
 `
 
-func (q *Queries) GetPokemonByID(ctx context.Context, id int32) (Pokemon, error) {
-	row := q.db.QueryRow(ctx, getPokemonByID, id)
+func (q *Queries) GetPokemonByID(ctx context.Context, id int64) (Pokemon, error) {
+	row := q.db.QueryRowContext(ctx, getPokemonByID, id)
 	var i Pokemon
 	err := row.Scan(
 		&i.ID,
@@ -46,30 +45,30 @@ SELECT p.id, p.name, p.slug, p.generation, p.sprite_url,
 FROM pokemon p
 JOIN pokemon_types pt ON pt.pokemon_id = p.id
 JOIN types t ON t.id = pt.type_id
-WHERE p.id = $1
+WHERE p.id = ?1
 ORDER BY pt.slot
 `
 
 type GetPokemonWithTypesRow struct {
-	ID          int32
+	ID          int64
 	Name        string
 	Slug        string
-	Generation  int16
+	Generation  int64
 	SpriteUrl   string
-	BaseHp      int16
-	BaseAttack  int16
-	BaseDefense int16
-	BaseSpAtk   int16
-	BaseSpDef   int16
-	BaseSpeed   int16
-	TypeID      int32
+	BaseHp      int64
+	BaseAttack  int64
+	BaseDefense int64
+	BaseSpAtk   int64
+	BaseSpDef   int64
+	BaseSpeed   int64
+	TypeID      int64
 	TypeName    string
 	TypeSlug    string
-	TypeSlot    int16
+	TypeSlot    int64
 }
 
-func (q *Queries) GetPokemonWithTypes(ctx context.Context, id int32) ([]GetPokemonWithTypesRow, error) {
-	rows, err := q.db.Query(ctx, getPokemonWithTypes, id)
+func (q *Queries) GetPokemonWithTypes(ctx context.Context, id int64) ([]GetPokemonWithTypesRow, error) {
+	rows, err := q.db.QueryContext(ctx, getPokemonWithTypes, id)
 	if err != nil {
 		return nil, err
 	}
@@ -98,6 +97,9 @@ func (q *Queries) GetPokemonWithTypes(ctx context.Context, id int32) ([]GetPokem
 		}
 		items = append(items, i)
 	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -113,7 +115,7 @@ ORDER BY id
 `
 
 func (q *Queries) ListAllPokemon(ctx context.Context) ([]Pokemon, error) {
-	rows, err := q.db.Query(ctx, listAllPokemon)
+	rows, err := q.db.QueryContext(ctx, listAllPokemon)
 	if err != nil {
 		return nil, err
 	}
@@ -137,6 +139,9 @@ func (q *Queries) ListAllPokemon(ctx context.Context) ([]Pokemon, error) {
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -150,12 +155,12 @@ SELECT p.id, p.name, p.slug, p.generation, p.sprite_url,
        p.base_sp_atk, p.base_sp_def, p.base_speed
 FROM pokemon p
 JOIN pokemon_types pt ON pt.pokemon_id = p.id
-WHERE pt.type_id = $1
+WHERE pt.type_id = ?1
 ORDER BY p.id
 `
 
-func (q *Queries) ListPokemonByType(ctx context.Context, typeID int32) ([]Pokemon, error) {
-	rows, err := q.db.Query(ctx, listPokemonByType, typeID)
+func (q *Queries) ListPokemonByType(ctx context.Context, typeID int64) ([]Pokemon, error) {
+	rows, err := q.db.QueryContext(ctx, listPokemonByType, typeID)
 	if err != nil {
 		return nil, err
 	}
@@ -180,6 +185,9 @@ func (q *Queries) ListPokemonByType(ctx context.Context, typeID int32) ([]Pokemo
 		}
 		items = append(items, i)
 	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -190,20 +198,20 @@ const listPokemonTypes = `-- name: ListPokemonTypes :many
 SELECT pt.pokemon_id, pt.type_id, pt.slot, t.name AS type_name, t.slug AS type_slug
 FROM pokemon_types pt
 JOIN types t ON t.id = pt.type_id
-WHERE pt.pokemon_id = $1
+WHERE pt.pokemon_id = ?1
 ORDER BY pt.slot
 `
 
 type ListPokemonTypesRow struct {
-	PokemonID int32
-	TypeID    int32
-	Slot      int16
+	PokemonID int64
+	TypeID    int64
+	Slot      int64
 	TypeName  string
 	TypeSlug  string
 }
 
-func (q *Queries) ListPokemonTypes(ctx context.Context, pokemonID int32) ([]ListPokemonTypesRow, error) {
-	rows, err := q.db.Query(ctx, listPokemonTypes, pokemonID)
+func (q *Queries) ListPokemonTypes(ctx context.Context, pokemonID int64) ([]ListPokemonTypesRow, error) {
+	rows, err := q.db.QueryContext(ctx, listPokemonTypes, pokemonID)
 	if err != nil {
 		return nil, err
 	}
@@ -222,6 +230,9 @@ func (q *Queries) ListPokemonTypes(ctx context.Context, pokemonID int32) ([]List
 		}
 		items = append(items, i)
 	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -233,13 +244,13 @@ SELECT id, name, slug, generation, sprite_url,
        base_hp, base_attack, base_defense,
        base_sp_atk, base_sp_def, base_speed
 FROM pokemon
-WHERE name ILIKE '%' || $1 || '%'
+WHERE name LIKE '%' || CAST(?1 AS TEXT) || '%'
 ORDER BY id
 LIMIT 50
 `
 
-func (q *Queries) SearchPokemonByName(ctx context.Context, dollar_1 pgtype.Text) ([]Pokemon, error) {
-	rows, err := q.db.Query(ctx, searchPokemonByName, dollar_1)
+func (q *Queries) SearchPokemonByName(ctx context.Context, dollar_1 string) ([]Pokemon, error) {
+	rows, err := q.db.QueryContext(ctx, searchPokemonByName, dollar_1)
 	if err != nil {
 		return nil, err
 	}
@@ -264,6 +275,9 @@ func (q *Queries) SearchPokemonByName(ctx context.Context, dollar_1 pgtype.Text)
 		}
 		items = append(items, i)
 	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -276,23 +290,23 @@ SELECT DISTINCT p.id, p.name, p.slug, p.generation, p.sprite_url,
        p.base_sp_atk, p.base_sp_def, p.base_speed
 FROM pokemon p
 LEFT JOIN pokemon_types pt ON pt.pokemon_id = p.id
-LEFT JOIN encounters e ON e.pokemon_id = p.id AND e.game_version_id = $1::int
-WHERE ($2::text IS NULL OR p.name ILIKE '%' || $2 || '%')
-  AND ($3::int IS NULL OR pt.type_id = $3)
-  AND ($4::smallint IS NULL OR e.badge_required <= $4)
+LEFT JOIN encounters e ON e.pokemon_id = p.id AND e.game_version_id = CAST(?1 AS INTEGER)
+WHERE (CAST(?2 AS TEXT) IS NULL OR p.name LIKE '%' || CAST(?2 AS TEXT) || '%')
+  AND (CAST(?3 AS INTEGER) IS NULL OR pt.type_id = CAST(?3 AS INTEGER))
+  AND (CAST(?4 AS INTEGER) IS NULL OR e.badge_required <= CAST(?4 AS INTEGER))
 ORDER BY p.id
 LIMIT 60
 `
 
 type SearchPokemonFilteredParams struct {
-	GameVersionID pgtype.Int4
-	Name          pgtype.Text
-	TypeID        pgtype.Int4
-	MaxBadge      pgtype.Int2
+	GameVersionID sql.NullInt64
+	Name          sql.NullString
+	TypeID        sql.NullInt64
+	MaxBadge      sql.NullInt64
 }
 
 func (q *Queries) SearchPokemonFiltered(ctx context.Context, arg SearchPokemonFilteredParams) ([]Pokemon, error) {
-	rows, err := q.db.Query(ctx, searchPokemonFiltered,
+	rows, err := q.db.QueryContext(ctx, searchPokemonFiltered,
 		arg.GameVersionID,
 		arg.Name,
 		arg.TypeID,
@@ -321,6 +335,9 @@ func (q *Queries) SearchPokemonFiltered(ctx context.Context, arg SearchPokemonFi
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

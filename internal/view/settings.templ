@@ -16,7 +16,7 @@ templ SettingsPage(gs generated.GameState, versions []generated.GameVersion) {
 						for _, v := range versions {
 							<option
 								value={ fmt.Sprint(v.ID) }
-								if gs.GameVersionID.Valid && gs.GameVersionID.Int32 == v.ID {
+								if gs.GameVersionID.Valid && gs.GameVersionID.Int64 == v.ID {
 									selected
 								}
 							>
@@ -39,7 +39,7 @@ templ SettingsPage(gs generated.GameState, versions []generated.GameVersion) {
 									hx-trigger="change"
 									hx-patch="/settings/badge"
 									hx-swap="none"
-									if int16(i) == gs.BadgeCount {
+									if int64(i) == gs.BadgeCount {
 										checked
 									}
 								/>
@@ -65,7 +65,7 @@ templ SettingsPage(gs generated.GameState, versions []generated.GameVersion) {
 							hx-trigger="change"
 							hx-patch="/settings/trading"
 							hx-swap="none"
-							if gs.TradingEnabled {
+							if gs.TradingEnabled != 0 {
 								checked
 							}
 						/>

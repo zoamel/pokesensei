@@ -15,7 +15,7 @@ type mockHealthChecker struct {
 	err error
 }
 
-func (m *mockHealthChecker) Ping(ctx context.Context) (int32, error) {
+func (m *mockHealthChecker) Ping(ctx context.Context) (int64, error) {
 	if m.err != nil {
 		return 0, m.err
 	}
