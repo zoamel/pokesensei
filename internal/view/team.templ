@@ -53,9 +53,18 @@ templ teamBuilderSlot(slotNum int, slot TeamSlotData) {
 			<div class="builder-member">
 				<img src={ slot.Member.SpriteUrl } alt={ slot.Member.PokemonName } width="64" height="64"/>
 				<div class="builder-member-info">
+					<div class="builder-member-name-row">
 					<a href={ templ.SafeURL(fmt.Sprintf("/pokemon/%d", slot.Member.PokemonID)) } class="builder-member-name">
 						{ slot.Member.PokemonName }
 					</a>
+					<a
+						href={ templ.SafeURL(bulbapediaURL(slot.Member.PokemonName, "Pokémon")) }
+						target="_blank"
+						rel="noopener"
+						class="bulba-link"
+						title="View on Bulbapedia"
+					>↗</a>
+				</div>
 					<div class="builder-member-types">
 						for _, t := range slot.Types {
 							<span class={ "type-pill type-pill-sm", fmt.Sprintf("type-%s", t.Slug) }>{ t.Name }</span>
