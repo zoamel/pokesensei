@@ -18,6 +18,9 @@ templ BattlePage(trainers []generated.Trainer) {
 			<h1>Battle Helper</h1>
 			<div class="battle-layout">
 				<aside class="battle-sidebar">
+					<div class="battle-tools">
+						<a href="/battle/types" class="btn btn-secondary">Type Chart ↗</a>
+					</div>
 					<h2>Trainers</h2>
 					if len(trainers) == 0 {
 						<p class="empty-state">Import game data to see trainers.</p>
@@ -87,6 +90,13 @@ templ matchupCard(mu BattleMatchup) {
 			<img src={ mu.Opponent.SpriteURL } alt={ mu.Opponent.Name } width="48" height="48"/>
 			<div>
 				<strong>{ mu.Opponent.Name }</strong>
+				<a
+					href={ templ.SafeURL(bulbapediaURL(mu.Opponent.Name, "Pokémon")) }
+					target="_blank"
+					rel="noopener"
+					class="bulba-link"
+					title="View on Bulbapedia"
+				>↗</a>
 				if mu.Opponent.Level > 0 {
 					<span class="matchup-level">{ fmt.Sprintf("Lv. %d", mu.Opponent.Level) }</span>
 				}
@@ -100,6 +110,13 @@ templ matchupCard(mu BattleMatchup) {
 					<div class={ "ranking-row", rankingClass(r.Effectiveness) }>
 						<img src={ r.TeamMember.SpriteURL } alt={ r.TeamMember.Name } width="32" height="32"/>
 						<span class="ranking-name">{ r.TeamMember.Name }</span>
+					<a
+						href={ templ.SafeURL(bulbapediaURL(r.TeamMember.Name, "Pokémon")) }
+						target="_blank"
+						rel="noopener"
+						class="bulba-link"
+						title="View on Bulbapedia"
+					>↗</a>
 						if r.BestMove != nil {
 							<span class="ranking-move">{ r.BestMove.Name }</span>
 							<span class="ranking-class">{ r.BestMove.DamageClass }</span>
