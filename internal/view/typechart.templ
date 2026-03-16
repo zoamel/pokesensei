@@ -1,0 +1,86 @@
+package view
+
+import (
+	"fmt"
+	"zoamel/pokesensei/db/generated"
+)
+
+templ TypeChartPage(types []generated.Type, matrix map[int64]map[int64]int64) {
+	@AppShell("Type Chart", "battle") {
+		<div class="guide">
+			<h1>Type Chart</h1>
+			<div class="guide-content">
+				<p>Every Pokémon and move has a type. When attacking, your move's type vs the defender's type determines damage: super effective (2x), not very effective (0.5x), or immune (0x). Master a few key matchups — Water beats Fire, Fire beats Grass, Grass beats Water — and build from there.</p>
+			</div>
+			<p class="guide-intro">Click a row to highlight that attacking type's matchups.</p>
+			<div class="type-chart-wrapper" x-data="{ activeRow: null }">
+				<table class="type-chart">
+					<thead>
+						<tr>
+							<th class="type-chart-corner">Atk ↓ / Def →</th>
+							for _, t := range types {
+								<th class="type-chart-header">
+									<span class={ fmt.Sprintf("type-label type-%s", t.Slug) }>
+										{ typeAbbrev(t.Name) }
+									</span>
+								</th>
+							}
+						</tr>
+					</thead>
+					<tbody>
+						for _, atk := range types {
+							<tr
+								x-on:click={ fmt.Sprintf("activeRow = activeRow === %d ? null : %d", atk.ID, atk.ID) }
+								:class={ fmt.Sprintf("activeRow === %d && 'type-chart-active'", atk.ID) }
+								class="type-chart-row"
+							>
+								<td class="type-chart-label">
+									<span class={ fmt.Sprintf("type-label type-%s", atk.Slug) }>{ atk.Name }</span>
+								</td>
+								for _, def := range types {
+									<td class={ "type-chart-cell", efficacyClass(matrix[atk.ID][def.ID]) }>
+										{ efficacySymbol(matrix[atk.ID][def.ID]) }
+									</td>
+								}
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	}
+}
+
+func typeAbbrev(name string) string {
+	if len(name) <= 3 {
+		return name
+	}
+	return name[:3]
+}
+
+func efficacyClass(factor int64) string {
+	switch factor {
+	case 200:
+		return "eff-super"
+	case 50:
+		return "eff-not"
+	case 0:
+		return "eff-immune"
+	default:
+		return "eff-normal"
+	}
+}
+
+func efficacySymbol(factor int64) string {
+	switch factor {
+	case 200:
+		return "2×"
+	case 50:
+		return "½"
+	case 0:
+		return "0"
+	default:
+		return ""
+	}
+}
+
