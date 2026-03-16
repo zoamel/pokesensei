@@ -183,12 +183,12 @@ func AppShell(title string, activePage string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var13 = []any{"app-nav-link", templ.KV("active", activePage == "guide")}
+			var templ_7745c5c3_Var13 = []any{"app-nav-link", templ.KV("active", activePage == "settings")}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var13...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<a href=\"/guide\" class=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<a href=\"/settings\" class=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -201,29 +201,7 @@ func AppShell(title string, activePage string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\">Guide</a> ")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var15 = []any{"app-nav-link", templ.KV("active", activePage == "settings")}
-			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var15...)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<a href=\"/settings\" class=\"")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var16 string
-			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var15).String())
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/layout.templ`, Line: 1, Col: 0}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "\">Settings</a></div></div></nav><main class=\"app-main\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\">Settings</a></div></div></nav><main class=\"app-main\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -231,7 +209,7 @@ func AppShell(title string, activePage string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</main><div class=\"toast-container\" x-data=\"{ toasts: [] }\" @show-toast.window=\"\n\t\t\t\tlet t = { id: Date.now(), message: $event.detail.message, variant: $event.detail.variant || 'success' };\n\t\t\t\ttoasts.push(t);\n\t\t\t\tsetTimeout(() => toasts = toasts.filter(x => x.id !== t.id), 3000)\n\t\t\t\"><template x-for=\"t in toasts\" :key=\"t.id\"><div class=\"toast\" :class=\"t.variant === 'error' && 'toast--error'\" x-text=\"t.message\"></div></template></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</main><div class=\"toast-container\" x-data=\"{ toasts: [] }\" @show-toast.window=\"\n\t\t\t\tlet t = { id: Date.now(), message: $event.detail.message, variant: $event.detail.variant || 'success' };\n\t\t\t\ttoasts.push(t);\n\t\t\t\tsetTimeout(() => toasts = toasts.filter(x => x.id !== t.id), 3000)\n\t\t\t\"><template x-for=\"t in toasts\" :key=\"t.id\"><div class=\"toast\" :class=\"t.variant === 'error' && 'toast--error'\" x-text=\"t.message\"></div></template></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
