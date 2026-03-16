@@ -66,7 +66,6 @@ func run() error {
 	teamHandler := handler.NewTeam(queries, log)
 	suggestionHandler := handler.NewSuggestions(queries, log)
 	battleHandler := handler.NewBattle(queries, log)
-	guideHandler := handler.NewGuide(queries, log)
 
 	// Configure server and routes
 	srv := server.New(cfg, log)
@@ -109,21 +108,9 @@ func run() error {
 	srv.Handle("GET /battle/pokemon/{id}", http.HandlerFunc(battleHandler.HandlePokemonMatchup))
 	srv.Handle("GET /battle/search", http.HandlerFunc(battleHandler.HandleSearch))
 
-	// Basics Guide
-	srv.Handle("GET /guide", guideHandler)
-	srv.Handle("GET /guide/types", http.HandlerFunc(guideHandler.HandleTypes))
-	srv.Handle("GET /guide/natures", http.HandlerFunc(guideHandler.HandleNatures))
-	srv.Handle("GET /guide/abilities", http.HandlerFunc(guideHandler.HandleAbilities))
-	srv.Handle("GET /guide/abilities/search", http.HandlerFunc(guideHandler.HandleAbilitySearch))
-	srv.Handle("GET /guide/evs-ivs", http.HandlerFunc(guideHandler.HandleEVsIVs))
-	srv.Handle("GET /guide/status", http.HandlerFunc(guideHandler.HandleStatus))
-	srv.Handle("GET /guide/moves", http.HandlerFunc(guideHandler.HandleMoves))
-	srv.Handle("GET /guide/basics", http.HandlerFunc(guideHandler.HandleBasics))
-	srv.Handle("GET /guide/catching", http.HandlerFunc(guideHandler.HandleCatching))
-	srv.Handle("GET /guide/gym-tips", http.HandlerFunc(guideHandler.HandleGymTips))
-	srv.Handle("GET /guide/recommended", http.HandlerFunc(guideHandler.HandleRecommended))
-	srv.Handle("GET /guide/items", http.HandlerFunc(guideHandler.HandleItems))
-	srv.Handle("GET /guide/mechanics/{game}", http.HandlerFunc(guideHandler.HandleMechanics))
+	// Type chart (moved from /guide/types; all other /guide/* routes removed)
+	srv.Handle("GET /guide/types", http.RedirectHandler("/battle/types", http.StatusMovedPermanently))
+	srv.Handle("GET /battle/types", http.HandlerFunc(battleHandler.HandleTypeChart))
 
 	// Static files
 	srv.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
