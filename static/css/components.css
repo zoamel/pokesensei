@@ -316,6 +316,12 @@
   font-size: var(--font-size-lg);
 }
 
+.finder-filters form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
 .filter-group {
   display: flex;
   flex-direction: column;
