@@ -18,9 +18,6 @@ type PokemonStore interface {
 	GetPokemonByID(ctx context.Context, id int64) (generated.Pokemon, error)
 	GetPokemonWithTypes(ctx context.Context, id int64) ([]generated.GetPokemonWithTypesRow, error)
 	ListPokemonAbilities(ctx context.Context, pokemonID int64) ([]generated.ListPokemonAbilitiesRow, error)
-	ListEncountersByPokemon(ctx context.Context, arg generated.ListEncountersByPokemonParams) ([]generated.ListEncountersByPokemonRow, error)
-	GetEvolutionChainByPokemon(ctx context.Context, pokemonID int64) ([]generated.GetEvolutionChainByPokemonRow, error)
-	ListPokemonMoves(ctx context.Context, arg generated.ListPokemonMovesParams) ([]generated.ListPokemonMovesRow, error)
 }
 
 type PokemonHandler struct {
@@ -121,34 +118,10 @@ func (h *PokemonHandler) HandleDetail(w http.ResponseWriter, r *http.Request) {
 
 	types, _ := h.store.GetPokemonWithTypes(ctx, id)
 	abilities, _ := h.store.ListPokemonAbilities(ctx, id)
-	evoChain, _ := h.store.GetEvolutionChainByPokemon(ctx, id)
-
-	gs, _ := h.store.GetGameState(ctx)
-
-	var encounters []generated.ListEncountersByPokemonRow
-	if gs.GameVersionID.Valid {
-		encounters, _ = h.store.ListEncountersByPokemon(ctx, generated.ListEncountersByPokemonParams{
-			PokemonID:     id,
-			GameVersionID: gs.GameVersionID.Int64,
-		})
-	}
-
-	// Get moves for current game version group
-	var moves []generated.ListPokemonMovesRow
-	if gs.GameVersionID.Valid {
-		vgID := versionGroupForGame(gs.GameVersionID.Int64)
-		moves, _ = h.store.ListPokemonMoves(ctx, generated.ListPokemonMovesParams{
-			PokemonID:      id,
-			VersionGroupID: int64(vgID),
-		})
-	}
 
 	detail := view.PokemonDetail{
-		Pokemon:    pokemon,
-		Encounters: encounters,
-		EvoChain:   evoChain,
-		Abilities:  abilities,
-		Moves:      moves,
+		Pokemon:   pokemon,
+		Abilities: abilities,
 	}
 	for _, t := range types {
 		detail.Types = append(detail.Types, view.TypeInfo{
@@ -160,16 +133,5 @@ func (h *PokemonHandler) HandleDetail(w http.ResponseWriter, r *http.Request) {
 
 	if err := view.PokemonDetailPage(detail).Render(ctx, w); err != nil {
 		h.log.Error("failed to render pokemon detail", "error", err)
-	}
-}
-
-func versionGroupForGame(gameVersionID int64) int {
-	switch gameVersionID {
-	case 10, 11:
-		return 7 // FRLG
-	case 15, 16:
-		return 10 // HGSS
-	default:
-		return 7
 	}
 }
