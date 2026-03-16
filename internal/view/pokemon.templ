@@ -137,6 +137,14 @@ templ PokemonDetailPage(detail PokemonDetail) {
 				>
 					Add to Team
 				</button>
+				<a
+					href={ templ.SafeURL(bulbapediaURL(detail.Pokemon.Name, "Pokémon")) }
+					target="_blank"
+					rel="noopener"
+					class="btn btn-secondary"
+				>
+					View on Bulbapedia ↗
+				</a>
 			</div>
 			<div class="detail-sections">
 				<section class="detail-section">
@@ -157,7 +165,14 @@ templ PokemonDetailPage(detail PokemonDetail) {
 						<ul class="ability-list">
 							for _, a := range detail.Abilities {
 								<li>
-									<strong>{ a.Name }</strong>
+									<a
+										href={ templ.SafeURL(bulbapediaURL(a.Name, "Ability")) }
+										target="_blank"
+										rel="noopener"
+										class="ability-link"
+									>
+										<strong>{ a.Name }</strong> ↗
+									</a>
 									if a.IsHidden != 0 {
 										<span class="badge-hidden">Hidden</span>
 									}
@@ -167,138 +182,6 @@ templ PokemonDetailPage(detail PokemonDetail) {
 								</li>
 							}
 						</ul>
-					</section>
-				}
-				if len(detail.EvoChain) > 1 {
-					<section class="detail-section">
-						<h2>Evolution Chain</h2>
-						<div class="evo-chain">
-							for _, evo := range detail.EvoChain {
-								<div class={ "evo-step", templ.KV("current", evo.PokemonID == detail.Pokemon.ID) }>
-									<a href={ templ.SafeURL(fmt.Sprintf("/pokemon/%d", evo.PokemonID)) }>
-										<img src={ evo.SpriteUrl } alt={ evo.PokemonName } width="64" height="64"/>
-										<span>{ evo.PokemonName }</span>
-									</a>
-									if evo.TradeRequired != 0 {
-										<span class="badge-trade">Trade</span>
-									}
-									if evo.MinLevel.Valid {
-										<span class="evo-level">{ fmt.Sprintf("Lv. %d", evo.MinLevel.Int64) }</span>
-									}
-								</div>
-							}
-						</div>
-					</section>
-				}
-				if len(detail.Encounters) > 0 {
-					<section class="detail-section">
-						<h2>Locations</h2>
-						<table class="encounter-table">
-							<thead>
-								<tr>
-									<th>Location</th>
-									<th>Method</th>
-									<th>Chance</th>
-									<th>Level</th>
-									<th>Badge</th>
-								</tr>
-							</thead>
-							<tbody>
-								for _, e := range detail.Encounters {
-									<tr>
-										<td>
-											{ e.LocationName }
-											if e.AreaName != "" {
-												<span class="area-name"> ({ e.AreaName })</span>
-											}
-										</td>
-										<td>{ formatEncounterMethod(e.Method) }</td>
-										<td>{ fmt.Sprintf("%d%%", e.Chance) }</td>
-										<td>
-											if e.MinLevel == e.MaxLevel {
-												{ fmt.Sprint(e.MinLevel) }
-											} else {
-												{ fmt.Sprintf("%d–%d", e.MinLevel, e.MaxLevel) }
-											}
-										</td>
-										<td>
-											if e.BadgeRequired == 0 {
-												Start
-											} else {
-												{ fmt.Sprintf("Badge %d", e.BadgeRequired) }
-											}
-										</td>
-									</tr>
-								}
-							</tbody>
-						</table>
-					</section>
-				}
-				if len(detail.Moves) > 0 {
-					<section class="detail-section">
-						<h2>Moves</h2>
-						<p class="guide-intro"><strong>Building a moveset:</strong> Aim for 4 moves of different types. Include at least one move that matches this Pokémon's type (STAB bonus = 50% more damage). Mix Physical and Special moves based on this Pokémon's stronger attacking stat.</p>
-						<table class="move-table">
-							<thead>
-								<tr>
-									<th>Move</th>
-									<th>Type</th>
-									<th>Class</th>
-									<th>Power</th>
-									<th>Acc</th>
-									<th>PP</th>
-									<th>Method</th>
-									<th>Level</th>
-								</tr>
-							</thead>
-							<tbody>
-								for _, m := range detail.Moves {
-									<tr>
-										<td>
-											{ m.Name }
-											if m.Effect != "" {
-												<span class="move-info" data-tooltip={ m.Effect }>i</span>
-											}
-										</td>
-										<td>
-											if m.TypeSlug.Valid {
-												<span class={ "type-pill type-pill-sm", fmt.Sprintf("type-%s", m.TypeSlug.String) }>{ m.TypeName.String }</span>
-											} else {
-												–
-											}
-										</td>
-										<td>
-											<span class={ "damage-class", fmt.Sprintf("damage-%s", m.DamageClass) }>{ m.DamageClass }</span>
-										</td>
-										<td>
-											if m.Power.Valid {
-												{ fmt.Sprint(m.Power.Int64) }
-											} else {
-												–
-											}
-										</td>
-										<td>
-											if m.Accuracy.Valid {
-												{ fmt.Sprintf("%d%%", m.Accuracy.Int64) }
-											} else {
-												–
-											}
-										</td>
-										<td>{ fmt.Sprint(m.Pp) }</td>
-										<td>
-											<span class="has-tooltip" data-tooltip={ learnMethodTip(m.LearnMethod) }>{ formatLearnMethod(m.LearnMethod) }</span>
-										</td>
-										<td>
-											if m.LevelLearnedAt > 0 {
-												{ fmt.Sprint(m.LevelLearnedAt) }
-											} else {
-												–
-											}
-										</td>
-									</tr>
-								}
-							</tbody>
-						</table>
 					</section>
 				}
 			</div>

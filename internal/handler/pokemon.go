@@ -135,3 +135,14 @@ func (h *PokemonHandler) HandleDetail(w http.ResponseWriter, r *http.Request) {
 		h.log.Error("failed to render pokemon detail", "error", err)
 	}
 }
+
+func versionGroupForGame(gameVersionID int64) int {
+	switch gameVersionID {
+	case 10, 11:
+		return 7 // FRLG
+	case 15, 16:
+		return 10 // HGSS
+	default:
+		return 7
+	}
+}
