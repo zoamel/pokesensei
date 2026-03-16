@@ -23,6 +23,7 @@ type BattleStore interface {
 	GetPokemonWithTypes(ctx context.Context, id int64) ([]generated.GetPokemonWithTypesRow, error)
 	ListPokemonMovesAtLevel(ctx context.Context, arg generated.ListPokemonMovesAtLevelParams) ([]generated.ListPokemonMovesAtLevelRow, error)
 	GetTypeEfficacy(ctx context.Context) ([]generated.TypeEfficacy, error)
+	ListTypes(ctx context.Context) ([]generated.Type, error)
 	SearchPokemonFiltered(ctx context.Context, arg generated.SearchPokemonFilteredParams) ([]generated.Pokemon, error)
 }
 
@@ -255,4 +256,35 @@ func (h *BattleHandler) loadTeamMoves(ctx context.Context, team []matchup.Pokemo
 		}
 	}
 	return moves
+}
+
+// GET /battle/types — interactive type chart
+func (h *BattleHandler) HandleTypeChart(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	types, err := h.store.ListTypes(ctx)
+	if err != nil {
+		h.log.Error("failed to list types", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	efficacy, err := h.store.GetTypeEfficacy(ctx)
+	if err != nil {
+		h.log.Error("failed to get efficacy", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	matrix := make(map[int64]map[int64]int64)
+	for _, e := range efficacy {
+		if matrix[e.AttackingTypeID] == nil {
+			matrix[e.AttackingTypeID] = make(map[int64]int64)
+		}
+		matrix[e.AttackingTypeID][e.DefendingTypeID] = e.DamageFactor
+	}
+
+	if err := view.TypeChartPage(types, matrix).Render(ctx, w); err != nil {
+		h.log.Error("failed to render type chart", "error", err)
+	}
 }
