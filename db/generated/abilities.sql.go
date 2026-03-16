@@ -9,40 +9,6 @@ import (
 	"context"
 )
 
-const listAbilities = `-- name: ListAbilities :many
-SELECT id, name, slug, description
-FROM abilities
-ORDER BY name
-`
-
-func (q *Queries) ListAbilities(ctx context.Context) ([]Ability, error) {
-	rows, err := q.db.QueryContext(ctx, listAbilities)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Ability
-	for rows.Next() {
-		var i Ability
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.Slug,
-			&i.Description,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const listPokemonAbilities = `-- name: ListPokemonAbilities :many
 SELECT pa.ability_id, a.name, a.slug, a.description, pa.is_hidden, pa.slot
 FROM pokemon_abilities pa
@@ -76,43 +42,6 @@ func (q *Queries) ListPokemonAbilities(ctx context.Context, pokemonID int64) ([]
 			&i.Description,
 			&i.IsHidden,
 			&i.Slot,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const searchAbilities = `-- name: SearchAbilities :many
-SELECT id, name, slug, description
-FROM abilities
-WHERE name LIKE '%' || CAST(?1 AS TEXT) || '%'
-   OR description LIKE '%' || CAST(?1 AS TEXT) || '%'
-ORDER BY name
-LIMIT 50
-`
-
-func (q *Queries) SearchAbilities(ctx context.Context, dollar_1 string) ([]Ability, error) {
-	rows, err := q.db.QueryContext(ctx, searchAbilities, dollar_1)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Ability
-	for rows.Next() {
-		var i Ability
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.Slug,
-			&i.Description,
 		); err != nil {
 			return nil, err
 		}
