@@ -17,29 +17,16 @@ templ DashboardPage(gs generated.GameState, team []generated.ListTeamMembersRow)
 					}
 				</div>
 			</section>
-			if gs.BadgeCount <= 2 || len(team) < 3 {
-				<section class="getting-started">
-					<h2>Getting Started</h2>
-					<div class="shortcut-grid">
-						<a href="/guide/basics" class="shortcut-card">
-							<h3>How Pokémon Works</h3>
-							<p>New to Pokémon? Learn the basics here</p>
-						</a>
-						<a href="/pokemon" class="shortcut-card">
-							<h3>Pokémon Finder</h3>
-							<p>See what Pokémon are available before your next badge</p>
-						</a>
-						<a href="/battle" class="shortcut-card">
-							<h3>Battle Helper</h3>
-							<p>Prepare for your next gym battle</p>
-						</a>
-						<a href="/guide/gym-tips" class="shortcut-card">
-							<h3>Gym Strategy Tips</h3>
-							<p>Advice for beating each gym leader</p>
-						</a>
-					</div>
-				</section>
-			}
+			<section class="coverage-overview">
+				<h2>Type Coverage</h2>
+				<div
+					hx-get="/team/coverage"
+					hx-trigger="load"
+					hx-swap="innerHTML"
+				>
+					<p class="loading-text">Loading coverage...</p>
+				</div>
+			</section>
 			<section class="tool-shortcuts">
 				<h2>Tools</h2>
 				<div class="shortcut-grid">
@@ -55,10 +42,6 @@ templ DashboardPage(gs generated.GameState, team []generated.ListTeamMembersRow)
 						<h3>Pokémon Finder</h3>
 						<p>Search available Pokémon</p>
 					</a>
-					<a href="/guide" class="shortcut-card">
-						<h3>Basics Guide</h3>
-						<p>Learn game mechanics</p>
-					</a>
 				</div>
 			</section>
 			<div class="game-info">
@@ -66,6 +49,11 @@ templ DashboardPage(gs generated.GameState, team []generated.ListTeamMembersRow)
 					{ fmt.Sprintf("Badges: %d/8", gs.BadgeCount) }
 				</span>
 			</div>
+			<footer class="dashboard-footer">
+				<a href="https://bulbapedia.bulbagarden.net" target="_blank" rel="noopener" class="bulba-footer-link">
+					Game mechanics reference → Bulbapedia ↗
+				</a>
+			</footer>
 		</div>
 	}
 }

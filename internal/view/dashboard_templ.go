@@ -56,30 +56,20 @@ func DashboardPage(gs generated.GameState, team []generated.ListTeamMembersRow) 
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div></section>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			if gs.BadgeCount <= 2 || len(team) < 3 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<section class=\"getting-started\"><h2>Getting Started</h2><div class=\"shortcut-grid\"><a href=\"/guide/basics\" class=\"shortcut-card\"><h3>How Pokémon Works</h3><p>New to Pokémon? Learn the basics here</p></a> <a href=\"/pokemon\" class=\"shortcut-card\"><h3>Pokémon Finder</h3><p>See what Pokémon are available before your next badge</p></a> <a href=\"/battle\" class=\"shortcut-card\"><h3>Battle Helper</h3><p>Prepare for your next gym battle</p></a> <a href=\"/guide/gym-tips\" class=\"shortcut-card\"><h3>Gym Strategy Tips</h3><p>Advice for beating each gym leader</p></a></div></section>")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<section class=\"tool-shortcuts\"><h2>Tools</h2><div class=\"shortcut-grid\"><a href=\"/team\" class=\"shortcut-card\"><h3>Team Builder</h3><p>Build and manage your team</p></a> <a href=\"/battle\" class=\"shortcut-card\"><h3>Battle Helper</h3><p>Prepare for upcoming battles</p></a> <a href=\"/pokemon\" class=\"shortcut-card\"><h3>Pokémon Finder</h3><p>Search available Pokémon</p></a> <a href=\"/guide\" class=\"shortcut-card\"><h3>Basics Guide</h3><p>Learn game mechanics</p></a></div></section><div class=\"game-info\"><span>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div></section><section class=\"coverage-overview\"><h2>Type Coverage</h2><div hx-get=\"/team/coverage\" hx-trigger=\"load\" hx-swap=\"innerHTML\"><p class=\"loading-text\">Loading coverage...</p></div></section><section class=\"tool-shortcuts\"><h2>Tools</h2><div class=\"shortcut-grid\"><a href=\"/team\" class=\"shortcut-card\"><h3>Team Builder</h3><p>Build and manage your team</p></a> <a href=\"/battle\" class=\"shortcut-card\"><h3>Battle Helper</h3><p>Prepare for upcoming battles</p></a> <a href=\"/pokemon\" class=\"shortcut-card\"><h3>Pokémon Finder</h3><p>Search available Pokémon</p></a></div></section><div class=\"game-info\"><span>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("Badges: %d/8", gs.BadgeCount))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/dashboard.templ`, Line: 66, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/dashboard.templ`, Line: 49, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</span></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</span></div><footer class=\"dashboard-footer\"><a href=\"https://bulbapedia.bulbagarden.net\" target=\"_blank\" rel=\"noopener\" class=\"bulba-footer-link\">Game mechanics reference → Bulbapedia ↗</a></footer></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -114,90 +104,90 @@ func teamSlot(slot int, team []generated.ListTeamMembersRow) templ.Component {
 			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div class=\"team-slot\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"team-slot\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		for _, member := range team {
 			if int(member.Slot) == slot {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div class=\"team-member\"><img src=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"team-member\"><img src=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(member.SpriteUrl)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/dashboard.templ`, Line: 78, Col: 32}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/dashboard.templ`, Line: 66, Col: 32}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\" alt=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" alt=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(member.PokemonName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/dashboard.templ`, Line: 78, Col: 59}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/dashboard.templ`, Line: 66, Col: 59}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\" width=\"64\" height=\"64\"> <span class=\"member-name\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\" width=\"64\" height=\"64\"> <span class=\"member-name\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var7 string
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(member.PokemonName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/dashboard.templ`, Line: 79, Col: 51}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/dashboard.templ`, Line: 67, Col: 51}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</span> <span class=\"member-level\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</span> <span class=\"member-level\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("Lv. %d", member.Level))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/dashboard.templ`, Line: 80, Col: 69}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/dashboard.templ`, Line: 68, Col: 69}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</span></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</span></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
 		}
 		if !slotOccupied(slot, team) {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<div class=\"team-member empty\"><span class=\"empty-slot\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<div class=\"team-member empty\"><span class=\"empty-slot\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("Slot %d", slot))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/dashboard.templ`, Line: 86, Col: 59}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/view/dashboard.templ`, Line: 74, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</span></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</span></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
