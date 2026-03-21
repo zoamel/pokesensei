@@ -99,6 +99,12 @@ func run() error {
 	srv.Handle("POST /team/members", http.HandlerFunc(teamHandler.HandleAdd))
 	srv.Handle("DELETE /team/members/{id}", http.HandlerFunc(teamHandler.HandleRemove))
 	srv.Handle("PATCH /team/members/{id}", http.HandlerFunc(teamHandler.HandleUpdate))
+	srv.Handle("GET /team/members/{id}", http.HandlerFunc(teamHandler.HandleDetail))
+	srv.Handle("PATCH /team/members/{id}/nature", http.HandlerFunc(teamHandler.HandleSetNature))
+	srv.Handle("PATCH /team/members/{id}/ability", http.HandlerFunc(teamHandler.HandleSetAbility))
+	srv.Handle("POST /team/members/{id}/moves", http.HandlerFunc(teamHandler.HandleAddMove))
+	srv.Handle("DELETE /team/members/{id}/moves/{tmMoveId}", http.HandlerFunc(teamHandler.HandleRemoveMove))
+	srv.Handle("GET /team/members/{id}/moves", http.HandlerFunc(teamHandler.HandleMovesPartial))
 	srv.Handle("GET /team/coverage", http.HandlerFunc(teamHandler.HandleCoverage))
 	srv.Handle("GET /team/suggestions", suggestionHandler)
 

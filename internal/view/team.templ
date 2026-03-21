@@ -64,6 +64,11 @@ templ teamBuilderSlot(slotNum int, slot TeamSlotData) {
 						class="bulba-link"
 						title="View on Bulbapedia"
 					>↗</a>
+					<a
+						href={ templ.SafeURL(fmt.Sprintf("/team/members/%d", slot.Member.ID)) }
+						class="btn btn-outline btn-sm"
+						title="Configure moves, ability, nature"
+					>Configure</a>
 				</div>
 					<div class="builder-member-types">
 						for _, t := range slot.Types {
