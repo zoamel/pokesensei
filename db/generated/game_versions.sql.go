@@ -7,10 +7,11 @@ package generated
 
 import (
 	"context"
+	"database/sql"
 )
 
 const getGameVersionBySlug = `-- name: GetGameVersionBySlug :one
-SELECT id, name, slug
+SELECT id, name, slug, version_group_id
 FROM game_versions
 WHERE slug = ?1
 `
@@ -18,12 +19,30 @@ WHERE slug = ?1
 func (q *Queries) GetGameVersionBySlug(ctx context.Context, slug string) (GameVersion, error) {
 	row := q.db.QueryRowContext(ctx, getGameVersionBySlug, slug)
 	var i GameVersion
-	err := row.Scan(&i.ID, &i.Name, &i.Slug)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Slug,
+		&i.VersionGroupID,
+	)
 	return i, err
 }
 
+const getVersionGroupIDByGameVersion = `-- name: GetVersionGroupIDByGameVersion :one
+SELECT version_group_id
+FROM game_versions
+WHERE id = ?1
+`
+
+func (q *Queries) GetVersionGroupIDByGameVersion(ctx context.Context, id int64) (sql.NullInt64, error) {
+	row := q.db.QueryRowContext(ctx, getVersionGroupIDByGameVersion, id)
+	var version_group_id sql.NullInt64
+	err := row.Scan(&version_group_id)
+	return version_group_id, err
+}
+
 const listGameVersions = `-- name: ListGameVersions :many
-SELECT id, name, slug
+SELECT id, name, slug, version_group_id
 FROM game_versions
 ORDER BY id
 `
@@ -37,7 +56,12 @@ func (q *Queries) ListGameVersions(ctx context.Context) ([]GameVersion, error) {
 	var items []GameVersion
 	for rows.Next() {
 		var i GameVersion
-		if err := rows.Scan(&i.ID, &i.Name, &i.Slug); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Slug,
+			&i.VersionGroupID,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

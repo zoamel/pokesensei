@@ -7,6 +7,7 @@ package generated
 
 import (
 	"context"
+	"database/sql"
 )
 
 const addTeamMember = `-- name: AddTeamMember :one
@@ -23,7 +24,16 @@ type AddTeamMemberParams struct {
 	IsLocked    int64
 }
 
-func (q *Queries) AddTeamMember(ctx context.Context, arg AddTeamMemberParams) (TeamMember, error) {
+type AddTeamMemberRow struct {
+	ID          int64
+	GameStateID int64
+	PokemonID   int64
+	Level       int64
+	Slot        int64
+	IsLocked    int64
+}
+
+func (q *Queries) AddTeamMember(ctx context.Context, arg AddTeamMemberParams) (AddTeamMemberRow, error) {
 	row := q.db.QueryRowContext(ctx, addTeamMember,
 		arg.GameStateID,
 		arg.PokemonID,
@@ -31,7 +41,7 @@ func (q *Queries) AddTeamMember(ctx context.Context, arg AddTeamMemberParams) (T
 		arg.Slot,
 		arg.IsLocked,
 	)
-	var i TeamMember
+	var i AddTeamMemberRow
 	err := row.Scan(
 		&i.ID,
 		&i.GameStateID,
@@ -43,6 +53,30 @@ func (q *Queries) AddTeamMember(ctx context.Context, arg AddTeamMemberParams) (T
 	return i, err
 }
 
+const addTeamMemberMove = `-- name: AddTeamMemberMove :one
+INSERT INTO team_member_moves (team_member_id, move_id, slot)
+VALUES (?1, ?2, ?3)
+RETURNING id, team_member_id, move_id, slot
+`
+
+type AddTeamMemberMoveParams struct {
+	TeamMemberID int64
+	MoveID       int64
+	Slot         int64
+}
+
+func (q *Queries) AddTeamMemberMove(ctx context.Context, arg AddTeamMemberMoveParams) (TeamMemberMove, error) {
+	row := q.db.QueryRowContext(ctx, addTeamMemberMove, arg.TeamMemberID, arg.MoveID, arg.Slot)
+	var i TeamMemberMove
+	err := row.Scan(
+		&i.ID,
+		&i.TeamMemberID,
+		&i.MoveID,
+		&i.Slot,
+	)
+	return i, err
+}
+
 const clearTeam = `-- name: ClearTeam :exec
 DELETE FROM team_members WHERE game_state_id = ?1
 `
@@ -50,6 +84,207 @@ DELETE FROM team_members WHERE game_state_id = ?1
 func (q *Queries) ClearTeam(ctx context.Context, gameStateID int64) error {
 	_, err := q.db.ExecContext(ctx, clearTeam, gameStateID)
 	return err
+}
+
+const getTeamMemberDetail = `-- name: GetTeamMemberDetail :one
+SELECT tm.id, tm.pokemon_id, tm.level, tm.slot, tm.is_locked,
+       tm.nature_id, tm.ability_id,
+       p.name AS pokemon_name, p.slug AS pokemon_slug, p.sprite_url,
+       p.base_hp, p.base_attack, p.base_defense, p.base_sp_atk, p.base_sp_def, p.base_speed,
+       n.name AS nature_name, n.increased_stat, n.decreased_stat,
+       a.name AS ability_name
+FROM team_members tm
+JOIN pokemon p ON p.id = tm.pokemon_id
+LEFT JOIN natures n ON n.id = tm.nature_id
+LEFT JOIN abilities a ON a.id = tm.ability_id
+WHERE tm.id = ?1
+`
+
+type GetTeamMemberDetailRow struct {
+	ID            int64
+	PokemonID     int64
+	Level         int64
+	Slot          int64
+	IsLocked      int64
+	NatureID      sql.NullInt64
+	AbilityID     sql.NullInt64
+	PokemonName   string
+	PokemonSlug   string
+	SpriteUrl     string
+	BaseHp        int64
+	BaseAttack    int64
+	BaseDefense   int64
+	BaseSpAtk     int64
+	BaseSpDef     int64
+	BaseSpeed     int64
+	NatureName    sql.NullString
+	IncreasedStat sql.NullString
+	DecreasedStat sql.NullString
+	AbilityName   sql.NullString
+}
+
+func (q *Queries) GetTeamMemberDetail(ctx context.Context, id int64) (GetTeamMemberDetailRow, error) {
+	row := q.db.QueryRowContext(ctx, getTeamMemberDetail, id)
+	var i GetTeamMemberDetailRow
+	err := row.Scan(
+		&i.ID,
+		&i.PokemonID,
+		&i.Level,
+		&i.Slot,
+		&i.IsLocked,
+		&i.NatureID,
+		&i.AbilityID,
+		&i.PokemonName,
+		&i.PokemonSlug,
+		&i.SpriteUrl,
+		&i.BaseHp,
+		&i.BaseAttack,
+		&i.BaseDefense,
+		&i.BaseSpAtk,
+		&i.BaseSpDef,
+		&i.BaseSpeed,
+		&i.NatureName,
+		&i.IncreasedStat,
+		&i.DecreasedStat,
+		&i.AbilityName,
+	)
+	return i, err
+}
+
+const listAvailableMoves = `-- name: ListAvailableMoves :many
+SELECT DISTINCT m.id, m.name, m.slug, m.power, m.accuracy, m.pp,
+       m.damage_class, m.effect, pm.learn_method, pm.level_learned_at,
+       t.name AS type_name, t.slug AS type_slug
+FROM pokemon_moves pm
+JOIN moves m ON m.id = pm.move_id
+LEFT JOIN types t ON t.id = m.type_id
+WHERE pm.pokemon_id = ?1
+  AND pm.version_group_id = ?2
+  AND (
+    (pm.learn_method = 'level-up' AND pm.level_learned_at <= ?3)
+    OR pm.learn_method != 'level-up'
+  )
+ORDER BY m.name
+`
+
+type ListAvailableMovesParams struct {
+	PokemonID      int64
+	VersionGroupID int64
+	LevelLearnedAt int64
+}
+
+type ListAvailableMovesRow struct {
+	ID             int64
+	Name           string
+	Slug           string
+	Power          sql.NullInt64
+	Accuracy       sql.NullInt64
+	Pp             int64
+	DamageClass    string
+	Effect         string
+	LearnMethod    string
+	LevelLearnedAt int64
+	TypeName       sql.NullString
+	TypeSlug       sql.NullString
+}
+
+func (q *Queries) ListAvailableMoves(ctx context.Context, arg ListAvailableMovesParams) ([]ListAvailableMovesRow, error) {
+	rows, err := q.db.QueryContext(ctx, listAvailableMoves, arg.PokemonID, arg.VersionGroupID, arg.LevelLearnedAt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListAvailableMovesRow
+	for rows.Next() {
+		var i ListAvailableMovesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Slug,
+			&i.Power,
+			&i.Accuracy,
+			&i.Pp,
+			&i.DamageClass,
+			&i.Effect,
+			&i.LearnMethod,
+			&i.LevelLearnedAt,
+			&i.TypeName,
+			&i.TypeSlug,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTeamMemberMoves = `-- name: ListTeamMemberMoves :many
+SELECT tmm.id, tmm.slot, tmm.move_id,
+       m.name AS move_name, m.slug AS move_slug, m.power, m.accuracy, m.pp,
+       m.damage_class, m.effect,
+       t.name AS type_name, t.slug AS type_slug
+FROM team_member_moves tmm
+JOIN moves m ON m.id = tmm.move_id
+LEFT JOIN types t ON t.id = m.type_id
+WHERE tmm.team_member_id = ?1
+ORDER BY tmm.slot
+`
+
+type ListTeamMemberMovesRow struct {
+	ID          int64
+	Slot        int64
+	MoveID      int64
+	MoveName    string
+	MoveSlug    string
+	Power       sql.NullInt64
+	Accuracy    sql.NullInt64
+	Pp          int64
+	DamageClass string
+	Effect      string
+	TypeName    sql.NullString
+	TypeSlug    sql.NullString
+}
+
+func (q *Queries) ListTeamMemberMoves(ctx context.Context, teamMemberID int64) ([]ListTeamMemberMovesRow, error) {
+	rows, err := q.db.QueryContext(ctx, listTeamMemberMoves, teamMemberID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListTeamMemberMovesRow
+	for rows.Next() {
+		var i ListTeamMemberMovesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Slot,
+			&i.MoveID,
+			&i.MoveName,
+			&i.MoveSlug,
+			&i.Power,
+			&i.Accuracy,
+			&i.Pp,
+			&i.DamageClass,
+			&i.Effect,
+			&i.TypeName,
+			&i.TypeSlug,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listTeamMembers = `-- name: ListTeamMembers :many
@@ -112,6 +347,43 @@ DELETE FROM team_members WHERE id = ?1
 
 func (q *Queries) RemoveTeamMember(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, removeTeamMember, id)
+	return err
+}
+
+const removeTeamMemberMove = `-- name: RemoveTeamMemberMove :exec
+DELETE FROM team_member_moves WHERE id = ?1
+`
+
+func (q *Queries) RemoveTeamMemberMove(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, removeTeamMemberMove, id)
+	return err
+}
+
+const setTeamMemberAbility = `-- name: SetTeamMemberAbility :exec
+UPDATE team_members SET ability_id = ?1 WHERE id = ?2
+`
+
+type SetTeamMemberAbilityParams struct {
+	AbilityID sql.NullInt64
+	ID        int64
+}
+
+func (q *Queries) SetTeamMemberAbility(ctx context.Context, arg SetTeamMemberAbilityParams) error {
+	_, err := q.db.ExecContext(ctx, setTeamMemberAbility, arg.AbilityID, arg.ID)
+	return err
+}
+
+const setTeamMemberNature = `-- name: SetTeamMemberNature :exec
+UPDATE team_members SET nature_id = ?1 WHERE id = ?2
+`
+
+type SetTeamMemberNatureParams struct {
+	NatureID sql.NullInt64
+	ID       int64
+}
+
+func (q *Queries) SetTeamMemberNature(ctx context.Context, arg SetTeamMemberNatureParams) error {
+	_, err := q.db.ExecContext(ctx, setTeamMemberNature, arg.NatureID, arg.ID)
 	return err
 }
 

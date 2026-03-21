@@ -54,9 +54,10 @@ type GameState struct {
 }
 
 type GameVersion struct {
-	ID   int64
-	Name string
-	Slug string
+	ID             int64
+	Name           string
+	Slug           string
+	VersionGroupID sql.NullInt64
 }
 
 type Location struct {
@@ -130,6 +131,15 @@ type TeamMember struct {
 	Level       int64
 	Slot        int64
 	IsLocked    int64
+	NatureID    sql.NullInt64
+	AbilityID   sql.NullInt64
+}
+
+type TeamMemberMove struct {
+	ID           int64
+	TeamMemberID int64
+	MoveID       int64
+	Slot         int64
 }
 
 type Trainer struct {
