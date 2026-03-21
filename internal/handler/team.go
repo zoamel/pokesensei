@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -22,6 +23,16 @@ type TeamStore interface {
 	GetPokemonWithTypes(ctx context.Context, id int64) ([]generated.GetPokemonWithTypesRow, error)
 	ListTypes(ctx context.Context) ([]generated.Type, error)
 	GetTypeEfficacy(ctx context.Context) ([]generated.TypeEfficacy, error)
+	GetTeamMemberDetail(ctx context.Context, id int64) (generated.GetTeamMemberDetailRow, error)
+	ListNatures(ctx context.Context) ([]generated.Nature, error)
+	ListPokemonAbilities(ctx context.Context, pokemonID int64) ([]generated.ListPokemonAbilitiesRow, error)
+	ListTeamMemberMoves(ctx context.Context, teamMemberID int64) ([]generated.ListTeamMemberMovesRow, error)
+	ListAvailableMoves(ctx context.Context, arg generated.ListAvailableMovesParams) ([]generated.ListAvailableMovesRow, error)
+	GetVersionGroupIDByGameVersion(ctx context.Context, id int64) (sql.NullInt64, error)
+	SetTeamMemberNature(ctx context.Context, arg generated.SetTeamMemberNatureParams) error
+	SetTeamMemberAbility(ctx context.Context, arg generated.SetTeamMemberAbilityParams) error
+	AddTeamMemberMove(ctx context.Context, arg generated.AddTeamMemberMoveParams) (generated.TeamMemberMove, error)
+	RemoveTeamMemberMove(ctx context.Context, id int64) error
 }
 
 type TeamHandler struct {
@@ -282,6 +293,301 @@ func (h *TeamHandler) HandleCoverage(w http.ResponseWriter, r *http.Request) {
 	coverage := computeCoverage(types, teamTypes, efficacyMap)
 	if err := view.TeamCoveragePartial(types, coverage).Render(ctx, w); err != nil {
 		h.log.Error("failed to render coverage", "error", err)
+	}
+}
+
+// GET /team/members/{id} — team member detail page
+func (h *TeamHandler) HandleDetail(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid member ID", http.StatusBadRequest)
+		return
+	}
+
+	ctx := r.Context()
+
+	member, err := h.store.GetTeamMemberDetail(ctx, id)
+	if err != nil {
+		h.log.Error("failed to get team member detail", "id", id, "error", err)
+		http.Error(w, "Not Found", http.StatusNotFound)
+		return
+	}
+
+	types, err := h.store.GetPokemonWithTypes(ctx, member.PokemonID)
+	if err != nil {
+		h.log.Error("failed to get pokemon types", "error", err)
+	}
+	var typeInfos []view.TypeInfo
+	for _, t := range types {
+		typeInfos = append(typeInfos, view.TypeInfo{ID: t.TypeID, Name: t.TypeName, Slug: t.TypeSlug})
+	}
+
+	natures, err := h.store.ListNatures(ctx)
+	if err != nil {
+		h.log.Error("failed to list natures", "error", err)
+	}
+
+	abilities, err := h.store.ListPokemonAbilities(ctx, member.PokemonID)
+	if err != nil {
+		h.log.Error("failed to list abilities", "error", err)
+	}
+
+	moves, err := h.store.ListTeamMemberMoves(ctx, id)
+	if err != nil {
+		h.log.Error("failed to list team member moves", "error", err)
+	}
+
+	var available []generated.ListAvailableMovesRow
+	gs, err := h.store.GetGameState(ctx)
+	if err == nil && gs.GameVersionID.Valid {
+		vgID, err := h.store.GetVersionGroupIDByGameVersion(ctx, gs.GameVersionID.Int64)
+		if err == nil && vgID.Valid {
+			available, err = h.store.ListAvailableMoves(ctx, generated.ListAvailableMovesParams{
+				PokemonID:      member.PokemonID,
+				VersionGroupID: vgID.Int64,
+				LevelLearnedAt: member.Level,
+			})
+			if err != nil {
+				h.log.Error("failed to list available moves", "error", err)
+			}
+		}
+	}
+
+	assignedIDs := make(map[int64]bool)
+	for _, m := range moves {
+		assignedIDs[m.MoveID] = true
+	}
+
+	data := view.TeamMemberDetailData{
+		Member:          member,
+		Types:           typeInfos,
+		Natures:         natures,
+		Abilities:       abilities,
+		Moves:           moves,
+		Available:       available,
+		AssignedMoveIDs: assignedIDs,
+	}
+
+	if err := view.TeamMemberDetailPage(data).Render(ctx, w); err != nil {
+		h.log.Error("failed to render team member detail", "error", err)
+	}
+}
+
+// PATCH /team/members/{id}/nature — set or clear nature
+func (h *TeamHandler) HandleSetNature(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid member ID", http.StatusBadRequest)
+		return
+	}
+
+	ctx := r.Context()
+
+	var natureID sql.NullInt64
+	if v := r.FormValue("nature_id"); v != "" {
+		n, err := strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			http.Error(w, "Invalid nature_id", http.StatusBadRequest)
+			return
+		}
+		natureID = sql.NullInt64{Int64: n, Valid: true}
+	}
+
+	if err := h.store.SetTeamMemberNature(ctx, generated.SetTeamMemberNatureParams{
+		NatureID: natureID,
+		ID:       id,
+	}); err != nil {
+		h.log.Error("failed to set nature", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	member, err := h.store.GetTeamMemberDetail(ctx, id)
+	if err != nil {
+		h.log.Error("failed to re-fetch member after nature set", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	if err := view.TeamMemberStatSummary(member).Render(ctx, w); err != nil {
+		h.log.Error("failed to render stat summary", "error", err)
+	}
+}
+
+// PATCH /team/members/{id}/ability — set or clear ability
+func (h *TeamHandler) HandleSetAbility(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid member ID", http.StatusBadRequest)
+		return
+	}
+
+	ctx := r.Context()
+
+	var abilityID sql.NullInt64
+	if v := r.FormValue("ability_id"); v != "" {
+		a, err := strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			http.Error(w, "Invalid ability_id", http.StatusBadRequest)
+			return
+		}
+		abilityID = sql.NullInt64{Int64: a, Valid: true}
+	}
+
+	if err := h.store.SetTeamMemberAbility(ctx, generated.SetTeamMemberAbilityParams{
+		AbilityID: abilityID,
+		ID:        id,
+	}); err != nil {
+		h.log.Error("failed to set ability", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+// POST /team/members/{id}/moves — add a move to the team member
+func (h *TeamHandler) HandleAddMove(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid member ID", http.StatusBadRequest)
+		return
+	}
+
+	moveID, err := strconv.ParseInt(r.FormValue("move_id"), 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid move_id", http.StatusBadRequest)
+		return
+	}
+
+	ctx := r.Context()
+
+	moves, err := h.store.ListTeamMemberMoves(ctx, id)
+	if err != nil {
+		h.log.Error("failed to list moves", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	occupied := make(map[int64]bool)
+	for _, m := range moves {
+		occupied[m.Slot] = true
+	}
+
+	var slot int64
+	for s := int64(1); s <= 4; s++ {
+		if !occupied[s] {
+			slot = s
+			break
+		}
+	}
+
+	if slot == 0 {
+		http.Error(w, "No available move slots", http.StatusConflict)
+		return
+	}
+
+	if _, err := h.store.AddTeamMemberMove(ctx, generated.AddTeamMemberMoveParams{
+		TeamMemberID: id,
+		MoveID:       moveID,
+		Slot:         slot,
+	}); err != nil {
+		h.log.Error("failed to add move", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	h.renderMovesSection(w, r, id)
+}
+
+// DELETE /team/members/{id}/moves/{tmMoveId} — remove a move from the team member
+func (h *TeamHandler) HandleRemoveMove(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid member ID", http.StatusBadRequest)
+		return
+	}
+
+	tmMoveID, err := strconv.ParseInt(r.PathValue("tmMoveId"), 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid move ID", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.store.RemoveTeamMemberMove(r.Context(), tmMoveID); err != nil {
+		h.log.Error("failed to remove move", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	h.renderMovesSection(w, r, id)
+}
+
+// GET /team/members/{id}/moves — HTMX partial: moves section refresh
+func (h *TeamHandler) HandleMovesPartial(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid member ID", http.StatusBadRequest)
+		return
+	}
+
+	h.renderMovesSection(w, r, id)
+}
+
+// renderMovesSection re-fetches all move data and renders the moves section partial.
+func (h *TeamHandler) renderMovesSection(w http.ResponseWriter, r *http.Request, memberID int64) {
+	ctx := r.Context()
+
+	member, err := h.store.GetTeamMemberDetail(ctx, memberID)
+	if err != nil {
+		h.log.Error("failed to get member for moves section", "error", err)
+		http.Error(w, "Not Found", http.StatusNotFound)
+		return
+	}
+
+	moves, err := h.store.ListTeamMemberMoves(ctx, memberID)
+	if err != nil {
+		h.log.Error("failed to list team member moves", "error", err)
+	}
+
+	var available []generated.ListAvailableMovesRow
+	gs, err := h.store.GetGameState(ctx)
+	if err == nil && gs.GameVersionID.Valid {
+		vgID, err := h.store.GetVersionGroupIDByGameVersion(ctx, gs.GameVersionID.Int64)
+		if err == nil && vgID.Valid {
+			available, err = h.store.ListAvailableMoves(ctx, generated.ListAvailableMovesParams{
+				PokemonID:      member.PokemonID,
+				VersionGroupID: vgID.Int64,
+				LevelLearnedAt: member.Level,
+			})
+			if err != nil {
+				h.log.Error("failed to list available moves", "error", err)
+			}
+		}
+	}
+
+	assignedIDs := make(map[int64]bool)
+	for _, m := range moves {
+		assignedIDs[m.MoveID] = true
+	}
+
+	if err := view.TeamMemberMovesSection(memberID, moves, available, assignedIDs).Render(ctx, w); err != nil {
+		h.log.Error("failed to render moves section", "error", err)
 	}
 }
 
