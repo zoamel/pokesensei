@@ -1305,3 +1305,227 @@
   from { opacity: 1; translate: 0 0; }
   to   { opacity: 0; translate: 0 -0.5rem; }
 }
+
+/* Team Member Detail Page */
+.member-detail {
+  max-inline-size: 56rem;
+}
+
+.member-detail-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-block-end: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.member-detail-title {
+  flex: 1;
+  min-inline-size: 15rem;
+}
+
+.member-detail-title h1 {
+  font-size: var(--font-size-2xl);
+  margin-block-end: var(--space-1);
+}
+
+.member-detail-types {
+  display: flex;
+  gap: var(--space-2);
+  margin-block-start: var(--space-1);
+}
+
+.member-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.member-detail-section h2 {
+  font-size: var(--font-size-lg);
+  margin-block-end: var(--space-4);
+  padding-block-end: var(--space-2);
+  border-block-end: 1px solid var(--color-border);
+}
+
+/* Move slots grid */
+.move-slots {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+}
+
+@media (max-width: 32rem) {
+  .move-slots { grid-template-columns: 1fr; }
+}
+
+.move-slot {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  min-block-size: 4rem;
+}
+
+.move-slot-filled {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+
+.move-slot-name {
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  flex: 1;
+}
+
+.move-slot-meta {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.move-slot-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3);
+  color: var(--color-text-muted);
+  text-align: center;
+  min-block-size: 4rem;
+}
+
+.empty-slot-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* Available moves panel */
+.available-moves-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.move-search {
+  inline-size: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+}
+
+.available-moves {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-block-size: 24rem;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.available-move-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-block-end: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.available-move-row:last-child {
+  border-block-end: none;
+}
+
+.available-move-row:hover {
+  background: var(--color-surface-alt);
+}
+
+.available-move-name {
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  flex: 1;
+}
+
+.available-move-meta {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.available-move-learn {
+  font-size: 0.7rem;
+  padding: 0.125rem var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+/* Stats section */
+.stats-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.stat-row {
+  display: grid;
+  grid-template-columns: 5rem 2.5rem 1fr;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.stat-name {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.stat-value {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-align: end;
+}
+
+.stat-bar {
+  block-size: 0.5rem;
+  background: var(--color-surface-alt);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.stat-bar-fill {
+  block-size: 100%;
+  background: var(--color-primary);
+  border-radius: 999px;
+}
+
+.stat-boosted .stat-bar-fill {
+  background: oklch(0.55 0.15 145);
+}
+
+.stat-reduced .stat-bar-fill {
+  background: oklch(0.55 0.15 25);
+}
+
+/* Form elements */
+.member-detail select {
+  inline-size: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  margin-block-end: var(--space-3);
+}
+
+.member-detail-header .back-link {
+  order: -1;
+  flex-basis: 100%;
+}
