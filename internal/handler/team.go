@@ -15,7 +15,7 @@ import (
 type TeamStore interface {
 	GetGameState(ctx context.Context) (generated.GameState, error)
 	ListTeamMembers(ctx context.Context, gameStateID int64) ([]generated.ListTeamMembersRow, error)
-	AddTeamMember(ctx context.Context, arg generated.AddTeamMemberParams) (generated.TeamMember, error)
+	AddTeamMember(ctx context.Context, arg generated.AddTeamMemberParams) (generated.AddTeamMemberRow, error)
 	RemoveTeamMember(ctx context.Context, id int64) error
 	UpdateTeamMemberLevel(ctx context.Context, arg generated.UpdateTeamMemberLevelParams) error
 	UpdateTeamMemberLock(ctx context.Context, arg generated.UpdateTeamMemberLockParams) error
