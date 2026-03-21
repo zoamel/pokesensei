@@ -50,6 +50,23 @@ type CoverageCell struct {
 }
 
 
+// TeamMemberDetailData holds all data for the team member detail page.
+type TeamMemberDetailData struct {
+	Member          generated.GetTeamMemberDetailRow
+	Types           []TypeInfo
+	Natures         []generated.Nature
+	Abilities       []generated.ListPokemonAbilitiesRow
+	Moves           []generated.ListTeamMemberMovesRow
+	Available       []generated.ListAvailableMovesRow
+	AssignedMoveIDs map[int64]bool
+}
+
+// MoveSlotData holds data for rendering a single move slot.
+type MoveSlotData struct {
+	SlotNum int
+	Move    *generated.ListTeamMemberMovesRow
+}
+
 func titleCase(s string) string {
 	parts := strings.Split(s, "-")
 	for i, p := range parts {

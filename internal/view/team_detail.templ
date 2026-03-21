@@ -1,0 +1,267 @@
+package view
+
+import (
+	"fmt"
+	"zoamel/pokesensei/db/generated"
+)
+
+templ TeamMemberDetailPage(data TeamMemberDetailData) {
+	@AppShell(data.Member.PokemonName+" — Team Config", "team") {
+		<div class="member-detail">
+			<a href="/team" class="back-link">← Back to Team</a>
+			<div class="member-detail-header">
+				<img src={ data.Member.SpriteUrl } alt={ data.Member.PokemonName } width="64" height="64"/>
+				<div class="member-detail-title">
+					<h1>{ data.Member.PokemonName }</h1>
+					<div class="member-detail-types">
+						for _, t := range data.Types {
+							<span class={ "type-pill type-pill-sm", fmt.Sprintf("type-%s", t.Slug) }>{ t.Name }</span>
+						}
+					</div>
+				</div>
+				<label class="level-input">
+					<span>Lv.</span>
+					<input
+						type="number"
+						name="level"
+						value={ fmt.Sprint(data.Member.Level) }
+						min="1"
+						max="100"
+						hx-patch={ fmt.Sprintf("/team/members/%d", data.Member.ID) }
+						hx-trigger="change"
+						hx-swap="none"
+					/>
+				</label>
+				<a
+					href={ templ.SafeURL(bulbapediaURL(data.Member.PokemonName, "Pokémon")) }
+					target="_blank"
+					rel="noopener"
+					class="btn btn-secondary"
+				>
+					View on Bulbapedia ↗
+				</a>
+			</div>
+			<div class="member-detail-body">
+				<section id="nature-section" class="member-detail-section">
+					<h2>Nature</h2>
+					<select
+						name="nature_id"
+						hx-patch={ fmt.Sprintf("/team/members/%d/nature", data.Member.ID) }
+						hx-trigger="change"
+						hx-target="#stat-summary"
+						hx-swap="innerHTML"
+						hx-include="this"
+					>
+						<option value="">— No nature —</option>
+						for _, n := range data.Natures {
+							<option
+								value={ fmt.Sprint(n.ID) }
+								if data.Member.NatureID.Valid && data.Member.NatureID.Int64 == n.ID {
+									selected
+								}
+							>{ natureLabel(n) }</option>
+						}
+					</select>
+				</section>
+				<section id="ability-section" class="member-detail-section">
+					<h2>Ability</h2>
+					<select
+						name="ability_id"
+						hx-patch={ fmt.Sprintf("/team/members/%d/ability", data.Member.ID) }
+						hx-trigger="change"
+						hx-swap="none"
+						hx-include="this"
+					>
+						<option value="">— No ability —</option>
+						for _, a := range data.Abilities {
+							<option
+								value={ fmt.Sprint(a.AbilityID) }
+								if data.Member.AbilityID.Valid && data.Member.AbilityID.Int64 == a.AbilityID {
+									selected
+								}
+							>
+								if a.IsHidden != 0 {
+									{ a.Name + " (Hidden)" }
+								} else {
+									{ a.Name }
+								}
+							</option>
+						}
+					</select>
+				</section>
+				<section id="moves-section" class="member-detail-section">
+					<h2>Moves</h2>
+					@TeamMemberMovesSection(data.Member.ID, data.Moves, data.Available, data.AssignedMoveIDs)
+				</section>
+				<section class="member-detail-section">
+					<h2>Base Stats</h2>
+					<div id="stat-summary">
+						@TeamMemberStatSummary(data.Member)
+					</div>
+				</section>
+			</div>
+		</div>
+	}
+}
+
+templ TeamMemberMovesSection(memberID int64, moves []generated.ListTeamMemberMovesRow, available []generated.ListAvailableMovesRow, assignedIDs map[int64]bool) {
+	<div hx-trigger="team-updated from:body" hx-get={ fmt.Sprintf("/team/members/%d/moves", memberID) } hx-target="#moves-section" hx-swap="innerHTML">
+		<div class="move-slots">
+			for slotNum := 1; slotNum <= 4; slotNum++ {
+				<div class="move-slot">
+					{{ var assignedMove *generated.ListTeamMemberMovesRow }}
+					for i := range moves {
+						if moves[i].Slot == int64(slotNum) {
+							{{ assignedMove = &moves[i] }}
+						}
+					}
+					if assignedMove != nil {
+						<div class="move-slot-filled">
+							<span class="move-slot-name">{ assignedMove.MoveName }</span>
+							if assignedMove.TypeName.Valid {
+								<span class={ "type-pill type-pill-sm", fmt.Sprintf("type-%s", assignedMove.TypeSlug.String) }>{ assignedMove.TypeName.String }</span>
+							}
+							<span class="move-slot-meta">
+								if assignedMove.Power.Valid {
+									{ fmt.Sprintf("Pwr %d", assignedMove.Power.Int64) }
+								} else {
+									{ "Pwr —" }
+								}
+								{ " · " }
+								if assignedMove.Accuracy.Valid {
+									{ fmt.Sprintf("Acc %d%%", assignedMove.Accuracy.Int64) }
+								} else {
+									{ "Acc —" }
+								}
+								{ " · " }
+								{ titleCase(assignedMove.DamageClass) }
+							</span>
+							<button
+								class="btn-remove"
+								hx-delete={ fmt.Sprintf("/team/members/%d/moves/%d", memberID, assignedMove.ID) }
+								hx-target="#moves-section"
+								hx-swap="innerHTML"
+								title="Remove move"
+							>×</button>
+						</div>
+					} else {
+						<div class="move-slot-empty">
+							<span class="empty-slot-label">{ fmt.Sprintf("Slot %d — Empty", slotNum) }</span>
+						</div>
+					}
+				</div>
+			}
+		</div>
+		<div class="available-moves-panel" x-data="{ search: '' }">
+			<h3>Available Moves</h3>
+			<input type="text" x-model="search" placeholder="Search moves..." class="move-search"/>
+			<div class="available-moves">
+				for _, m := range available {
+					<div
+						class="available-move-row"
+						x-show={ "search === '' || $el.dataset.name.toLowerCase().includes(search.toLowerCase())" }
+						data-name={ m.Name }
+					>
+						<span class="available-move-name">{ m.Name }</span>
+						if m.TypeName.Valid {
+							<span class={ "type-pill type-pill-sm", fmt.Sprintf("type-%s", m.TypeSlug.String) }>{ m.TypeName.String }</span>
+						}
+						<span class="available-move-meta">
+							if m.Power.Valid {
+								{ fmt.Sprintf("Pwr %d", m.Power.Int64) }
+							} else {
+								{ "Pwr —" }
+							}
+							{ " · " }
+							if m.Accuracy.Valid {
+								{ fmt.Sprintf("Acc %d%%", m.Accuracy.Int64) }
+							} else {
+								{ "Acc —" }
+							}
+							{ " · " }
+							{ titleCase(m.DamageClass) }
+						</span>
+						<span class="available-move-learn">{ titleCase(m.LearnMethod) }</span>
+						<button
+							class="btn btn-sm btn-outline"
+							hx-post={ fmt.Sprintf("/team/members/%d/moves", memberID) }
+							hx-target="#moves-section"
+							hx-swap="innerHTML"
+							hx-vals={ fmt.Sprintf(`{"move_id": "%d"}`, m.ID) }
+							if len(moves) >= 4 || assignedIDs[m.ID] {
+								disabled
+							}
+						>Add</button>
+					</div>
+				}
+			</div>
+		</div>
+	</div>
+}
+
+templ TeamMemberStatSummary(member generated.GetTeamMemberDetailRow) {
+	<div class="stats-grid">
+		<div class={ "stat-row", statNatureClass("", member) }>
+			<span class="stat-name">HP</span>
+			<span class="stat-value">{ fmt.Sprint(member.BaseHp) }</span>
+			<div class="stat-bar">
+				<div class="stat-bar-fill" style={ fmt.Sprintf("width: %d%%", member.BaseHp*100/255) }></div>
+			</div>
+		</div>
+		<div class={ "stat-row", statNatureClass("attack", member) }>
+			<span class="stat-name">Attack</span>
+			<span class="stat-value">{ fmt.Sprint(member.BaseAttack) }</span>
+			<div class="stat-bar">
+				<div class={ "stat-bar-fill", statNatureClass("attack", member) } style={ fmt.Sprintf("width: %d%%", member.BaseAttack*100/255) }></div>
+			</div>
+		</div>
+		<div class={ "stat-row", statNatureClass("defense", member) }>
+			<span class="stat-name">Defense</span>
+			<span class="stat-value">{ fmt.Sprint(member.BaseDefense) }</span>
+			<div class="stat-bar">
+				<div class={ "stat-bar-fill", statNatureClass("defense", member) } style={ fmt.Sprintf("width: %d%%", member.BaseDefense*100/255) }></div>
+			</div>
+		</div>
+		<div class={ "stat-row", statNatureClass("special-attack", member) }>
+			<span class="stat-name">Sp. Atk</span>
+			<span class="stat-value">{ fmt.Sprint(member.BaseSpAtk) }</span>
+			<div class="stat-bar">
+				<div class={ "stat-bar-fill", statNatureClass("special-attack", member) } style={ fmt.Sprintf("width: %d%%", member.BaseSpAtk*100/255) }></div>
+			</div>
+		</div>
+		<div class={ "stat-row", statNatureClass("special-defense", member) }>
+			<span class="stat-name">Sp. Def</span>
+			<span class="stat-value">{ fmt.Sprint(member.BaseSpDef) }</span>
+			<div class="stat-bar">
+				<div class={ "stat-bar-fill", statNatureClass("special-defense", member) } style={ fmt.Sprintf("width: %d%%", member.BaseSpDef*100/255) }></div>
+			</div>
+		</div>
+		<div class={ "stat-row", statNatureClass("speed", member) }>
+			<span class="stat-name">Speed</span>
+			<span class="stat-value">{ fmt.Sprint(member.BaseSpeed) }</span>
+			<div class="stat-bar">
+				<div class={ "stat-bar-fill", statNatureClass("speed", member) } style={ fmt.Sprintf("width: %d%%", member.BaseSpeed*100/255) }></div>
+			</div>
+		</div>
+	</div>
+}
+
+func natureLabel(n generated.Nature) string {
+	if !n.IncreasedStat.Valid {
+		return n.Name
+	}
+	return fmt.Sprintf("%s (+%s / -%s)", n.Name, titleCase(n.IncreasedStat.String), titleCase(n.DecreasedStat.String))
+}
+
+func statNatureClass(statName string, member generated.GetTeamMemberDetailRow) string {
+	if statName == "" {
+		return ""
+	}
+	if member.IncreasedStat.Valid && member.IncreasedStat.String == statName {
+		return "stat-boosted"
+	}
+	if member.DecreasedStat.Valid && member.DecreasedStat.String == statName {
+		return "stat-reduced"
+	}
+	return ""
+}
