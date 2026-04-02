@@ -44,14 +44,8 @@ func (h *PokemonHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	gc, _ := gamecontext.FromRequest(r)
-	gs := generated.GameState{
-		ID:             gc.GameStateID,
-		GameVersionID:  sql.NullInt64{Int64: gc.GameVersionID, Valid: true},
-		BadgeCount:     gc.BadgeCount,
-		TradingEnabled: boolToInt64(gc.TradingEnabled),
-	}
 
-	if err := view.PokemonFinderPage(types, gs).Render(ctx, w); err != nil {
+	if err := view.PokemonFinderPage(types, gc).Render(ctx, w); err != nil {
 		h.log.Error("failed to render pokemon finder", "error", err)
 	}
 }

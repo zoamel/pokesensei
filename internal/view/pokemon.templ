@@ -3,9 +3,10 @@ package view
 import (
 	"fmt"
 	"zoamel/pokesensei/db/generated"
+	"zoamel/pokesensei/internal/gamecontext"
 )
 
-templ PokemonFinderPage(types []generated.Type, gs generated.GameState) {
+templ PokemonFinderPage(types []generated.Type, gc gamecontext.GameContext) {
 	@AppShell("Pokémon Finder", "pokemon") {
 		<div class="finder">
 			<h1>Pokémon Finder</h1>
@@ -13,9 +14,7 @@ templ PokemonFinderPage(types []generated.Type, gs generated.GameState) {
 				<aside class="finder-filters">
 					<h2>Filters</h2>
 					<form id="pokemon-filters">
-						if gs.GameVersionID.Valid {
-							<input type="hidden" name="game_version_id" value={ fmt.Sprint(gs.GameVersionID.Int64) }/>
-						}
+						<input type="hidden" name="game_version_id" value={ fmt.Sprint(gc.GameVersionID) }/>
 						<div class="filter-group">
 							<label for="name-search">Name</label>
 							<input
@@ -45,35 +44,33 @@ templ PokemonFinderPage(types []generated.Type, gs generated.GameState) {
 								}
 							</select>
 						</div>
-						if gs.GameVersionID.Valid {
-							<div class="filter-group">
-								<label for="badge-filter">Max Badge</label>
-								<select
-									id="badge-filter"
-									name="max_badge"
-									hx-get="/pokemon/search"
-									hx-trigger="change"
-									hx-target="#search-results"
-									hx-include="#pokemon-filters"
-								>
-									<option value="">Any Badge</option>
-									for i := 0; i <= 8; i++ {
-										<option
-											value={ fmt.Sprint(i) }
-											if int64(i) == gs.BadgeCount {
-												selected
-											}
-										>
-											if i == 0 {
-												Pre-badge
-											} else {
-												{ fmt.Sprintf("Badge %d", i) }
-											}
-										</option>
-									}
-								</select>
-							</div>
-						}
+						<div class="filter-group">
+							<label for="badge-filter">Max Badge</label>
+							<select
+								id="badge-filter"
+								name="max_badge"
+								hx-get="/pokemon/search"
+								hx-trigger="change"
+								hx-target="#search-results"
+								hx-include="#pokemon-filters"
+							>
+								<option value="">Any Badge</option>
+								for i := 0; int64(i) <= gc.MaxBadges; i++ {
+									<option
+										value={ fmt.Sprint(i) }
+										if int64(i) == gc.BadgeCount {
+											selected
+										}
+									>
+										if i == 0 {
+											Pre-badge
+										} else {
+											{ fmt.Sprintf("Badge %d", i) }
+										}
+									</option>
+								}
+							</select>
+						</div>
 					</form>
 				</aside>
 				<section class="finder-results">
