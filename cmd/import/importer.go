@@ -177,20 +177,9 @@ func (imp *Importer) ImportNatures(ctx context.Context) error {
 	return nil
 }
 
-func (imp *Importer) ImportGameVersions(ctx context.Context) error {
+func (imp *Importer) ImportGameVersions(ctx context.Context, versionGroupIDs []int) error {
 	if _, err := imp.db.ExecContext(ctx, "DELETE FROM game_versions"); err != nil {
 		return err
-	}
-
-	versions := []struct {
-		id   int
-		name string
-		slug string
-	}{
-		{10, "FireRed", "firered"},
-		{11, "LeafGreen", "leafgreen"},
-		{15, "HeartGold", "heartgold"},
-		{16, "SoulSilver", "soulsilver"},
 	}
 
 	tx, err := imp.db.BeginTx(ctx, nil)
@@ -199,17 +188,27 @@ func (imp *Importer) ImportGameVersions(ctx context.Context) error {
 	}
 	defer tx.Rollback()
 
-	for _, v := range versions {
-		if _, err := tx.ExecContext(ctx, "INSERT INTO game_versions (id, name, slug) VALUES (?, ?, ?)",
-			v.id, v.name, v.slug); err != nil {
-			return fmt.Errorf("inserting game version: %w", err)
+	count := 0
+	for _, vgID := range versionGroupIDs {
+		apiVG, err := imp.client.GetVersionGroup(ctx, vgID)
+		if err != nil {
+			return fmt.Errorf("fetching version group %d from PokeAPI: %w", vgID, err)
+		}
+		for _, v := range apiVG.Versions {
+			versionID := extractID(v.URL)
+			if _, err := tx.ExecContext(ctx,
+				"INSERT OR IGNORE INTO game_versions (id, name, slug, version_group_id) VALUES (?, ?, ?, ?)",
+				versionID, formatName(v.Name), v.Name, vgID); err != nil {
+				return fmt.Errorf("inserting game version %s: %w", v.Name, err)
+			}
+			count++
 		}
 	}
 
 	if err := tx.Commit(); err != nil {
 		return err
 	}
-	imp.log.Info("imported game versions", "count", len(versions))
+	imp.log.Info("imported game versions", "count", count)
 	return nil
 }
 
@@ -529,7 +528,8 @@ func (imp *Importer) ImportEncounters(ctx context.Context, gameGroup string, vg 
 	locationCache := make(map[string]int64) // "pokeapi_id:version_id:area" -> location row id
 	count := 0
 
-	for pokemonID := 1; pokemonID <= 493; pokemonID++ {
+	maxDex := vg.MaxPokedex
+	for pokemonID := 1; pokemonID <= maxDex; pokemonID++ {
 		encounters, err := imp.client.GetPokemonEncounters(ctx, pokemonID)
 		if err != nil {
 			continue
@@ -608,7 +608,7 @@ func (imp *Importer) ImportEncounters(ctx context.Context, gameGroup string, vg 
 		}
 
 		if pokemonID%50 == 0 {
-			imp.log.Info("importing encounters", "progress", fmt.Sprintf("%d/493", pokemonID))
+			imp.log.Info("importing encounters", "progress", fmt.Sprintf("%d/%d", pokemonID, maxDex))
 		}
 	}
 

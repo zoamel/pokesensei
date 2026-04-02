@@ -30,6 +30,27 @@ func (q *Queries) GetVersionGroup(ctx context.Context, id int64) (VersionGroup, 
 	return i, err
 }
 
+const getVersionGroupBySlug = `-- name: GetVersionGroupBySlug :one
+SELECT id, name, slug, generation, max_pokedex, type_chart_era, max_badges
+FROM version_groups
+WHERE slug = ?1
+`
+
+func (q *Queries) GetVersionGroupBySlug(ctx context.Context, slug string) (VersionGroup, error) {
+	row := q.db.QueryRowContext(ctx, getVersionGroupBySlug, slug)
+	var i VersionGroup
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Slug,
+		&i.Generation,
+		&i.MaxPokedex,
+		&i.TypeChartEra,
+		&i.MaxBadges,
+	)
+	return i, err
+}
+
 const listVersionGroups = `-- name: ListVersionGroups :many
 SELECT id, name, slug, generation, max_pokedex, type_chart_era, max_badges
 FROM version_groups

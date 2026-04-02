@@ -6,28 +6,12 @@ import (
 	"os"
 )
 
-// VersionGroupInfo maps game group shorthand to PokéAPI IDs.
+// VersionGroupInfo holds resolved version group data from the database and PokeAPI.
 type VersionGroupInfo struct {
 	VersionGroupID int
 	VersionIDs     []int
-	VersionSlugs   []string
 	Name           string
-}
-
-// VersionGroups maps CLI flag values to PokéAPI version group info.
-var VersionGroups = map[string]VersionGroupInfo{
-	"frlg": {
-		VersionGroupID: 7,
-		VersionIDs:     []int{10, 11},
-		VersionSlugs:   []string{"firered", "leafgreen"},
-		Name:           "FireRed/LeafGreen",
-	},
-	"hgss": {
-		VersionGroupID: 10,
-		VersionIDs:     []int{15, 16},
-		VersionSlugs:   []string{"heartgold", "soulsilver"},
-		Name:           "HeartGold/SoulSilver",
-	},
+	MaxPokedex     int
 }
 
 // LoadBadgeMap loads a badge-to-location mapping from a JSON file.

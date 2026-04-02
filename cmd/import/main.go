@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -9,6 +10,7 @@ import (
 	"strings"
 
 	"zoamel/pokesensei/db"
+	"zoamel/pokesensei/db/generated"
 	"zoamel/pokesensei/internal/database"
 )
 
@@ -23,13 +25,11 @@ func run() error {
 	var (
 		databasePath string
 		games        string
-		maxDex       int
 		seedTrainers bool
 	)
 
 	flag.StringVar(&databasePath, "database-path", os.Getenv("DATABASE_PATH"), "SQLite database file path")
-	flag.StringVar(&games, "games", "frlg,hgss", "Comma-separated game groups to import (frlg, hgss)")
-	flag.IntVar(&maxDex, "max-dex", 493, "Maximum national dex number to import (default: 493 for Gen IV)")
+	flag.StringVar(&games, "games", "frlg,hgss", "Comma-separated game group slugs to import (must exist in version_groups table)")
 	flag.BoolVar(&seedTrainers, "seed-trainers", false, "Import trainer seed data from db/seed/ JSON files")
 	flag.Parse()
 
@@ -55,14 +55,36 @@ func run() error {
 	}
 	defer sqlDB.Close()
 
+	queries := generated.New(sqlDB)
+
+	// Parse game group slugs and resolve against DB
+	gameSlugs := strings.Split(games, ",")
+	for i := range gameSlugs {
+		gameSlugs[i] = strings.TrimSpace(gameSlugs[i])
+	}
+
+	var versionGroups []generated.VersionGroup
+	for _, slug := range gameSlugs {
+		vg, err := queries.GetVersionGroupBySlug(ctx, slug)
+		if err != nil {
+			return fmt.Errorf("unknown game group %q (not found in version_groups table): %w", slug, err)
+		}
+		versionGroups = append(versionGroups, vg)
+	}
+
+	// Determine global max dex across all requested games
+	var maxDex int
+	var versionGroupIDs []int
+	for _, vg := range versionGroups {
+		if int(vg.MaxPokedex) > maxDex {
+			maxDex = int(vg.MaxPokedex)
+		}
+		versionGroupIDs = append(versionGroupIDs, int(vg.ID))
+	}
+	log.Info("resolved game groups", "slugs", gameSlugs, "max_dex", maxDex)
+
 	client := NewPokeAPIClient(log)
 	importer := NewImporter(sqlDB, client, log)
-
-	// Parse game groups
-	gameGroups := strings.Split(games, ",")
-	for i := range gameGroups {
-		gameGroups[i] = strings.TrimSpace(gameGroups[i])
-	}
 
 	// Always import shared data first
 	log.Info("importing shared data (types, natures)")
@@ -76,8 +98,8 @@ func run() error {
 		return fmt.Errorf("importing natures: %w", err)
 	}
 
-	// Import game versions
-	if err := importer.ImportGameVersions(ctx); err != nil {
+	// Import game versions from PokeAPI (based on version_groups in DB)
+	if err := importer.ImportGameVersions(ctx, versionGroupIDs); err != nil {
 		return fmt.Errorf("importing game versions: %w", err)
 	}
 
@@ -98,23 +120,25 @@ func run() error {
 	}
 
 	// Import moves and learnsets per game group
-	for _, group := range gameGroups {
-		vg, ok := VersionGroups[group]
-		if !ok {
-			return fmt.Errorf("unknown game group: %s (valid: frlg, hgss)", group)
+	for i, vg := range versionGroups {
+		slug := gameSlugs[i]
+		vgInfo, err := resolveVersionGroupInfo(ctx, queries, vg)
+		if err != nil {
+			return fmt.Errorf("resolving version info for %s: %w", slug, err)
 		}
-		log.Info("importing game-specific data", "group", group, "version_group_id", vg.VersionGroupID)
+
+		log.Info("importing game-specific data", "group", slug, "version_group_id", vg.ID)
 
 		if err := importer.ImportMoves(ctx); err != nil {
-			return fmt.Errorf("importing moves for %s: %w", group, err)
+			return fmt.Errorf("importing moves for %s: %w", slug, err)
 		}
 
-		if err := importer.ImportLearnsets(ctx, maxDex, vg.VersionGroupID); err != nil {
-			return fmt.Errorf("importing learnsets for %s: %w", group, err)
+		if err := importer.ImportLearnsets(ctx, int(vg.MaxPokedex), int(vg.ID)); err != nil {
+			return fmt.Errorf("importing learnsets for %s: %w", slug, err)
 		}
 
-		if err := importer.ImportEncounters(ctx, group, vg); err != nil {
-			return fmt.Errorf("importing encounters for %s: %w", group, err)
+		if err := importer.ImportEncounters(ctx, slug, vgInfo); err != nil {
+			return fmt.Errorf("importing encounters for %s: %w", slug, err)
 		}
 	}
 
@@ -130,8 +154,8 @@ func run() error {
 			"frlg": "db/seed/frlg_trainers.json",
 			"hgss": "db/seed/hgss_trainers.json",
 		}
-		for _, group := range gameGroups {
-			if seedFile, ok := seedFiles[group]; ok {
+		for _, slug := range gameSlugs {
+			if seedFile, ok := seedFiles[slug]; ok {
 				log.Info("seeding trainer data", "file", seedFile)
 				if err := seedImporter.ImportTrainersFromFile(ctx, seedFile); err != nil {
 					return fmt.Errorf("seeding trainers from %s: %w", seedFile, err)
@@ -142,4 +166,23 @@ func run() error {
 
 	log.Info("import complete")
 	return nil
+}
+
+// resolveVersionGroupInfo builds a VersionGroupInfo from DB data by querying
+// the game_versions table for the individual version IDs.
+func resolveVersionGroupInfo(ctx context.Context, queries *generated.Queries, vg generated.VersionGroup) (VersionGroupInfo, error) {
+	versions, err := queries.ListGameVersionsByVersionGroup(ctx, sql.NullInt64{Int64: vg.ID, Valid: true})
+	if err != nil {
+		return VersionGroupInfo{}, fmt.Errorf("listing game versions for group %d: %w", vg.ID, err)
+	}
+
+	info := VersionGroupInfo{
+		VersionGroupID: int(vg.ID),
+		Name:           vg.Name,
+		MaxPokedex:     int(vg.MaxPokedex),
+	}
+	for _, v := range versions {
+		info.VersionIDs = append(info.VersionIDs, int(v.ID))
+	}
+	return info, nil
 }

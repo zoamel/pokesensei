@@ -134,6 +134,14 @@ func (c *PokeAPIClient) GetLocationArea(ctx context.Context, id int) (*APILocati
 	return &la, nil
 }
 
+func (c *PokeAPIClient) GetVersionGroup(ctx context.Context, id int) (*APIVersionGroup, error) {
+	var vg APIVersionGroup
+	if err := c.fetch(ctx, fmt.Sprintf("%s/version-group/%d", baseURL, id), &vg); err != nil {
+		return nil, err
+	}
+	return &vg, nil
+}
+
 // --- PokéAPI response types ---
 
 type NamedResource struct {
@@ -268,4 +276,10 @@ type APILocationArea struct {
 	ID       int           `json:"id"`
 	Name     string        `json:"name"`
 	Location NamedResource `json:"location"`
+}
+
+type APIVersionGroup struct {
+	ID       int             `json:"id"`
+	Name     string          `json:"name"`
+	Versions []NamedResource `json:"versions"`
 }
