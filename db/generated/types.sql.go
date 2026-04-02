@@ -10,9 +10,7 @@ import (
 )
 
 const getTypeByID = `-- name: GetTypeByID :one
-SELECT id, name, slug
-FROM types
-WHERE id = ?1
+SELECT id, name, slug FROM types WHERE id = ?1
 `
 
 func (q *Queries) GetTypeByID(ctx context.Context, id int64) (Type, error) {
@@ -22,21 +20,28 @@ func (q *Queries) GetTypeByID(ctx context.Context, id int64) (Type, error) {
 	return i, err
 }
 
-const getTypeEfficacy = `-- name: GetTypeEfficacy :many
+const getTypeEfficacyByEra = `-- name: GetTypeEfficacyByEra :many
 SELECT attacking_type_id, defending_type_id, damage_factor
 FROM type_efficacy
+WHERE era = ?1
 ORDER BY attacking_type_id, defending_type_id
 `
 
-func (q *Queries) GetTypeEfficacy(ctx context.Context) ([]TypeEfficacy, error) {
-	rows, err := q.db.QueryContext(ctx, getTypeEfficacy)
+type GetTypeEfficacyByEraRow struct {
+	AttackingTypeID int64
+	DefendingTypeID int64
+	DamageFactor    int64
+}
+
+func (q *Queries) GetTypeEfficacyByEra(ctx context.Context, era string) ([]GetTypeEfficacyByEraRow, error) {
+	rows, err := q.db.QueryContext(ctx, getTypeEfficacyByEra, era)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []TypeEfficacy
+	var items []GetTypeEfficacyByEraRow
 	for rows.Next() {
-		var i TypeEfficacy
+		var i GetTypeEfficacyByEraRow
 		if err := rows.Scan(&i.AttackingTypeID, &i.DefendingTypeID, &i.DamageFactor); err != nil {
 			return nil, err
 		}
@@ -51,26 +56,31 @@ func (q *Queries) GetTypeEfficacy(ctx context.Context) ([]TypeEfficacy, error) {
 	return items, nil
 }
 
-const getTypeEfficacyForAttacker = `-- name: GetTypeEfficacyForAttacker :many
+const getTypeEfficacyForAttackerByEra = `-- name: GetTypeEfficacyForAttackerByEra :many
 SELECT defending_type_id, damage_factor
 FROM type_efficacy
-WHERE attacking_type_id = ?1
+WHERE attacking_type_id = ?1 AND era = ?2
 `
 
-type GetTypeEfficacyForAttackerRow struct {
+type GetTypeEfficacyForAttackerByEraParams struct {
+	AttackingTypeID int64
+	Era             string
+}
+
+type GetTypeEfficacyForAttackerByEraRow struct {
 	DefendingTypeID int64
 	DamageFactor    int64
 }
 
-func (q *Queries) GetTypeEfficacyForAttacker(ctx context.Context, attackingTypeID int64) ([]GetTypeEfficacyForAttackerRow, error) {
-	rows, err := q.db.QueryContext(ctx, getTypeEfficacyForAttacker, attackingTypeID)
+func (q *Queries) GetTypeEfficacyForAttackerByEra(ctx context.Context, arg GetTypeEfficacyForAttackerByEraParams) ([]GetTypeEfficacyForAttackerByEraRow, error) {
+	rows, err := q.db.QueryContext(ctx, getTypeEfficacyForAttackerByEra, arg.AttackingTypeID, arg.Era)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetTypeEfficacyForAttackerRow
+	var items []GetTypeEfficacyForAttackerByEraRow
 	for rows.Next() {
-		var i GetTypeEfficacyForAttackerRow
+		var i GetTypeEfficacyForAttackerByEraRow
 		if err := rows.Scan(&i.DefendingTypeID, &i.DamageFactor); err != nil {
 			return nil, err
 		}
@@ -86,13 +96,42 @@ func (q *Queries) GetTypeEfficacyForAttacker(ctx context.Context, attackingTypeI
 }
 
 const listTypes = `-- name: ListTypes :many
-SELECT id, name, slug
-FROM types
-ORDER BY id
+SELECT id, name, slug FROM types ORDER BY id
 `
 
 func (q *Queries) ListTypes(ctx context.Context) ([]Type, error) {
 	rows, err := q.db.QueryContext(ctx, listTypes)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Type
+	for rows.Next() {
+		var i Type
+		if err := rows.Scan(&i.ID, &i.Name, &i.Slug); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTypesByEra = `-- name: ListTypesByEra :many
+SELECT DISTINCT t.id, t.name, t.slug
+FROM types t
+JOIN type_efficacy te ON te.attacking_type_id = t.id
+WHERE te.era = ?1
+ORDER BY t.id
+`
+
+func (q *Queries) ListTypesByEra(ctx context.Context, era string) ([]Type, error) {
+	rows, err := q.db.QueryContext(ctx, listTypesByEra, era)
 	if err != nil {
 		return nil, err
 	}

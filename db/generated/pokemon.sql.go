@@ -111,11 +111,12 @@ SELECT id, name, slug, generation, sprite_url,
        base_hp, base_attack, base_defense,
        base_sp_atk, base_sp_def, base_speed
 FROM pokemon
+WHERE id <= ?1
 ORDER BY id
 `
 
-func (q *Queries) ListAllPokemon(ctx context.Context) ([]Pokemon, error) {
-	rows, err := q.db.QueryContext(ctx, listAllPokemon)
+func (q *Queries) ListAllPokemon(ctx context.Context, maxPokedex int64) ([]Pokemon, error) {
+	rows, err := q.db.QueryContext(ctx, listAllPokemon, maxPokedex)
 	if err != nil {
 		return nil, err
 	}
@@ -294,6 +295,7 @@ LEFT JOIN encounters e ON e.pokemon_id = p.id AND e.game_version_id = CAST(?1 AS
 WHERE (CAST(?2 AS TEXT) IS NULL OR p.name LIKE '%' || CAST(?2 AS TEXT) || '%')
   AND (CAST(?3 AS INTEGER) IS NULL OR pt.type_id = CAST(?3 AS INTEGER))
   AND (CAST(?4 AS INTEGER) IS NULL OR e.badge_required <= CAST(?4 AS INTEGER))
+  AND p.id <= ?5
 ORDER BY p.id
 LIMIT 60
 `
@@ -303,6 +305,7 @@ type SearchPokemonFilteredParams struct {
 	Name          sql.NullString
 	TypeID        sql.NullInt64
 	MaxBadge      sql.NullInt64
+	MaxPokedex    int64
 }
 
 func (q *Queries) SearchPokemonFiltered(ctx context.Context, arg SearchPokemonFilteredParams) ([]Pokemon, error) {
@@ -311,6 +314,7 @@ func (q *Queries) SearchPokemonFiltered(ctx context.Context, arg SearchPokemonFi
 		arg.Name,
 		arg.TypeID,
 		arg.MaxBadge,
+		arg.MaxPokedex,
 	)
 	if err != nil {
 		return nil, err

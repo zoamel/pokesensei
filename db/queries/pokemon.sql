@@ -26,6 +26,7 @@ SELECT id, name, slug, generation, sprite_url,
        base_hp, base_attack, base_defense,
        base_sp_atk, base_sp_def, base_speed
 FROM pokemon
+WHERE id <= sqlc.arg('max_pokedex')
 ORDER BY id;
 
 -- name: SearchPokemonByName :many
@@ -47,6 +48,7 @@ LEFT JOIN encounters e ON e.pokemon_id = p.id AND e.game_version_id = CAST(sqlc.
 WHERE (CAST(sqlc.narg('name') AS TEXT) IS NULL OR p.name LIKE '%' || CAST(sqlc.narg('name') AS TEXT) || '%')
   AND (CAST(sqlc.narg('type_id') AS INTEGER) IS NULL OR pt.type_id = CAST(sqlc.narg('type_id') AS INTEGER))
   AND (CAST(sqlc.narg('max_badge') AS INTEGER) IS NULL OR e.badge_required <= CAST(sqlc.narg('max_badge') AS INTEGER))
+  AND p.id <= sqlc.arg('max_pokedex')
 ORDER BY p.id
 LIMIT 60;
 

@@ -10,10 +10,19 @@ import (
 	"database/sql"
 )
 
+const activateGameState = `-- name: ActivateGameState :exec
+UPDATE game_state SET is_active = 1, updated_at = datetime('now') WHERE id = ?1
+`
+
+func (q *Queries) ActivateGameState(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, activateGameState, id)
+	return err
+}
+
 const createGameState = `-- name: CreateGameState :one
-INSERT INTO game_state (game_version_id, starter_pokemon_id, badge_count, trading_enabled)
-VALUES (?1, ?2, ?3, ?4)
-RETURNING id, game_version_id, starter_pokemon_id, badge_count, trading_enabled, created_at, updated_at
+INSERT INTO game_state (game_version_id, starter_pokemon_id, badge_count, trading_enabled, is_active)
+VALUES (?1, ?2, ?3, ?4, 1)
+RETURNING id, game_version_id, starter_pokemon_id, badge_count, trading_enabled, is_active, created_at, updated_at
 `
 
 type CreateGameStateParams struct {
@@ -37,10 +46,20 @@ func (q *Queries) CreateGameState(ctx context.Context, arg CreateGameStateParams
 		&i.StarterPokemonID,
 		&i.BadgeCount,
 		&i.TradingEnabled,
+		&i.IsActive,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const deactivateAllGameStates = `-- name: DeactivateAllGameStates :exec
+UPDATE game_state SET is_active = 0 WHERE is_active = 1
+`
+
+func (q *Queries) DeactivateAllGameStates(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, deactivateAllGameStates)
+	return err
 }
 
 const deleteGameState = `-- name: DeleteGameState :exec
@@ -52,16 +71,56 @@ func (q *Queries) DeleteGameState(ctx context.Context, id int64) error {
 	return err
 }
 
-const getGameState = `-- name: GetGameState :one
-SELECT gs.id, gs.game_version_id, gs.starter_pokemon_id, gs.badge_count,
-       gs.trading_enabled, gs.created_at, gs.updated_at
+const getActiveGameContext = `-- name: GetActiveGameContext :one
+SELECT gs.id, gs.game_version_id, gs.badge_count, gs.trading_enabled,
+       gv.version_group_id,
+       vg.generation, vg.max_pokedex, vg.type_chart_era, vg.max_badges
 FROM game_state gs
-ORDER BY gs.id
+JOIN game_versions gv ON gv.id = gs.game_version_id
+JOIN version_groups vg ON vg.id = gv.version_group_id
+WHERE gs.is_active = 1
 LIMIT 1
 `
 
-func (q *Queries) GetGameState(ctx context.Context) (GameState, error) {
-	row := q.db.QueryRowContext(ctx, getGameState)
+type GetActiveGameContextRow struct {
+	ID             int64
+	GameVersionID  sql.NullInt64
+	BadgeCount     int64
+	TradingEnabled int64
+	VersionGroupID sql.NullInt64
+	Generation     int64
+	MaxPokedex     int64
+	TypeChartEra   string
+	MaxBadges      int64
+}
+
+func (q *Queries) GetActiveGameContext(ctx context.Context) (GetActiveGameContextRow, error) {
+	row := q.db.QueryRowContext(ctx, getActiveGameContext)
+	var i GetActiveGameContextRow
+	err := row.Scan(
+		&i.ID,
+		&i.GameVersionID,
+		&i.BadgeCount,
+		&i.TradingEnabled,
+		&i.VersionGroupID,
+		&i.Generation,
+		&i.MaxPokedex,
+		&i.TypeChartEra,
+		&i.MaxBadges,
+	)
+	return i, err
+}
+
+const getActiveGameState = `-- name: GetActiveGameState :one
+SELECT gs.id, gs.game_version_id, gs.starter_pokemon_id, gs.badge_count,
+       gs.trading_enabled, gs.is_active, gs.created_at, gs.updated_at
+FROM game_state gs
+WHERE gs.is_active = 1
+LIMIT 1
+`
+
+func (q *Queries) GetActiveGameState(ctx context.Context) (GameState, error) {
+	row := q.db.QueryRowContext(ctx, getActiveGameState)
 	var i GameState
 	err := row.Scan(
 		&i.ID,
@@ -69,10 +128,90 @@ func (q *Queries) GetGameState(ctx context.Context) (GameState, error) {
 		&i.StarterPokemonID,
 		&i.BadgeCount,
 		&i.TradingEnabled,
+		&i.IsActive,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const getGameStateForVersion = `-- name: GetGameStateForVersion :one
+SELECT id, game_version_id, starter_pokemon_id, badge_count,
+       trading_enabled, is_active, created_at, updated_at
+FROM game_state
+WHERE game_version_id = ?1
+`
+
+func (q *Queries) GetGameStateForVersion(ctx context.Context, gameVersionID sql.NullInt64) (GameState, error) {
+	row := q.db.QueryRowContext(ctx, getGameStateForVersion, gameVersionID)
+	var i GameState
+	err := row.Scan(
+		&i.ID,
+		&i.GameVersionID,
+		&i.StarterPokemonID,
+		&i.BadgeCount,
+		&i.TradingEnabled,
+		&i.IsActive,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const listGameStates = `-- name: ListGameStates :many
+SELECT gs.id, gs.game_version_id, gs.starter_pokemon_id, gs.badge_count,
+       gs.trading_enabled, gs.is_active, gs.created_at, gs.updated_at,
+       gv.name AS game_name, gv.slug AS game_slug
+FROM game_state gs
+JOIN game_versions gv ON gv.id = gs.game_version_id
+ORDER BY gs.updated_at DESC
+`
+
+type ListGameStatesRow struct {
+	ID               int64
+	GameVersionID    sql.NullInt64
+	StarterPokemonID sql.NullInt64
+	BadgeCount       int64
+	TradingEnabled   int64
+	IsActive         int64
+	CreatedAt        string
+	UpdatedAt        string
+	GameName         string
+	GameSlug         string
+}
+
+func (q *Queries) ListGameStates(ctx context.Context) ([]ListGameStatesRow, error) {
+	rows, err := q.db.QueryContext(ctx, listGameStates)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListGameStatesRow
+	for rows.Next() {
+		var i ListGameStatesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.GameVersionID,
+			&i.StarterPokemonID,
+			&i.BadgeCount,
+			&i.TradingEnabled,
+			&i.IsActive,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.GameName,
+			&i.GameSlug,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateBadgeCount = `-- name: UpdateBadgeCount :exec

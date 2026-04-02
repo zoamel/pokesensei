@@ -49,6 +49,7 @@ type GameState struct {
 	StarterPokemonID sql.NullInt64
 	BadgeCount       int64
 	TradingEnabled   int64
+	IsActive         int64
 	CreatedAt        string
 	UpdatedAt        string
 }
@@ -178,4 +179,15 @@ type TypeEfficacy struct {
 	AttackingTypeID int64
 	DefendingTypeID int64
 	DamageFactor    int64
+	Era             string
+}
+
+type VersionGroup struct {
+	ID           int64
+	Name         string
+	Slug         string
+	Generation   int64
+	MaxPokedex   int64
+	TypeChartEra string
+	MaxBadges    int64
 }
