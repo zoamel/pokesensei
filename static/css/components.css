@@ -1263,6 +1263,41 @@
   color: var(--color-text-muted);
 }
 
+/* Type chart legend */
+.type-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  margin-block: var(--space-3);
+  font-size: var(--font-size-sm);
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.legend-swatch {
+  display: inline-block;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+.legend-swatch.eff-super { background: var(--color-eff-super, #4ade80); }
+.legend-swatch.eff-normal { background: var(--color-surface); }
+.legend-swatch.eff-not { background: var(--color-eff-not, #f87171); }
+.legend-swatch.eff-immune { background: var(--color-eff-immune, #1e1e2e); }
+
+.legend-note {
+  margin-inline-start: auto;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
 /* Type chart */
 .type-chart-wrapper {
   overflow-x: auto;

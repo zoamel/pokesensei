@@ -10,7 +10,21 @@ templ TypeChartPage(types []generated.Type, matrix map[int64]map[int64]int64) {
 		<div class="guide">
 			<h1>Type Chart</h1>
 			<div class="guide-content">
-				<p>Every Pokémon and move has a type. When attacking, your move's type vs the defender's type determines damage: super effective (2x), not very effective (0.5x), or immune (0x). Master a few key matchups — Water beats Fire, Fire beats Grass, Grass beats Water — and build from there.</p>
+				<p>Every Pokémon and move has a type. When attacking, your move's type vs the defender's type determines damage: super effective (2×), not very effective (½×), or immune (0×).</p>
+			</div>
+			<div class="type-chart-legend">
+				<span class="legend-item"><span class="legend-swatch eff-super"></span> 2× Super effective</span>
+				<span class="legend-item"><span class="legend-swatch eff-normal"></span> 1× Normal</span>
+				<span class="legend-item"><span class="legend-swatch eff-not"></span> ½× Not very effective</span>
+				<span class="legend-item"><span class="legend-swatch eff-immune"></span> 0× No effect</span>
+				<span class="legend-note">
+					{ fmt.Sprintf("%d types", len(types)) }
+					if len(types) < 18 {
+						(pre-Fairy, Gen I–V)
+					} else {
+						(Gen VI+)
+					}
+				</span>
 			</div>
 			<p class="guide-intro">Click a row to highlight that attacking type's matchups.</p>
 			<div class="type-chart-wrapper" x-data="{ activeRow: null }">
