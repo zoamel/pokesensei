@@ -49,7 +49,7 @@ func (h *BattleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	trainers, _ := h.store.ListTrainersByGame(ctx, gc.GameVersionID)
 
-	if err := view.BattlePage(trainers).Render(ctx, w); err != nil {
+	if err := view.BattlePage(trainers, gc).Render(ctx, w); err != nil {
 		h.log.Error("failed to render battle page", "error", err)
 	}
 }

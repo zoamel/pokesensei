@@ -3,6 +3,7 @@ package view
 import (
 	"fmt"
 	"zoamel/pokesensei/db/generated"
+	"zoamel/pokesensei/internal/gamecontext"
 	"zoamel/pokesensei/internal/matchup"
 )
 
@@ -12,7 +13,7 @@ type BattleMatchup struct {
 	Rankings []matchup.MatchupResult
 }
 
-templ BattlePage(trainers []generated.Trainer) {
+templ BattlePage(trainers []generated.Trainer, gc gamecontext.GameContext) {
 	@AppShell("Battle Helper", "battle") {
 		<div class="battle">
 			<h1>Battle Helper</h1>
@@ -20,6 +21,16 @@ templ BattlePage(trainers []generated.Trainer) {
 				<aside class="battle-sidebar">
 					<div class="battle-tools">
 						<a href="/battle/types" class="btn btn-secondary">Type Chart ↗</a>
+						<button
+							class="btn btn-primary"
+							x-data={ fmt.Sprintf("{ maxDex: %d }", gc.MaxPokedex) }
+							x-on:click={ `
+								let id = Math.floor(Math.random() * maxDex) + 1;
+								htmx.ajax('GET', '/battle/pokemon/' + id, '#matchup-results')
+							` }
+						>
+							Random Opponent
+						</button>
 					</div>
 					<h2>Trainers</h2>
 					if len(trainers) == 0 {
