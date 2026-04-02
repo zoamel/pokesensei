@@ -12,8 +12,11 @@ import (
 )
 
 type GameStateStore interface {
-	GetGameState(ctx context.Context) (generated.GameState, error)
+	GetActiveGameState(ctx context.Context) (generated.GameState, error)
+	GetGameStateForVersion(ctx context.Context, gameVersionID sql.NullInt64) (generated.GameState, error)
 	CreateGameState(ctx context.Context, arg generated.CreateGameStateParams) (generated.GameState, error)
+	DeactivateAllGameStates(ctx context.Context) error
+	ActivateGameState(ctx context.Context, id int64) error
 	UpdateGameVersion(ctx context.Context, arg generated.UpdateGameVersionParams) error
 	UpdateStarter(ctx context.Context, arg generated.UpdateStarterParams) error
 	UpdateBadgeCount(ctx context.Context, arg generated.UpdateBadgeCountParams) error
@@ -58,27 +61,33 @@ func (h *OnboardingHandler) HandleGameStep(w http.ResponseWriter, r *http.Reques
 	}
 
 	ctx := r.Context()
+	gvID := sql.NullInt64{Int64: int64(gameVersionID), Valid: true}
 
-	// Get or create game state
-	gs, err := h.store.GetGameState(ctx)
-	if err != nil {
-		// No game state yet — create one
-		gs, err = h.store.CreateGameState(ctx, generated.CreateGameStateParams{
-			GameVersionID: sql.NullInt64{Int64: int64(gameVersionID), Valid: true},
-		})
-		if err != nil {
-			h.log.Error("failed to create game state", "error", err)
+	// Check if a playthrough exists for this game version
+	existing, err := h.store.GetGameStateForVersion(ctx, gvID)
+	if err == nil {
+		// Switch to existing playthrough
+		if err := h.store.DeactivateAllGameStates(ctx); err != nil {
+			h.log.Error("failed to deactivate game states", "error", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+		if err := h.store.ActivateGameState(ctx, existing.ID); err != nil {
+			h.log.Error("failed to activate game state", "error", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
 	} else {
-		// Update existing
-		err = h.store.UpdateGameVersion(ctx, generated.UpdateGameVersionParams{
-			GameVersionID: sql.NullInt64{Int64: int64(gameVersionID), Valid: true},
-			ID:            gs.ID,
-		})
-		if err != nil {
-			h.log.Error("failed to update game version", "error", err)
+		// Create new playthrough
+		if err := h.store.DeactivateAllGameStates(ctx); err != nil {
+			h.log.Error("failed to deactivate game states", "error", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+		if _, err := h.store.CreateGameState(ctx, generated.CreateGameStateParams{
+			GameVersionID: gvID,
+		}); err != nil {
+			h.log.Error("failed to create game state", "error", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
@@ -105,7 +114,7 @@ func (h *OnboardingHandler) HandleStarterStep(w http.ResponseWriter, r *http.Req
 	}
 
 	ctx := r.Context()
-	gs, err := h.store.GetGameState(ctx)
+	gs, err := h.store.GetActiveGameState(ctx)
 	if err != nil {
 		http.Error(w, "Complete game selection first", http.StatusBadRequest)
 		return
@@ -133,13 +142,13 @@ func (h *OnboardingHandler) HandleBadgeStep(w http.ResponseWriter, r *http.Reque
 	}
 
 	badgeCount, err := strconv.Atoi(r.FormValue("badge_count"))
-	if err != nil || badgeCount < 0 || badgeCount > 8 {
+	if err != nil || badgeCount < 0 || badgeCount > 16 {
 		http.Error(w, "Invalid badge count", http.StatusBadRequest)
 		return
 	}
 
 	ctx := r.Context()
-	gs, err := h.store.GetGameState(ctx)
+	gs, err := h.store.GetActiveGameState(ctx)
 	if err != nil {
 		http.Error(w, "Complete game selection first", http.StatusBadRequest)
 		return

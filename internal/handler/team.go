@@ -10,11 +10,11 @@ import (
 	"strconv"
 
 	"zoamel/pokesensei/db/generated"
+	"zoamel/pokesensei/internal/gamecontext"
 	"zoamel/pokesensei/internal/view"
 )
 
 type TeamStore interface {
-	GetGameState(ctx context.Context) (generated.GameState, error)
 	ListTeamMembers(ctx context.Context, gameStateID int64) ([]generated.ListTeamMembersRow, error)
 	AddTeamMember(ctx context.Context, arg generated.AddTeamMemberParams) (generated.AddTeamMemberRow, error)
 	RemoveTeamMember(ctx context.Context, id int64) error
@@ -22,13 +22,12 @@ type TeamStore interface {
 	UpdateTeamMemberLock(ctx context.Context, arg generated.UpdateTeamMemberLockParams) error
 	GetPokemonWithTypes(ctx context.Context, id int64) ([]generated.GetPokemonWithTypesRow, error)
 	ListTypes(ctx context.Context) ([]generated.Type, error)
-	GetTypeEfficacy(ctx context.Context) ([]generated.TypeEfficacy, error)
+	GetTypeEfficacyByEra(ctx context.Context, era string) ([]generated.GetTypeEfficacyByEraRow, error)
 	GetTeamMemberDetail(ctx context.Context, id int64) (generated.GetTeamMemberDetailRow, error)
 	ListNatures(ctx context.Context) ([]generated.Nature, error)
 	ListPokemonAbilities(ctx context.Context, pokemonID int64) ([]generated.ListPokemonAbilitiesRow, error)
 	ListTeamMemberMoves(ctx context.Context, teamMemberID int64) ([]generated.ListTeamMemberMovesRow, error)
 	ListAvailableMoves(ctx context.Context, arg generated.ListAvailableMovesParams) ([]generated.ListAvailableMovesRow, error)
-	GetVersionGroupIDByGameVersion(ctx context.Context, id int64) (sql.NullInt64, error)
 	SetTeamMemberNature(ctx context.Context, arg generated.SetTeamMemberNatureParams) error
 	SetTeamMemberAbility(ctx context.Context, arg generated.SetTeamMemberAbilityParams) error
 	AddTeamMemberMove(ctx context.Context, arg generated.AddTeamMemberMoveParams) (generated.TeamMemberMove, error)
@@ -48,13 +47,9 @@ func NewTeam(store TeamStore, log *slog.Logger) *TeamHandler {
 func (h *TeamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	gs, err := h.store.GetGameState(ctx)
-	if err != nil {
-		http.Redirect(w, r, "/onboarding", http.StatusSeeOther)
-		return
-	}
+	gc, _ := gamecontext.FromRequest(r)
 
-	team, err := h.store.ListTeamMembers(ctx, gs.ID)
+	team, err := h.store.ListTeamMembers(ctx, gc.GameStateID)
 	if err != nil {
 		h.log.Error("failed to list team", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -83,6 +78,13 @@ func (h *TeamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	gs := generated.GameState{
+		ID:             gc.GameStateID,
+		GameVersionID:  sql.NullInt64{Int64: gc.GameVersionID, Valid: true},
+		BadgeCount:     gc.BadgeCount,
+		TradingEnabled: boolToInt64(gc.TradingEnabled),
+	}
+
 	if err := view.TeamBuilderPage(gs, slots).Render(ctx, w); err != nil {
 		h.log.Error("failed to render team builder", "error", err)
 	}
@@ -96,11 +98,7 @@ func (h *TeamHandler) HandleAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
-	gs, err := h.store.GetGameState(ctx)
-	if err != nil {
-		http.Error(w, "No game state", http.StatusBadRequest)
-		return
-	}
+	gc, _ := gamecontext.FromRequest(r)
 
 	pokemonID, err := strconv.ParseInt(r.FormValue("pokemon_id"), 10, 64)
 	if err != nil {
@@ -114,7 +112,7 @@ func (h *TeamHandler) HandleAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Find next available slot
-	team, err := h.store.ListTeamMembers(ctx, gs.ID)
+	team, err := h.store.ListTeamMembers(ctx, gc.GameStateID)
 	if err != nil {
 		h.log.Error("failed to list team", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -152,7 +150,7 @@ func (h *TeamHandler) HandleAdd(w http.ResponseWriter, r *http.Request) {
 	name := rows[0].Name
 
 	if _, err := h.store.AddTeamMember(ctx, generated.AddTeamMemberParams{
-		GameStateID: gs.ID,
+		GameStateID: gc.GameStateID,
 		PokemonID:   pokemonID,
 		Level:       level,
 		Slot:        int64(slot),
@@ -243,13 +241,9 @@ func (h *TeamHandler) HandleUpdate(w http.ResponseWriter, r *http.Request) {
 func (h *TeamHandler) HandleCoverage(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	gs, err := h.store.GetGameState(ctx)
-	if err != nil {
-		http.Error(w, "No game state", http.StatusBadRequest)
-		return
-	}
+	gc, _ := gamecontext.FromRequest(r)
 
-	team, err := h.store.ListTeamMembers(ctx, gs.ID)
+	team, err := h.store.ListTeamMembers(ctx, gc.GameStateID)
 	if err != nil {
 		h.log.Error("failed to list team", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -263,7 +257,7 @@ func (h *TeamHandler) HandleCoverage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	efficacy, err := h.store.GetTypeEfficacy(ctx)
+	efficacy, err := h.store.GetTypeEfficacyByEra(ctx, gc.TypeChartEra)
 	if err != nil {
 		h.log.Error("failed to get efficacy", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -337,20 +331,14 @@ func (h *TeamHandler) HandleDetail(w http.ResponseWriter, r *http.Request) {
 		h.log.Error("failed to list team member moves", "error", err)
 	}
 
-	var available []generated.ListAvailableMovesRow
-	gs, err := h.store.GetGameState(ctx)
-	if err == nil && gs.GameVersionID.Valid {
-		vgID, err := h.store.GetVersionGroupIDByGameVersion(ctx, gs.GameVersionID.Int64)
-		if err == nil && vgID.Valid {
-			available, err = h.store.ListAvailableMoves(ctx, generated.ListAvailableMovesParams{
-				PokemonID:      member.PokemonID,
-				VersionGroupID: vgID.Int64,
-				LevelLearnedAt: member.Level,
-			})
-			if err != nil {
-				h.log.Error("failed to list available moves", "error", err)
-			}
-		}
+	gc, _ := gamecontext.FromRequest(r)
+	available, err := h.store.ListAvailableMoves(ctx, generated.ListAvailableMovesParams{
+		PokemonID:      member.PokemonID,
+		VersionGroupID: gc.VersionGroupID,
+		LevelLearnedAt: member.Level,
+	})
+	if err != nil {
+		h.log.Error("failed to list available moves", "error", err)
 	}
 
 	assignedIDs := make(map[int64]bool)
@@ -565,20 +553,14 @@ func (h *TeamHandler) renderMovesSection(w http.ResponseWriter, r *http.Request,
 		h.log.Error("failed to list team member moves", "error", err)
 	}
 
-	var available []generated.ListAvailableMovesRow
-	gs, err := h.store.GetGameState(ctx)
-	if err == nil && gs.GameVersionID.Valid {
-		vgID, err := h.store.GetVersionGroupIDByGameVersion(ctx, gs.GameVersionID.Int64)
-		if err == nil && vgID.Valid {
-			available, err = h.store.ListAvailableMoves(ctx, generated.ListAvailableMovesParams{
-				PokemonID:      member.PokemonID,
-				VersionGroupID: vgID.Int64,
-				LevelLearnedAt: member.Level,
-			})
-			if err != nil {
-				h.log.Error("failed to list available moves", "error", err)
-			}
-		}
+	gc, _ := gamecontext.FromRequest(r)
+	available, err := h.store.ListAvailableMoves(ctx, generated.ListAvailableMovesParams{
+		PokemonID:      member.PokemonID,
+		VersionGroupID: gc.VersionGroupID,
+		LevelLearnedAt: member.Level,
+	})
+	if err != nil {
+		h.log.Error("failed to list available moves", "error", err)
 	}
 
 	assignedIDs := make(map[int64]bool)

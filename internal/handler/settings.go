@@ -12,13 +12,17 @@ import (
 )
 
 type SettingsStore interface {
-	GetGameState(ctx context.Context) (generated.GameState, error)
+	GetActiveGameState(ctx context.Context) (generated.GameState, error)
 	UpdateGameVersion(ctx context.Context, arg generated.UpdateGameVersionParams) error
 	UpdateStarter(ctx context.Context, arg generated.UpdateStarterParams) error
 	UpdateBadgeCount(ctx context.Context, arg generated.UpdateBadgeCountParams) error
 	UpdateTradingEnabled(ctx context.Context, arg generated.UpdateTradingEnabledParams) error
 	ListGameVersions(ctx context.Context) ([]generated.GameVersion, error)
 	ClearTeam(ctx context.Context, gameStateID int64) error
+	DeactivateAllGameStates(ctx context.Context) error
+	ActivateGameState(ctx context.Context, id int64) error
+	GetGameStateForVersion(ctx context.Context, gameVersionID sql.NullInt64) (generated.GameState, error)
+	CreateGameState(ctx context.Context, arg generated.CreateGameStateParams) (generated.GameState, error)
 }
 
 type SettingsHandler struct {
@@ -34,7 +38,7 @@ func NewSettings(store SettingsStore, log *slog.Logger) *SettingsHandler {
 func (h *SettingsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	gs, err := h.store.GetGameState(ctx)
+	gs, err := h.store.GetActiveGameState(ctx)
 	if err != nil {
 		http.Redirect(w, r, "/onboarding", http.StatusSeeOther)
 		return
@@ -52,7 +56,7 @@ func (h *SettingsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// PATCH /settings/game
+// PATCH /settings/game — switch to a different game version (creates new game state if needed)
 func (h *SettingsHandler) HandleGameUpdate(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
@@ -60,11 +64,6 @@ func (h *SettingsHandler) HandleGameUpdate(w http.ResponseWriter, r *http.Reques
 	}
 
 	ctx := r.Context()
-	gs, err := h.store.GetGameState(ctx)
-	if err != nil {
-		http.Error(w, "No game state", http.StatusBadRequest)
-		return
-	}
 
 	gameVersionID, err := strconv.Atoi(r.FormValue("game_version_id"))
 	if err != nil {
@@ -72,18 +71,36 @@ func (h *SettingsHandler) HandleGameUpdate(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if err := h.store.UpdateGameVersion(ctx, generated.UpdateGameVersionParams{
-		GameVersionID: sql.NullInt64{Int64: int64(gameVersionID), Valid: true},
-		ID:            gs.ID,
-	}); err != nil {
-		h.log.Error("failed to update game", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
+	gvID := sql.NullInt64{Int64: int64(gameVersionID), Valid: true}
 
-	// Changing game resets team
-	if err := h.store.ClearTeam(ctx, gs.ID); err != nil {
-		h.log.Error("failed to clear team", "error", err)
+	// Check if a game state already exists for this version
+	existing, err := h.store.GetGameStateForVersion(ctx, gvID)
+	if err == nil {
+		// Switch to existing playthrough
+		if err := h.store.DeactivateAllGameStates(ctx); err != nil {
+			h.log.Error("failed to deactivate game states", "error", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+		if err := h.store.ActivateGameState(ctx, existing.ID); err != nil {
+			h.log.Error("failed to activate game state", "error", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+	} else {
+		// Create new playthrough for this game version
+		if err := h.store.DeactivateAllGameStates(ctx); err != nil {
+			h.log.Error("failed to deactivate game states", "error", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+		if _, err := h.store.CreateGameState(ctx, generated.CreateGameStateParams{
+			GameVersionID: gvID,
+		}); err != nil {
+			h.log.Error("failed to create game state", "error", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	w.Header().Set("HX-Refresh", "true")
@@ -98,7 +115,7 @@ func (h *SettingsHandler) HandleStarterUpdate(w http.ResponseWriter, r *http.Req
 	}
 
 	ctx := r.Context()
-	gs, err := h.store.GetGameState(ctx)
+	gs, err := h.store.GetActiveGameState(ctx)
 	if err != nil {
 		http.Error(w, "No game state", http.StatusBadRequest)
 		return
@@ -131,14 +148,14 @@ func (h *SettingsHandler) HandleBadgeUpdate(w http.ResponseWriter, r *http.Reque
 	}
 
 	ctx := r.Context()
-	gs, err := h.store.GetGameState(ctx)
+	gs, err := h.store.GetActiveGameState(ctx)
 	if err != nil {
 		http.Error(w, "No game state", http.StatusBadRequest)
 		return
 	}
 
 	badgeCount, err := strconv.Atoi(r.FormValue("badge_count"))
-	if err != nil || badgeCount < 0 || badgeCount > 8 {
+	if err != nil || badgeCount < 0 || badgeCount > 16 {
 		http.Error(w, "Invalid badge count", http.StatusBadRequest)
 		return
 	}
@@ -163,7 +180,7 @@ func (h *SettingsHandler) HandleTradingUpdate(w http.ResponseWriter, r *http.Req
 	}
 
 	ctx := r.Context()
-	gs, err := h.store.GetGameState(ctx)
+	gs, err := h.store.GetActiveGameState(ctx)
 	if err != nil {
 		http.Error(w, "No game state", http.StatusBadRequest)
 		return

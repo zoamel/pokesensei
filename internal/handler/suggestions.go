@@ -6,16 +6,16 @@ import (
 	"net/http"
 
 	"zoamel/pokesensei/db/generated"
+	"zoamel/pokesensei/internal/gamecontext"
 	"zoamel/pokesensei/internal/suggest"
 	"zoamel/pokesensei/internal/view"
 )
 
 type SuggestionStore interface {
-	GetGameState(ctx context.Context) (generated.GameState, error)
 	ListTeamMembers(ctx context.Context, gameStateID int64) ([]generated.ListTeamMembersRow, error)
-	ListAllPokemon(ctx context.Context) ([]generated.Pokemon, error)
+	ListAllPokemon(ctx context.Context, maxPokedex int64) ([]generated.Pokemon, error)
 	GetPokemonWithTypes(ctx context.Context, id int64) ([]generated.GetPokemonWithTypesRow, error)
-	GetTypeEfficacy(ctx context.Context) ([]generated.TypeEfficacy, error)
+	GetTypeEfficacyByEra(ctx context.Context, era string) ([]generated.GetTypeEfficacyByEraRow, error)
 	GetEvolutionChainByPokemon(ctx context.Context, pokemonID int64) ([]generated.GetEvolutionChainByPokemonRow, error)
 	GetMinBadgeByPokemon(ctx context.Context, gameVersionID int64) ([]generated.GetMinBadgeByPokemonRow, error)
 }
@@ -38,15 +38,11 @@ func NewSuggestions(store SuggestionStore, log *slog.Logger) *SuggestionHandler 
 func (h *SuggestionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	gs, err := h.store.GetGameState(ctx)
-	if err != nil {
-		http.Error(w, "No game state", http.StatusBadRequest)
-		return
-	}
+	gc, _ := gamecontext.FromRequest(r)
 
-	team, _ := h.store.ListTeamMembers(ctx, gs.ID)
-	allPokemon, _ := h.store.ListAllPokemon(ctx)
-	efficacyRows, _ := h.store.GetTypeEfficacy(ctx)
+	team, _ := h.store.ListTeamMembers(ctx, gc.GameStateID)
+	allPokemon, _ := h.store.ListAllPokemon(ctx, gc.MaxPokedex)
+	efficacyRows, _ := h.store.GetTypeEfficacyByEra(ctx, gc.TypeChartEra)
 
 	// Build efficacy map
 	efficacy := make(map[int64]map[int64]int64)
@@ -61,11 +57,9 @@ func (h *SuggestionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Pokémon with encounters get their minimum badge; Pokémon without encounters
 	// are not catchable in the wild, so they get badge 9 (effectively unavailable).
 	badgeMap := make(map[int64]int64)
-	if gs.GameVersionID.Valid {
-		badgeRows, _ := h.store.GetMinBadgeByPokemon(ctx, gs.GameVersionID.Int64)
-		for _, row := range badgeRows {
-			badgeMap[row.PokemonID] = row.MinBadge
-		}
+	badgeRows, _ := h.store.GetMinBadgeByPokemon(ctx, gc.GameVersionID)
+	for _, row := range badgeRows {
+		badgeMap[row.PokemonID] = row.MinBadge
 	}
 	const uncatchableBadge int64 = 9
 
@@ -118,24 +112,11 @@ func (h *SuggestionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	// Build starter
-	var starter *suggest.Pokemon
-	if gs.StarterPokemonID.Valid {
-		for _, c := range candidates {
-			if c.ID == gs.StarterPokemonID.Int64 {
-				cp := c
-				starter = &cp
-				break
-			}
-		}
-	}
-
 	input := suggest.SuggestionInput{
-		Starter:        starter,
 		CurrentTeam:    currentTeam,
 		Candidates:     candidates,
-		BadgeCount:     gs.BadgeCount,
-		TradingEnabled: gs.TradingEnabled != 0,
+		BadgeCount:     gc.BadgeCount,
+		TradingEnabled: gc.TradingEnabled,
 		Efficacy:       efficacy,
 	}
 

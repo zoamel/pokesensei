@@ -8,11 +8,11 @@ import (
 	"strconv"
 
 	"zoamel/pokesensei/db/generated"
+	"zoamel/pokesensei/internal/gamecontext"
 	"zoamel/pokesensei/internal/view"
 )
 
 type PokemonStore interface {
-	GetGameState(ctx context.Context) (generated.GameState, error)
 	SearchPokemonFiltered(ctx context.Context, arg generated.SearchPokemonFilteredParams) ([]generated.Pokemon, error)
 	ListTypes(ctx context.Context) ([]generated.Type, error)
 	GetPokemonByID(ctx context.Context, id int64) (generated.Pokemon, error)
@@ -40,7 +40,13 @@ func (h *PokemonHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	gs, _ := h.store.GetGameState(ctx)
+	gc, _ := gamecontext.FromRequest(r)
+	gs := generated.GameState{
+		ID:             gc.GameStateID,
+		GameVersionID:  sql.NullInt64{Int64: gc.GameVersionID, Valid: true},
+		BadgeCount:     gc.BadgeCount,
+		TradingEnabled: boolToInt64(gc.TradingEnabled),
+	}
 
 	if err := view.PokemonFinderPage(types, gs).Render(ctx, w); err != nil {
 		h.log.Error("failed to render pokemon finder", "error", err)
@@ -51,7 +57,11 @@ func (h *PokemonHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *PokemonHandler) HandleSearch(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	params := generated.SearchPokemonFilteredParams{}
+	gc, _ := gamecontext.FromRequest(r)
+
+	params := generated.SearchPokemonFilteredParams{
+		MaxPokedex: gc.MaxPokedex,
+	}
 
 	if name := r.URL.Query().Get("name"); name != "" {
 		params.Name = sql.NullString{String: name, Valid: true}
@@ -133,16 +143,5 @@ func (h *PokemonHandler) HandleDetail(w http.ResponseWriter, r *http.Request) {
 
 	if err := view.PokemonDetailPage(detail).Render(ctx, w); err != nil {
 		h.log.Error("failed to render pokemon detail", "error", err)
-	}
-}
-
-func versionGroupForGame(gameVersionID int64) int {
-	switch gameVersionID {
-	case 10, 11:
-		return 7 // FRLG
-	case 15, 16:
-		return 10 // HGSS
-	default:
-		return 7
 	}
 }
