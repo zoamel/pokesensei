@@ -216,8 +216,73 @@ templ PokemonDetailPage(detail PokemonDetail) {
 						</ul>
 					</section>
 				}
+				if len(detail.Moves) > 0 {
+					<section class="detail-section">
+						<h2>Learnable Moves</h2>
+						@movesTable(detail.Moves, "level-up")
+						@movesTable(detail.Moves, "machine")
+						@movesTable(detail.Moves, "tutor")
+						@movesTable(detail.Moves, "egg")
+					</section>
+				}
 			</div>
 		</div>
+	}
+}
+
+templ movesTable(allMoves []generated.ListPokemonMovesRow, method string) {
+	if movesForMethod := filterMovesByMethod(allMoves, method); len(movesForMethod) > 0 {
+		<details class="moves-group" open?={ method == "level-up" }>
+			<summary class="moves-group-title">{ moveMethodLabel(method) } ({ fmt.Sprint(len(movesForMethod)) })</summary>
+			<div class="moves-table-wrap">
+				<table class="moves-table">
+					<thead>
+						<tr>
+							if method == "level-up" {
+								<th>Lv.</th>
+							}
+							<th>Move</th>
+							<th>Type</th>
+							<th>Cat.</th>
+							<th>Pwr</th>
+							<th>Acc</th>
+							<th>PP</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, m := range movesForMethod {
+							<tr>
+								if method == "level-up" {
+									<td>{ fmt.Sprint(m.LevelLearnedAt) }</td>
+								}
+								<td class="move-name">{ m.Name }</td>
+								<td>
+									if m.TypeSlug.Valid {
+										<span class={ "type-pill type-pill-sm", fmt.Sprintf("type-%s", m.TypeSlug.String) }>{ m.TypeName.String }</span>
+									}
+								</td>
+								<td class="move-cat">{ titleCase(m.DamageClass) }</td>
+								<td>
+									if m.Power.Valid {
+										{ fmt.Sprint(m.Power.Int64) }
+									} else {
+										—
+									}
+								</td>
+								<td>
+									if m.Accuracy.Valid {
+										{ fmt.Sprintf("%d%%", m.Accuracy.Int64) }
+									} else {
+										—
+									}
+								</td>
+								<td>{ fmt.Sprint(m.Pp) }</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		</details>
 	}
 }
 
