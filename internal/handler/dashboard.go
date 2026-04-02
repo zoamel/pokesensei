@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"database/sql"
 	"log/slog"
 	"net/http"
 
@@ -37,14 +36,9 @@ func (h *DashboardHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	gs := generated.GameState{
-		ID:             gc.GameStateID,
-		GameVersionID:  sql.NullInt64{Int64: gc.GameVersionID, Valid: true},
-		BadgeCount:     gc.BadgeCount,
-		TradingEnabled: boolToInt64(gc.TradingEnabled),
-	}
+	games, _ := h.store.ListGameStates(ctx)
 
-	if err := view.DashboardPage(gs, team).Render(ctx, w); err != nil {
+	if err := view.DashboardPage(gc, team, games).Render(ctx, w); err != nil {
 		h.log.Error("failed to render dashboard", "error", err)
 	}
 }

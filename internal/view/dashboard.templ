@@ -3,12 +3,43 @@ package view
 import (
 	"fmt"
 	"zoamel/pokesensei/db/generated"
+	"zoamel/pokesensei/internal/gamecontext"
 )
 
-templ DashboardPage(gs generated.GameState, team []generated.ListTeamMembersRow) {
+templ DashboardPage(gc gamecontext.GameContext, team []generated.ListTeamMembersRow, games []generated.ListGameStatesRow) {
 	@AppShell("Dashboard", "dashboard") {
 		<div class="dashboard">
 			<h1>Dashboard</h1>
+			if len(games) > 1 {
+				<section class="game-switcher">
+					<h2>Your Games</h2>
+					<div class="game-switcher-list">
+						for _, g := range games {
+							if g.IsActive != 0 {
+								<div class="game-switcher-item active">
+									<span class="game-switcher-name">{ g.GameName }</span>
+									<span class="game-switcher-badges">{ fmt.Sprintf("%d badges", g.BadgeCount) }</span>
+									<span class="game-switcher-label">Playing</span>
+								</div>
+							} else {
+								<button
+									class="game-switcher-item"
+									hx-patch="/settings/game"
+									hx-vals={ fmt.Sprintf(`{"game_version_id": "%d"}`, g.GameVersionID.Int64) }
+									hx-swap="none"
+								>
+									<span class="game-switcher-name">{ g.GameName }</span>
+									<span class="game-switcher-badges">{ fmt.Sprintf("%d badges", g.BadgeCount) }</span>
+									<span class="game-switcher-label">Switch</span>
+								</button>
+							}
+						}
+						<a href="/onboarding" class="game-switcher-item game-switcher-new">
+							<span class="game-switcher-name">+ New Game</span>
+						</a>
+					</div>
+				</section>
+			}
 			<section class="team-overview">
 				<h2>Your Team</h2>
 				<div class="team-slots">
@@ -46,7 +77,7 @@ templ DashboardPage(gs generated.GameState, team []generated.ListTeamMembersRow)
 			</section>
 			<div class="game-info">
 				<span>
-					{ fmt.Sprintf("Badges: %d/8", gs.BadgeCount) }
+					{ fmt.Sprintf("Badges: %d/%d", gc.BadgeCount, gc.MaxBadges) }
 				</span>
 			</div>
 			<footer class="dashboard-footer">
