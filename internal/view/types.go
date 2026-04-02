@@ -35,6 +35,7 @@ type PokemonDetail struct {
 	Abilities      []generated.ListPokemonAbilitiesRow
 	EvolutionChain []generated.GetEvolutionChainByPokemonRow
 	Moves          []generated.ListPokemonMovesRow
+	Encounters     []generated.ListEncountersByPokemonRow
 }
 
 // TeamSlotData holds data for a single team slot display.

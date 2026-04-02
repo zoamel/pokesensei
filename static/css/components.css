@@ -624,6 +624,9 @@
   padding: 0.1rem var(--space-2);
 }
 
+.encounters-table-wrap { overflow-x: auto; }
+.encounter-area { font-size: var(--font-size-xs); color: var(--color-text-muted); }
+
 /* Stats */
 .stats-grid {
   display: flex;

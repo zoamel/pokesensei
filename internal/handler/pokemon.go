@@ -20,6 +20,7 @@ type PokemonStore interface {
 	ListPokemonAbilities(ctx context.Context, pokemonID int64) ([]generated.ListPokemonAbilitiesRow, error)
 	GetEvolutionChainByPokemon(ctx context.Context, pokemonID int64) ([]generated.GetEvolutionChainByPokemonRow, error)
 	ListPokemonMoves(ctx context.Context, arg generated.ListPokemonMovesParams) ([]generated.ListPokemonMovesRow, error)
+	ListEncountersByPokemon(ctx context.Context, arg generated.ListEncountersByPokemonParams) ([]generated.ListEncountersByPokemonRow, error)
 }
 
 type PokemonHandler struct {
@@ -137,12 +138,17 @@ func (h *PokemonHandler) HandleDetail(w http.ResponseWriter, r *http.Request) {
 		PokemonID:      id,
 		VersionGroupID: gc.VersionGroupID,
 	})
+	encounters, _ := h.store.ListEncountersByPokemon(ctx, generated.ListEncountersByPokemonParams{
+		PokemonID:     id,
+		GameVersionID: gc.GameVersionID,
+	})
 
 	detail := view.PokemonDetail{
 		Pokemon:        pokemon,
 		Abilities:      abilities,
 		EvolutionChain: evoChain,
 		Moves:          moves,
+		Encounters:     encounters,
 	}
 	for _, t := range types {
 		detail.Types = append(detail.Types, view.TypeInfo{

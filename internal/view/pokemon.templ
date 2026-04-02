@@ -225,6 +225,52 @@ templ PokemonDetailPage(detail PokemonDetail) {
 						@movesTable(detail.Moves, "egg")
 					</section>
 				}
+				if len(detail.Encounters) > 0 {
+					<section class="detail-section">
+						<h2>Catch Locations</h2>
+						<div class="encounters-table-wrap">
+							<table class="moves-table">
+								<thead>
+									<tr>
+										<th>Location</th>
+										<th>Method</th>
+										<th>Levels</th>
+										<th>Chance</th>
+										<th>Badge</th>
+									</tr>
+								</thead>
+								<tbody>
+									for _, e := range detail.Encounters {
+										<tr>
+											<td class="move-name">
+												{ e.LocationName }
+												if e.AreaName != "" {
+													<span class="encounter-area"> — { e.AreaName }</span>
+												}
+											</td>
+											<td>{ titleCase(e.Method) }</td>
+											<td>
+												if e.MinLevel == e.MaxLevel {
+													{ fmt.Sprint(e.MinLevel) }
+												} else {
+													{ fmt.Sprintf("%d–%d", e.MinLevel, e.MaxLevel) }
+												}
+											</td>
+											<td>{ fmt.Sprintf("%d%%", e.Chance) }</td>
+											<td>
+												if e.BadgeRequired > 0 {
+													{ fmt.Sprint(e.BadgeRequired) }
+												} else {
+													—
+												}
+											</td>
+										</tr>
+									}
+								</tbody>
+							</table>
+						</div>
+					</section>
+				}
 			</div>
 		</div>
 	}
