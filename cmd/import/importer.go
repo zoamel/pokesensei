@@ -506,7 +506,7 @@ func (imp *Importer) ImportLearnsets(ctx context.Context, maxDex int, versionGro
 	return nil
 }
 
-func (imp *Importer) ImportEncounters(ctx context.Context, vg VersionGroupInfo) error {
+func (imp *Importer) ImportEncounters(ctx context.Context, gameGroup string, vg VersionGroupInfo) error {
 	// Delete existing encounters for these versions
 	for _, versionID := range vg.VersionIDs {
 		if _, err := imp.db.ExecContext(ctx, "DELETE FROM encounters WHERE game_version_id = ?", versionID); err != nil {
@@ -520,12 +520,10 @@ func (imp *Importer) ImportEncounters(ctx context.Context, vg VersionGroupInfo) 
 		}
 	}
 
-	// Build badge lookup based on game group
-	badgeLookup := BadgeForRouteFRLG
-	for group, info := range VersionGroups {
-		if info.VersionGroupID == vg.VersionGroupID && group == "hgss" {
-			badgeLookup = BadgeForRouteHGSS
-		}
+	// Load badge lookup from JSON
+	badgeLookup, err := LoadBadgeMap(gameGroup)
+	if err != nil {
+		return fmt.Errorf("loading badge map for %s: %w", gameGroup, err)
 	}
 
 	locationCache := make(map[string]int64) // "pokeapi_id:version_id:area" -> location row id

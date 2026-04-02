@@ -113,7 +113,7 @@ func run() error {
 			return fmt.Errorf("importing learnsets for %s: %w", group, err)
 		}
 
-		if err := importer.ImportEncounters(ctx, vg); err != nil {
+		if err := importer.ImportEncounters(ctx, group, vg); err != nil {
 			return fmt.Errorf("importing encounters for %s: %w", group, err)
 		}
 	}
