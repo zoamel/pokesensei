@@ -534,6 +534,50 @@
   border-block-end: 1px solid var(--color-border);
 }
 
+/* Evolution Chain */
+.evo-chain {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding-block: var(--space-2);
+}
+
+.evo-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  color: var(--color-text);
+  transition: background 0.15s;
+}
+
+.evo-step:hover { background: var(--color-surface-alt); }
+
+.evo-step-current {
+  background: var(--color-surface-alt);
+  outline: 2px solid var(--color-primary);
+}
+
+.evo-name { font-size: var(--font-size-sm); font-weight: 600; }
+
+.evo-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-lg);
+}
+
+.evo-trigger {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
 /* Stats */
 .stats-grid {
   display: flex;

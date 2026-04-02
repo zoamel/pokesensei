@@ -147,6 +147,38 @@ templ PokemonDetailPage(detail PokemonDetail) {
 				</a>
 			</div>
 			<div class="detail-sections">
+				if len(detail.EvolutionChain) > 1 {
+					<section class="detail-section">
+						<h2>Evolution Chain</h2>
+						<div class="evo-chain">
+							for i, step := range detail.EvolutionChain {
+								if i > 0 {
+									<div class="evo-arrow">
+										<span class="evo-trigger">
+											if step.MinLevel.Valid {
+												{ fmt.Sprintf("Lv. %d", step.MinLevel.Int64) }
+											} else if step.TradeRequired != 0 {
+												Trade
+											} else if step.TriggerItem.Valid {
+												{ step.TriggerItem.String }
+											} else if step.EvolutionTrigger.Valid {
+												{ titleCase(step.EvolutionTrigger.String) }
+											}
+										</span>
+										→
+									</div>
+								}
+								<a
+									href={ templ.SafeURL(fmt.Sprintf("/pokemon/%d", step.PokemonID)) }
+									class={ "evo-step", templ.KV("evo-step-current", step.PokemonID == detail.Pokemon.ID) }
+								>
+									<img src={ step.SpriteUrl } alt={ step.PokemonName } width="64" height="64"/>
+									<span class="evo-name">{ step.PokemonName }</span>
+								</a>
+							}
+						</div>
+					</section>
+				}
 				<section class="detail-section">
 					<h2>Base Stats</h2>
 					<p class="guide-intro"><strong>HP</strong> = health points. <strong>Attack</strong> = physical move damage. <strong>Defense</strong> = physical damage resistance. <strong>Sp. Atk</strong> = special move damage. <strong>Sp. Def</strong> = special damage resistance. <strong>Speed</strong> = who moves first in battle. Higher bars = stronger in that stat. Most Pokémon specialize — use moves that match their best offensive stat.</p>

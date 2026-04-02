@@ -30,9 +30,10 @@ type PokemonListItem struct {
 
 // PokemonDetail holds all data for the Pokémon detail page.
 type PokemonDetail struct {
-	Pokemon   generated.Pokemon
-	Types     []TypeInfo
-	Abilities []generated.ListPokemonAbilitiesRow
+	Pokemon        generated.Pokemon
+	Types          []TypeInfo
+	Abilities      []generated.ListPokemonAbilitiesRow
+	EvolutionChain []generated.GetEvolutionChainByPokemonRow
 }
 
 // TeamSlotData holds data for a single team slot display.
