@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"zoamel/pokesensei/db/generated"
+	"zoamel/pokesensei/internal/gamecontext"
 	"zoamel/pokesensei/internal/view"
 )
 
@@ -19,8 +20,7 @@ type SettingsStore interface {
 	UpdateTradingEnabled(ctx context.Context, arg generated.UpdateTradingEnabledParams) error
 	ListGameVersions(ctx context.Context) ([]generated.GameVersion, error)
 	ClearTeam(ctx context.Context, gameStateID int64) error
-	DeactivateAllGameStates(ctx context.Context) error
-	ActivateGameState(ctx context.Context, id int64) error
+	SwitchActiveGameState(ctx context.Context, targetID int64) error
 	GetGameStateForVersion(ctx context.Context, gameVersionID sql.NullInt64) (generated.GameState, error)
 	CreateGameState(ctx context.Context, arg generated.CreateGameStateParams) (generated.GameState, error)
 }
@@ -76,28 +76,25 @@ func (h *SettingsHandler) HandleGameUpdate(w http.ResponseWriter, r *http.Reques
 	// Check if a game state already exists for this version
 	existing, err := h.store.GetGameStateForVersion(ctx, gvID)
 	if err == nil {
-		// Switch to existing playthrough
-		if err := h.store.DeactivateAllGameStates(ctx); err != nil {
-			h.log.Error("failed to deactivate game states", "error", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-		if err := h.store.ActivateGameState(ctx, existing.ID); err != nil {
-			h.log.Error("failed to activate game state", "error", err)
+		// Atomically switch to existing playthrough
+		if err := h.store.SwitchActiveGameState(ctx, existing.ID); err != nil {
+			h.log.Error("failed to switch game state", "error", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
 	} else {
-		// Create new playthrough for this game version
-		if err := h.store.DeactivateAllGameStates(ctx); err != nil {
-			h.log.Error("failed to deactivate game states", "error", err)
+		// Create new playthrough (inserts with is_active=1), then atomically
+		// deactivate all others to ensure exactly one active state.
+		newGS, err := h.store.CreateGameState(ctx, generated.CreateGameStateParams{
+			GameVersionID: gvID,
+		})
+		if err != nil {
+			h.log.Error("failed to create game state", "error", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
-		if _, err := h.store.CreateGameState(ctx, generated.CreateGameStateParams{
-			GameVersionID: gvID,
-		}); err != nil {
-			h.log.Error("failed to create game state", "error", err)
+		if err := h.store.SwitchActiveGameState(ctx, newGS.ID); err != nil {
+			h.log.Error("failed to switch to new game state", "error", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
@@ -114,12 +111,7 @@ func (h *SettingsHandler) HandleStarterUpdate(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	ctx := r.Context()
-	gs, err := h.store.GetActiveGameState(ctx)
-	if err != nil {
-		http.Error(w, "No game state", http.StatusBadRequest)
-		return
-	}
+	gc, _ := gamecontext.FromRequest(r)
 
 	starterID, err := strconv.Atoi(r.FormValue("starter_pokemon_id"))
 	if err != nil {
@@ -127,9 +119,9 @@ func (h *SettingsHandler) HandleStarterUpdate(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if err := h.store.UpdateStarter(ctx, generated.UpdateStarterParams{
+	if err := h.store.UpdateStarter(r.Context(), generated.UpdateStarterParams{
 		StarterPokemonID: sql.NullInt64{Int64: int64(starterID), Valid: true},
-		ID:               gs.ID,
+		ID:               gc.GameStateID,
 	}); err != nil {
 		h.log.Error("failed to update starter", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -147,12 +139,7 @@ func (h *SettingsHandler) HandleBadgeUpdate(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	ctx := r.Context()
-	gs, err := h.store.GetActiveGameState(ctx)
-	if err != nil {
-		http.Error(w, "No game state", http.StatusBadRequest)
-		return
-	}
+	gc, _ := gamecontext.FromRequest(r)
 
 	badgeCount, err := strconv.Atoi(r.FormValue("badge_count"))
 	if err != nil || badgeCount < 0 || badgeCount > 16 {
@@ -160,9 +147,9 @@ func (h *SettingsHandler) HandleBadgeUpdate(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if err := h.store.UpdateBadgeCount(ctx, generated.UpdateBadgeCountParams{
+	if err := h.store.UpdateBadgeCount(r.Context(), generated.UpdateBadgeCountParams{
 		BadgeCount: int64(badgeCount),
-		ID:         gs.ID,
+		ID:         gc.GameStateID,
 	}); err != nil {
 		h.log.Error("failed to update badge", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -179,12 +166,7 @@ func (h *SettingsHandler) HandleTradingUpdate(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	ctx := r.Context()
-	gs, err := h.store.GetActiveGameState(ctx)
-	if err != nil {
-		http.Error(w, "No game state", http.StatusBadRequest)
-		return
-	}
+	gc, _ := gamecontext.FromRequest(r)
 
 	tradingEnabled := r.FormValue("trading_enabled") == "on" || r.FormValue("trading_enabled") == "true"
 	var tradingVal int64
@@ -192,9 +174,9 @@ func (h *SettingsHandler) HandleTradingUpdate(w http.ResponseWriter, r *http.Req
 		tradingVal = 1
 	}
 
-	if err := h.store.UpdateTradingEnabled(ctx, generated.UpdateTradingEnabledParams{
+	if err := h.store.UpdateTradingEnabled(r.Context(), generated.UpdateTradingEnabledParams{
 		TradingEnabled: tradingVal,
-		ID:             gs.ID,
+		ID:             gc.GameStateID,
 	}); err != nil {
 		h.log.Error("failed to update trading", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

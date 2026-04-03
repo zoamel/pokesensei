@@ -36,7 +36,10 @@ func (h *DashboardHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	games, _ := h.store.ListGameStates(ctx)
+	games, err := h.store.ListGameStates(ctx)
+	if err != nil {
+		h.log.Error("failed to list game states", "error", err)
+	}
 
 	if err := view.DashboardPage(gc, team, games).Render(ctx, w); err != nil {
 		h.log.Error("failed to render dashboard", "error", err)

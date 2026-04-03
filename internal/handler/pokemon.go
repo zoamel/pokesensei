@@ -89,7 +89,10 @@ func (h *PokemonHandler) HandleSearch(w http.ResponseWriter, r *http.Request) {
 	// Get types for each result
 	pokemonWithTypes := make([]view.PokemonListItem, 0, len(results))
 	for _, p := range results {
-		types, _ := h.store.GetPokemonWithTypes(ctx, p.ID)
+		types, err := h.store.GetPokemonWithTypes(ctx, p.ID)
+		if err != nil {
+			h.log.Error("failed to get pokemon types", "pokemon_id", p.ID, "error", err)
+		}
 		item := view.PokemonListItem{Pokemon: p}
 		for _, t := range types {
 			item.Types = append(item.Types, view.TypeInfo{
@@ -125,17 +128,32 @@ func (h *PokemonHandler) HandleDetail(w http.ResponseWriter, r *http.Request) {
 
 	gc, _ := gamecontext.FromRequest(r)
 
-	types, _ := h.store.GetPokemonWithTypes(ctx, id)
-	abilities, _ := h.store.ListPokemonAbilities(ctx, id)
-	evoChain, _ := h.store.GetEvolutionChainByPokemon(ctx, id)
-	moves, _ := h.store.ListPokemonMoves(ctx, generated.ListPokemonMovesParams{
+	types, err := h.store.GetPokemonWithTypes(ctx, id)
+	if err != nil {
+		h.log.Error("failed to get pokemon types", "pokemon_id", id, "error", err)
+	}
+	abilities, err := h.store.ListPokemonAbilities(ctx, id)
+	if err != nil {
+		h.log.Error("failed to list pokemon abilities", "pokemon_id", id, "error", err)
+	}
+	evoChain, err := h.store.GetEvolutionChainByPokemon(ctx, id)
+	if err != nil {
+		h.log.Error("failed to get evolution chain", "pokemon_id", id, "error", err)
+	}
+	moves, err := h.store.ListPokemonMoves(ctx, generated.ListPokemonMovesParams{
 		PokemonID:      id,
 		VersionGroupID: gc.VersionGroupID,
 	})
-	encounters, _ := h.store.ListEncountersByPokemon(ctx, generated.ListEncountersByPokemonParams{
+	if err != nil {
+		h.log.Error("failed to list pokemon moves", "pokemon_id", id, "error", err)
+	}
+	encounters, err := h.store.ListEncountersByPokemon(ctx, generated.ListEncountersByPokemonParams{
 		PokemonID:     id,
 		GameVersionID: gc.GameVersionID,
 	})
+	if err != nil {
+		h.log.Error("failed to list encounters", "pokemon_id", id, "error", err)
+	}
 
 	detail := view.PokemonDetail{
 		Pokemon:        pokemon,

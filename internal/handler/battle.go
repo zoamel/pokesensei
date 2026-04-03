@@ -47,7 +47,10 @@ func (h *BattleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	gc, _ := gamecontext.FromRequest(r)
 
-	trainers, _ := h.store.ListTrainersByGame(ctx, gc.GameVersionID)
+	trainers, err := h.store.ListTrainersByGame(ctx, gc.GameVersionID)
+	if err != nil {
+		h.log.Error("failed to list trainers", "error", err)
+	}
 
 	if err := view.BattlePage(trainers, gc).Render(ctx, w); err != nil {
 		h.log.Error("failed to render battle page", "error", err)
@@ -83,7 +86,11 @@ func (h *BattleHandler) HandleTrainerMatchup(w http.ResponseWriter, r *http.Requ
 	// Build matchups for each trainer Pokémon
 	var matchups []view.BattleMatchup
 	for _, tp := range trainerPokemon {
-		types, _ := h.store.GetPokemonWithTypes(ctx, tp.PokemonID)
+		types, err := h.store.GetPokemonWithTypes(ctx, tp.PokemonID)
+		if err != nil {
+			h.log.Error("failed to get pokemon types", "pokemon_id", tp.PokemonID, "error", err)
+			continue
+		}
 		var typeIDs []int64
 		for _, t := range types {
 			typeIDs = append(typeIDs, t.TypeID)
@@ -126,7 +133,12 @@ func (h *BattleHandler) HandlePokemonMatchup(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	types, _ := h.store.GetPokemonWithTypes(ctx, pokemonID)
+	types, err := h.store.GetPokemonWithTypes(ctx, pokemonID)
+	if err != nil {
+		h.log.Error("failed to get pokemon types", "pokemon_id", pokemonID, "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 	var typeIDs []int64
 	for _, t := range types {
 		typeIDs = append(typeIDs, t.TypeID)
@@ -183,10 +195,17 @@ func (h *BattleHandler) HandleSearch(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *BattleHandler) loadTeamAndEfficacy(ctx context.Context, gc gamecontext.GameContext) ([]matchup.Pokemon, map[int64]map[int64]int64) {
-	members, _ := h.store.ListTeamMembers(ctx, gc.GameStateID)
+	members, err := h.store.ListTeamMembers(ctx, gc.GameStateID)
+	if err != nil {
+		h.log.Error("failed to list team members", "error", err)
+	}
 	var team []matchup.Pokemon
 	for _, m := range members {
-		types, _ := h.store.GetPokemonWithTypes(ctx, m.PokemonID)
+		types, err := h.store.GetPokemonWithTypes(ctx, m.PokemonID)
+		if err != nil {
+			h.log.Error("failed to get pokemon types", "pokemon_id", m.PokemonID, "error", err)
+			continue
+		}
 		var typeIDs []int64
 		for _, t := range types {
 			typeIDs = append(typeIDs, t.TypeID)
@@ -200,7 +219,10 @@ func (h *BattleHandler) loadTeamAndEfficacy(ctx context.Context, gc gamecontext.
 		})
 	}
 
-	efficacyRows, _ := h.store.GetTypeEfficacyByEra(ctx, gc.TypeChartEra)
+	efficacyRows, err := h.store.GetTypeEfficacyByEra(ctx, gc.TypeChartEra)
+	if err != nil {
+		h.log.Error("failed to get type efficacy", "era", gc.TypeChartEra, "error", err)
+	}
 	efficacy := make(map[int64]map[int64]int64)
 	for _, e := range efficacyRows {
 		if efficacy[e.AttackingTypeID] == nil {
@@ -219,11 +241,15 @@ func (h *BattleHandler) loadTeamMoves(ctx context.Context, gc gamecontext.GameCo
 		if level == 0 {
 			level = 50
 		}
-		rows, _ := h.store.ListPokemonMovesAtLevel(ctx, generated.ListPokemonMovesAtLevelParams{
+		rows, err := h.store.ListPokemonMovesAtLevel(ctx, generated.ListPokemonMovesAtLevelParams{
 			PokemonID:      member.ID,
 			VersionGroupID: gc.VersionGroupID,
 			LevelLearnedAt: level,
 		})
+		if err != nil {
+			h.log.Error("failed to list pokemon moves", "pokemon_id", member.ID, "error", err)
+			continue
+		}
 		for _, r := range rows {
 			power := int64(0)
 			if r.Power.Valid {

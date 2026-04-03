@@ -214,6 +214,18 @@ func (q *Queries) ListGameStates(ctx context.Context) ([]ListGameStatesRow, erro
 	return items, nil
 }
 
+const switchActiveGameState = `-- name: SwitchActiveGameState :exec
+UPDATE game_state
+SET is_active = CASE WHEN id = ?1 THEN 1 ELSE 0 END,
+    updated_at = CASE WHEN id = ?1 THEN datetime('now') ELSE updated_at END
+`
+
+// Atomically deactivate all game states and activate the target one.
+func (q *Queries) SwitchActiveGameState(ctx context.Context, targetID int64) error {
+	_, err := q.db.ExecContext(ctx, switchActiveGameState, targetID)
+	return err
+}
+
 const updateBadgeCount = `-- name: UpdateBadgeCount :exec
 UPDATE game_state SET badge_count = ?1, updated_at = datetime('now') WHERE id = ?2
 `

@@ -40,6 +40,12 @@ UPDATE game_state SET is_active = 0 WHERE is_active = 1;
 -- name: ActivateGameState :exec
 UPDATE game_state SET is_active = 1, updated_at = datetime('now') WHERE id = ?1;
 
+-- name: SwitchActiveGameState :exec
+-- Atomically deactivate all game states and activate the target one.
+UPDATE game_state
+SET is_active = CASE WHEN id = sqlc.arg(target_id) THEN 1 ELSE 0 END,
+    updated_at = CASE WHEN id = sqlc.arg(target_id) THEN datetime('now') ELSE updated_at END;
+
 -- name: UpdateGameVersion :exec
 UPDATE game_state SET game_version_id = ?1, updated_at = datetime('now') WHERE id = ?2;
 
