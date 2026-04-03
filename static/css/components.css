@@ -252,6 +252,67 @@
   color: var(--color-text-muted);
 }
 
+/* Game Switcher */
+.game-switcher {
+  margin-block-end: var(--space-8);
+}
+
+.game-switcher-list {
+  display: flex;
+  gap: var(--space-3);
+  overflow-x: auto;
+  padding-block-end: var(--space-2);
+}
+
+.game-switcher-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  min-inline-size: 9rem;
+  cursor: pointer;
+  font: inherit;
+  color: var(--color-text);
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.game-switcher-item:hover {
+  border-color: var(--color-primary);
+  background: var(--color-surface-alt);
+}
+
+.game-switcher-item.active {
+  border-color: var(--color-primary);
+  background: var(--color-surface-alt);
+  cursor: default;
+}
+
+.game-switcher-name {
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+}
+
+.game-switcher-badges {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.game-switcher-label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.game-switcher-new {
+  border-style: dashed;
+  color: var(--color-text-muted);
+}
+
 /* Settings */
 .settings h1 {
   font-size: var(--font-size-3xl);
@@ -472,6 +533,99 @@
   padding-block-end: var(--space-2);
   border-block-end: 1px solid var(--color-border);
 }
+
+/* Evolution Chain */
+.evo-chain {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding-block: var(--space-2);
+}
+
+.evo-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  color: var(--color-text);
+  transition: background 0.15s;
+}
+
+.evo-step:hover { background: var(--color-surface-alt); }
+
+.evo-step-current {
+  background: var(--color-surface-alt);
+  outline: 2px solid var(--color-primary);
+}
+
+.evo-name { font-size: var(--font-size-sm); font-weight: 600; }
+
+.evo-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-lg);
+}
+
+.evo-trigger {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+/* Moves Table */
+.moves-group {
+  margin-block-end: var(--space-4);
+}
+
+.moves-group-title {
+  font-weight: 600;
+  font-size: var(--font-size-base);
+  cursor: pointer;
+  padding: var(--space-2) 0;
+}
+
+.moves-table-wrap {
+  overflow-x: auto;
+  margin-block-start: var(--space-2);
+}
+
+.moves-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.moves-table th {
+  text-align: start;
+  padding: var(--space-1) var(--space-2);
+  border-block-end: 2px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.moves-table td {
+  padding: var(--space-1) var(--space-2);
+  border-block-end: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.moves-table .move-name { font-weight: 500; }
+.moves-table .move-cat { font-size: var(--font-size-xs); color: var(--color-text-muted); }
+
+.type-pill-sm {
+  font-size: var(--font-size-xs);
+  padding: 0.1rem var(--space-2);
+}
+
+.encounters-table-wrap { overflow-x: auto; }
+.encounter-area { font-size: var(--font-size-xs); color: var(--color-text-muted); }
 
 /* Stats */
 .stats-grid {
@@ -1107,6 +1261,41 @@
 .guide-card p {
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
+}
+
+/* Type chart legend */
+.type-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  margin-block: var(--space-3);
+  font-size: var(--font-size-sm);
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.legend-swatch {
+  display: inline-block;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+.legend-swatch.eff-super { background: var(--color-eff-super, #4ade80); }
+.legend-swatch.eff-normal { background: var(--color-surface); }
+.legend-swatch.eff-not { background: var(--color-eff-not, #f87171); }
+.legend-swatch.eff-immune { background: var(--color-eff-immune, #1e1e2e); }
+
+.legend-note {
+  margin-inline-start: auto;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
 }
 
 /* Type chart */

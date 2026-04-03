@@ -74,3 +74,38 @@ func (q *Queries) ListGameVersions(ctx context.Context) ([]GameVersion, error) {
 	}
 	return items, nil
 }
+
+const listGameVersionsByVersionGroup = `-- name: ListGameVersionsByVersionGroup :many
+SELECT id, name, slug, version_group_id
+FROM game_versions
+WHERE version_group_id = ?1
+ORDER BY id
+`
+
+func (q *Queries) ListGameVersionsByVersionGroup(ctx context.Context, versionGroupID sql.NullInt64) ([]GameVersion, error) {
+	rows, err := q.db.QueryContext(ctx, listGameVersionsByVersionGroup, versionGroupID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GameVersion
+	for rows.Next() {
+		var i GameVersion
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Slug,
+			&i.VersionGroupID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"io"
 	"log/slog"
@@ -13,27 +12,22 @@ import (
 	"testing"
 
 	"zoamel/pokesensei/db/generated"
+	"zoamel/pokesensei/internal/gamecontext"
 )
 
 // mockTeamStore implements TeamStore with controllable return values.
 type mockTeamStore struct {
-	getTeamMemberDetailRow generated.GetTeamMemberDetailRow
-	getTeamMemberDetailErr error
-	listNatures            []generated.Nature
-	listPokemonAbilities   []generated.ListPokemonAbilitiesRow
-	listTeamMemberMoves    []generated.ListTeamMemberMovesRow
-	listAvailableMoves     []generated.ListAvailableMovesRow
-	setNatureErr           error
-	setAbilityErr          error
-	addTeamMemberMoveErr   error
+	getTeamMemberDetailRow  generated.GetTeamMemberDetailRow
+	getTeamMemberDetailErr  error
+	listNatures             []generated.Nature
+	listPokemonAbilities    []generated.ListPokemonAbilitiesRow
+	listTeamMemberMoves     []generated.ListTeamMemberMovesRow
+	listAvailableMoves      []generated.ListAvailableMovesRow
+	setNatureErr            error
+	setAbilityErr           error
+	addTeamMemberMoveErr    error
 	removeTeamMemberMoveErr error
-	gameState              generated.GameState
-	pokemonTypes           []generated.GetPokemonWithTypesRow
-	versionGroupID         sql.NullInt64
-}
-
-func (m *mockTeamStore) GetGameState(ctx context.Context) (generated.GameState, error) {
-	return m.gameState, nil
+	pokemonTypes            []generated.GetPokemonWithTypesRow
 }
 
 func (m *mockTeamStore) ListTeamMembers(ctx context.Context, gameStateID int64) ([]generated.ListTeamMembersRow, error) {
@@ -64,7 +58,7 @@ func (m *mockTeamStore) ListTypes(ctx context.Context) ([]generated.Type, error)
 	return nil, nil
 }
 
-func (m *mockTeamStore) GetTypeEfficacy(ctx context.Context) ([]generated.TypeEfficacy, error) {
+func (m *mockTeamStore) GetTypeEfficacyByEra(ctx context.Context, era string) ([]generated.GetTypeEfficacyByEraRow, error) {
 	return nil, nil
 }
 
@@ -86,10 +80,6 @@ func (m *mockTeamStore) ListTeamMemberMoves(ctx context.Context, teamMemberID in
 
 func (m *mockTeamStore) ListAvailableMoves(ctx context.Context, arg generated.ListAvailableMovesParams) ([]generated.ListAvailableMovesRow, error) {
 	return m.listAvailableMoves, nil
-}
-
-func (m *mockTeamStore) GetVersionGroupIDByGameVersion(ctx context.Context, id int64) (sql.NullInt64, error) {
-	return m.versionGroupID, nil
 }
 
 func (m *mockTeamStore) SetTeamMemberNature(ctx context.Context, arg generated.SetTeamMemberNatureParams) error {
@@ -126,19 +116,25 @@ func validMemberDetail() generated.GetTeamMemberDetailRow {
 	}
 }
 
-func validGameState() generated.GameState {
-	return generated.GameState{
-		ID:            1,
-		GameVersionID: sql.NullInt64{Int64: 1, Valid: true},
+func requestWithGameContext(req *http.Request) *http.Request {
+	gc := gamecontext.GameContext{
+		GameStateID:    1,
+		GameVersionID:  1,
+		VersionGroupID: 1,
+		Generation:     3,
+		TypeChartEra:   "pre_fairy",
+		BadgeCount:     0,
+		MaxPokedex:     386,
+		MaxBadges:      8,
 	}
+	ctx := gamecontext.NewContext(req.Context(), gc)
+	return req.WithContext(ctx)
 }
 
 // TestHandleDetail_Success: valid id, mock returns member. Expect 200 and pokemon name in body.
 func TestHandleDetail_Success(t *testing.T) {
 	store := &mockTeamStore{
 		getTeamMemberDetailRow: validMemberDetail(),
-		gameState:              validGameState(),
-		versionGroupID:         sql.NullInt64{Int64: 1, Valid: true},
 		pokemonTypes: []generated.GetPokemonWithTypesRow{
 			{TypeID: 12, TypeName: "Grass", TypeSlug: "grass"},
 		},
@@ -147,6 +143,7 @@ func TestHandleDetail_Success(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodGet, "/team/members/42", nil)
 	req.SetPathValue("id", "42")
+	req = requestWithGameContext(req)
 	rec := httptest.NewRecorder()
 
 	h.HandleDetail(rec, req)
@@ -242,8 +239,6 @@ func TestHandleAddMove_Success(t *testing.T) {
 	store := &mockTeamStore{
 		listTeamMemberMoves:    []generated.ListTeamMemberMovesRow{},
 		getTeamMemberDetailRow: validMemberDetail(),
-		gameState:              validGameState(),
-		versionGroupID:         sql.NullInt64{Int64: 1, Valid: true},
 	}
 	h := newTeamHandler(store)
 
@@ -251,6 +246,7 @@ func TestHandleAddMove_Success(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/team/members/42/moves", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.SetPathValue("id", "42")
+	req = requestWithGameContext(req)
 	rec := httptest.NewRecorder()
 
 	h.HandleAddMove(rec, req)
@@ -289,14 +285,13 @@ func TestHandleAddMove_Full(t *testing.T) {
 func TestHandleRemoveMove_Success(t *testing.T) {
 	store := &mockTeamStore{
 		getTeamMemberDetailRow: validMemberDetail(),
-		gameState:              validGameState(),
-		versionGroupID:         sql.NullInt64{Int64: 1, Valid: true},
 	}
 	h := newTeamHandler(store)
 
 	req := httptest.NewRequest(http.MethodDelete, "/team/members/42/moves/7", nil)
 	req.SetPathValue("id", "42")
 	req.SetPathValue("tmMoveId", "7")
+	req = requestWithGameContext(req)
 	rec := httptest.NewRecorder()
 
 	h.HandleRemoveMove(rec, req)

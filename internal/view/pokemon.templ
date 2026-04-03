@@ -3,9 +3,10 @@ package view
 import (
 	"fmt"
 	"zoamel/pokesensei/db/generated"
+	"zoamel/pokesensei/internal/gamecontext"
 )
 
-templ PokemonFinderPage(types []generated.Type, gs generated.GameState) {
+templ PokemonFinderPage(types []generated.Type, gc gamecontext.GameContext) {
 	@AppShell("Pokémon Finder", "pokemon") {
 		<div class="finder">
 			<h1>Pokémon Finder</h1>
@@ -13,9 +14,7 @@ templ PokemonFinderPage(types []generated.Type, gs generated.GameState) {
 				<aside class="finder-filters">
 					<h2>Filters</h2>
 					<form id="pokemon-filters">
-						if gs.GameVersionID.Valid {
-							<input type="hidden" name="game_version_id" value={ fmt.Sprint(gs.GameVersionID.Int64) }/>
-						}
+						<input type="hidden" name="game_version_id" value={ fmt.Sprint(gc.GameVersionID) }/>
 						<div class="filter-group">
 							<label for="name-search">Name</label>
 							<input
@@ -45,35 +44,33 @@ templ PokemonFinderPage(types []generated.Type, gs generated.GameState) {
 								}
 							</select>
 						</div>
-						if gs.GameVersionID.Valid {
-							<div class="filter-group">
-								<label for="badge-filter">Max Badge</label>
-								<select
-									id="badge-filter"
-									name="max_badge"
-									hx-get="/pokemon/search"
-									hx-trigger="change"
-									hx-target="#search-results"
-									hx-include="#pokemon-filters"
-								>
-									<option value="">Any Badge</option>
-									for i := 0; i <= 8; i++ {
-										<option
-											value={ fmt.Sprint(i) }
-											if int64(i) == gs.BadgeCount {
-												selected
-											}
-										>
-											if i == 0 {
-												Pre-badge
-											} else {
-												{ fmt.Sprintf("Badge %d", i) }
-											}
-										</option>
-									}
-								</select>
-							</div>
-						}
+						<div class="filter-group">
+							<label for="badge-filter">Max Badge</label>
+							<select
+								id="badge-filter"
+								name="max_badge"
+								hx-get="/pokemon/search"
+								hx-trigger="change"
+								hx-target="#search-results"
+								hx-include="#pokemon-filters"
+							>
+								<option value="">Any Badge</option>
+								for i := 0; int64(i) <= gc.MaxBadges; i++ {
+									<option
+										value={ fmt.Sprint(i) }
+										if int64(i) == gc.BadgeCount {
+											selected
+										}
+									>
+										if i == 0 {
+											Pre-badge
+										} else {
+											{ fmt.Sprintf("Badge %d", i) }
+										}
+									</option>
+								}
+							</select>
+						</div>
 					</form>
 				</aside>
 				<section class="finder-results">
@@ -147,6 +144,38 @@ templ PokemonDetailPage(detail PokemonDetail) {
 				</a>
 			</div>
 			<div class="detail-sections">
+				if len(detail.EvolutionChain) > 1 {
+					<section class="detail-section">
+						<h2>Evolution Chain</h2>
+						<div class="evo-chain">
+							for i, step := range detail.EvolutionChain {
+								if i > 0 {
+									<div class="evo-arrow">
+										<span class="evo-trigger">
+											if step.MinLevel.Valid {
+												{ fmt.Sprintf("Lv. %d", step.MinLevel.Int64) }
+											} else if step.TradeRequired != 0 {
+												Trade
+											} else if step.TriggerItem.Valid {
+												{ step.TriggerItem.String }
+											} else if step.EvolutionTrigger.Valid {
+												{ titleCase(step.EvolutionTrigger.String) }
+											}
+										</span>
+										→
+									</div>
+								}
+								<a
+									href={ templ.SafeURL(fmt.Sprintf("/pokemon/%d", step.PokemonID)) }
+									class={ "evo-step", templ.KV("evo-step-current", step.PokemonID == detail.Pokemon.ID) }
+								>
+									<img src={ step.SpriteUrl } alt={ step.PokemonName } width="64" height="64"/>
+									<span class="evo-name">{ step.PokemonName }</span>
+								</a>
+							}
+						</div>
+					</section>
+				}
 				<section class="detail-section">
 					<h2>Base Stats</h2>
 					<p class="guide-intro"><strong>HP</strong> = health points. <strong>Attack</strong> = physical move damage. <strong>Defense</strong> = physical damage resistance. <strong>Sp. Atk</strong> = special move damage. <strong>Sp. Def</strong> = special damage resistance. <strong>Speed</strong> = who moves first in battle. Higher bars = stronger in that stat. Most Pokémon specialize — use moves that match their best offensive stat.</p>
@@ -184,8 +213,119 @@ templ PokemonDetailPage(detail PokemonDetail) {
 						</ul>
 					</section>
 				}
+				if len(detail.Moves) > 0 {
+					<section class="detail-section">
+						<h2>Learnable Moves</h2>
+						@movesTable(detail.Moves, "level-up")
+						@movesTable(detail.Moves, "machine")
+						@movesTable(detail.Moves, "tutor")
+						@movesTable(detail.Moves, "egg")
+					</section>
+				}
+				if len(detail.Encounters) > 0 {
+					<section class="detail-section">
+						<h2>Catch Locations</h2>
+						<div class="encounters-table-wrap">
+							<table class="moves-table">
+								<thead>
+									<tr>
+										<th>Location</th>
+										<th>Method</th>
+										<th>Levels</th>
+										<th>Chance</th>
+										<th>Badge</th>
+									</tr>
+								</thead>
+								<tbody>
+									for _, e := range detail.Encounters {
+										<tr>
+											<td class="move-name">
+												{ e.LocationName }
+												if e.AreaName != "" {
+													<span class="encounter-area"> — { e.AreaName }</span>
+												}
+											</td>
+											<td>{ titleCase(e.Method) }</td>
+											<td>
+												if e.MinLevel == e.MaxLevel {
+													{ fmt.Sprint(e.MinLevel) }
+												} else {
+													{ fmt.Sprintf("%d–%d", e.MinLevel, e.MaxLevel) }
+												}
+											</td>
+											<td>{ fmt.Sprintf("%d%%", e.Chance) }</td>
+											<td>
+												if e.BadgeRequired > 0 {
+													{ fmt.Sprint(e.BadgeRequired) }
+												} else {
+													—
+												}
+											</td>
+										</tr>
+									}
+								</tbody>
+							</table>
+						</div>
+					</section>
+				}
 			</div>
 		</div>
+	}
+}
+
+templ movesTable(allMoves []generated.ListPokemonMovesRow, method string) {
+	if movesForMethod := filterMovesByMethod(allMoves, method); len(movesForMethod) > 0 {
+		<details class="moves-group" open?={ method == "level-up" }>
+			<summary class="moves-group-title">{ moveMethodLabel(method) } ({ fmt.Sprint(len(movesForMethod)) })</summary>
+			<div class="moves-table-wrap">
+				<table class="moves-table">
+					<thead>
+						<tr>
+							if method == "level-up" {
+								<th>Lv.</th>
+							}
+							<th>Move</th>
+							<th>Type</th>
+							<th>Cat.</th>
+							<th>Pwr</th>
+							<th>Acc</th>
+							<th>PP</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, m := range movesForMethod {
+							<tr>
+								if method == "level-up" {
+									<td>{ fmt.Sprint(m.LevelLearnedAt) }</td>
+								}
+								<td class="move-name">{ m.Name }</td>
+								<td>
+									if m.TypeSlug.Valid {
+										<span class={ "type-pill type-pill-sm", fmt.Sprintf("type-%s", m.TypeSlug.String) }>{ m.TypeName.String }</span>
+									}
+								</td>
+								<td class="move-cat">{ titleCase(m.DamageClass) }</td>
+								<td>
+									if m.Power.Valid {
+										{ fmt.Sprint(m.Power.Int64) }
+									} else {
+										—
+									}
+								</td>
+								<td>
+									if m.Accuracy.Valid {
+										{ fmt.Sprintf("%d%%", m.Accuracy.Int64) }
+									} else {
+										—
+									}
+								</td>
+								<td>{ fmt.Sprint(m.Pp) }</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		</details>
 	}
 }
 

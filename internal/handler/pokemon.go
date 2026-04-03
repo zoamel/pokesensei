@@ -8,16 +8,19 @@ import (
 	"strconv"
 
 	"zoamel/pokesensei/db/generated"
+	"zoamel/pokesensei/internal/gamecontext"
 	"zoamel/pokesensei/internal/view"
 )
 
 type PokemonStore interface {
-	GetGameState(ctx context.Context) (generated.GameState, error)
 	SearchPokemonFiltered(ctx context.Context, arg generated.SearchPokemonFilteredParams) ([]generated.Pokemon, error)
 	ListTypes(ctx context.Context) ([]generated.Type, error)
 	GetPokemonByID(ctx context.Context, id int64) (generated.Pokemon, error)
 	GetPokemonWithTypes(ctx context.Context, id int64) ([]generated.GetPokemonWithTypesRow, error)
 	ListPokemonAbilities(ctx context.Context, pokemonID int64) ([]generated.ListPokemonAbilitiesRow, error)
+	GetEvolutionChainByPokemon(ctx context.Context, pokemonID int64) ([]generated.GetEvolutionChainByPokemonRow, error)
+	ListPokemonMoves(ctx context.Context, arg generated.ListPokemonMovesParams) ([]generated.ListPokemonMovesRow, error)
+	ListEncountersByPokemon(ctx context.Context, arg generated.ListEncountersByPokemonParams) ([]generated.ListEncountersByPokemonRow, error)
 }
 
 type PokemonHandler struct {
@@ -40,9 +43,9 @@ func (h *PokemonHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	gs, _ := h.store.GetGameState(ctx)
+	gc, _ := gamecontext.FromRequest(r)
 
-	if err := view.PokemonFinderPage(types, gs).Render(ctx, w); err != nil {
+	if err := view.PokemonFinderPage(types, gc).Render(ctx, w); err != nil {
 		h.log.Error("failed to render pokemon finder", "error", err)
 	}
 }
@@ -51,7 +54,11 @@ func (h *PokemonHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *PokemonHandler) HandleSearch(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	params := generated.SearchPokemonFilteredParams{}
+	gc, _ := gamecontext.FromRequest(r)
+
+	params := generated.SearchPokemonFilteredParams{
+		MaxPokedex: gc.MaxPokedex,
+	}
 
 	if name := r.URL.Query().Get("name"); name != "" {
 		params.Name = sql.NullString{String: name, Valid: true}
@@ -82,7 +89,10 @@ func (h *PokemonHandler) HandleSearch(w http.ResponseWriter, r *http.Request) {
 	// Get types for each result
 	pokemonWithTypes := make([]view.PokemonListItem, 0, len(results))
 	for _, p := range results {
-		types, _ := h.store.GetPokemonWithTypes(ctx, p.ID)
+		types, err := h.store.GetPokemonWithTypes(ctx, p.ID)
+		if err != nil {
+			h.log.Error("failed to get pokemon types", "pokemon_id", p.ID, "error", err)
+		}
 		item := view.PokemonListItem{Pokemon: p}
 		for _, t := range types {
 			item.Types = append(item.Types, view.TypeInfo{
@@ -116,12 +126,41 @@ func (h *PokemonHandler) HandleDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	types, _ := h.store.GetPokemonWithTypes(ctx, id)
-	abilities, _ := h.store.ListPokemonAbilities(ctx, id)
+	gc, _ := gamecontext.FromRequest(r)
+
+	types, err := h.store.GetPokemonWithTypes(ctx, id)
+	if err != nil {
+		h.log.Error("failed to get pokemon types", "pokemon_id", id, "error", err)
+	}
+	abilities, err := h.store.ListPokemonAbilities(ctx, id)
+	if err != nil {
+		h.log.Error("failed to list pokemon abilities", "pokemon_id", id, "error", err)
+	}
+	evoChain, err := h.store.GetEvolutionChainByPokemon(ctx, id)
+	if err != nil {
+		h.log.Error("failed to get evolution chain", "pokemon_id", id, "error", err)
+	}
+	moves, err := h.store.ListPokemonMoves(ctx, generated.ListPokemonMovesParams{
+		PokemonID:      id,
+		VersionGroupID: gc.VersionGroupID,
+	})
+	if err != nil {
+		h.log.Error("failed to list pokemon moves", "pokemon_id", id, "error", err)
+	}
+	encounters, err := h.store.ListEncountersByPokemon(ctx, generated.ListEncountersByPokemonParams{
+		PokemonID:     id,
+		GameVersionID: gc.GameVersionID,
+	})
+	if err != nil {
+		h.log.Error("failed to list encounters", "pokemon_id", id, "error", err)
+	}
 
 	detail := view.PokemonDetail{
-		Pokemon:   pokemon,
-		Abilities: abilities,
+		Pokemon:        pokemon,
+		Abilities:      abilities,
+		EvolutionChain: evoChain,
+		Moves:          moves,
+		Encounters:     encounters,
 	}
 	for _, t := range types {
 		detail.Types = append(detail.Types, view.TypeInfo{
@@ -133,16 +172,5 @@ func (h *PokemonHandler) HandleDetail(w http.ResponseWriter, r *http.Request) {
 
 	if err := view.PokemonDetailPage(detail).Render(ctx, w); err != nil {
 		h.log.Error("failed to render pokemon detail", "error", err)
-	}
-}
-
-func versionGroupForGame(gameVersionID int64) int {
-	switch gameVersionID {
-	case 10, 11:
-		return 7 // FRLG
-	case 15, 16:
-		return 10 // HGSS
-	default:
-		return 7
 	}
 }

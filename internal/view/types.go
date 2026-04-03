@@ -30,9 +30,12 @@ type PokemonListItem struct {
 
 // PokemonDetail holds all data for the Pokémon detail page.
 type PokemonDetail struct {
-	Pokemon   generated.Pokemon
-	Types     []TypeInfo
-	Abilities []generated.ListPokemonAbilitiesRow
+	Pokemon        generated.Pokemon
+	Types          []TypeInfo
+	Abilities      []generated.ListPokemonAbilitiesRow
+	EvolutionChain []generated.GetEvolutionChainByPokemonRow
+	Moves          []generated.ListPokemonMovesRow
+	Encounters     []generated.ListEncountersByPokemonRow
 }
 
 // TeamSlotData holds data for a single team slot display.
@@ -65,6 +68,31 @@ type TeamMemberDetailData struct {
 type MoveSlotData struct {
 	SlotNum int
 	Move    *generated.ListTeamMemberMovesRow
+}
+
+func filterMovesByMethod(moves []generated.ListPokemonMovesRow, method string) []generated.ListPokemonMovesRow {
+	var result []generated.ListPokemonMovesRow
+	for _, m := range moves {
+		if m.LearnMethod == method {
+			result = append(result, m)
+		}
+	}
+	return result
+}
+
+func moveMethodLabel(method string) string {
+	switch method {
+	case "level-up":
+		return "Level Up"
+	case "machine":
+		return "TM/HM"
+	case "tutor":
+		return "Move Tutor"
+	case "egg":
+		return "Egg Moves"
+	default:
+		return titleCase(method)
+	}
 }
 
 func titleCase(s string) string {

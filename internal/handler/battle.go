@@ -8,12 +8,12 @@ import (
 	"strconv"
 
 	"zoamel/pokesensei/db/generated"
+	"zoamel/pokesensei/internal/gamecontext"
 	"zoamel/pokesensei/internal/matchup"
 	"zoamel/pokesensei/internal/view"
 )
 
 type BattleStore interface {
-	GetGameState(ctx context.Context) (generated.GameState, error)
 	ListTeamMembers(ctx context.Context, gameStateID int64) ([]generated.ListTeamMembersRow, error)
 	ListTrainersByGame(ctx context.Context, gameVersionID int64) ([]generated.Trainer, error)
 	GetTrainerByID(ctx context.Context, id int64) (generated.Trainer, error)
@@ -22,8 +22,8 @@ type BattleStore interface {
 	GetPokemonByID(ctx context.Context, id int64) (generated.Pokemon, error)
 	GetPokemonWithTypes(ctx context.Context, id int64) ([]generated.GetPokemonWithTypesRow, error)
 	ListPokemonMovesAtLevel(ctx context.Context, arg generated.ListPokemonMovesAtLevelParams) ([]generated.ListPokemonMovesAtLevelRow, error)
-	GetTypeEfficacy(ctx context.Context) ([]generated.TypeEfficacy, error)
-	ListTypes(ctx context.Context) ([]generated.Type, error)
+	GetTypeEfficacyByEra(ctx context.Context, era string) ([]generated.GetTypeEfficacyByEraRow, error)
+	ListTypesByEra(ctx context.Context, era string) ([]generated.Type, error)
 	SearchPokemonFiltered(ctx context.Context, arg generated.SearchPokemonFilteredParams) ([]generated.Pokemon, error)
 }
 
@@ -45,18 +45,14 @@ func NewBattle(store BattleStore, log *slog.Logger) *BattleHandler {
 func (h *BattleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	gs, err := h.store.GetGameState(ctx)
+	gc, _ := gamecontext.FromRequest(r)
+
+	trainers, err := h.store.ListTrainersByGame(ctx, gc.GameVersionID)
 	if err != nil {
-		http.Redirect(w, r, "/onboarding", http.StatusSeeOther)
-		return
+		h.log.Error("failed to list trainers", "error", err)
 	}
 
-	var trainers []generated.Trainer
-	if gs.GameVersionID.Valid {
-		trainers, _ = h.store.ListTrainersByGame(ctx, gs.GameVersionID.Int64)
-	}
-
-	if err := view.BattlePage(trainers).Render(ctx, w); err != nil {
+	if err := view.BattlePage(trainers, gc).Render(ctx, w); err != nil {
 		h.log.Error("failed to render battle page", "error", err)
 	}
 }
@@ -84,12 +80,17 @@ func (h *BattleHandler) HandleTrainerMatchup(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	team, efficacy := h.loadTeamAndEfficacy(ctx)
+	gc, _ := gamecontext.FromRequest(r)
+	team, efficacy := h.loadTeamAndEfficacy(ctx, gc)
 
 	// Build matchups for each trainer Pokémon
 	var matchups []view.BattleMatchup
 	for _, tp := range trainerPokemon {
-		types, _ := h.store.GetPokemonWithTypes(ctx, tp.PokemonID)
+		types, err := h.store.GetPokemonWithTypes(ctx, tp.PokemonID)
+		if err != nil {
+			h.log.Error("failed to get pokemon types", "pokemon_id", tp.PokemonID, "error", err)
+			continue
+		}
 		var typeIDs []int64
 		for _, t := range types {
 			typeIDs = append(typeIDs, t.TypeID)
@@ -103,7 +104,7 @@ func (h *BattleHandler) HandleTrainerMatchup(w http.ResponseWriter, r *http.Requ
 			Level:     tp.Level,
 		}
 
-		results := h.engine.RankTeam(team, h.loadTeamMoves(ctx, team), opponent, efficacy)
+		results := h.engine.RankTeam(team, h.loadTeamMoves(ctx, gc, team), opponent, efficacy)
 
 		matchups = append(matchups, view.BattleMatchup{
 			Opponent: opponent,
@@ -132,7 +133,12 @@ func (h *BattleHandler) HandlePokemonMatchup(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	types, _ := h.store.GetPokemonWithTypes(ctx, pokemonID)
+	types, err := h.store.GetPokemonWithTypes(ctx, pokemonID)
+	if err != nil {
+		h.log.Error("failed to get pokemon types", "pokemon_id", pokemonID, "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 	var typeIDs []int64
 	for _, t := range types {
 		typeIDs = append(typeIDs, t.TypeID)
@@ -145,8 +151,9 @@ func (h *BattleHandler) HandlePokemonMatchup(w http.ResponseWriter, r *http.Requ
 		Types:     typeIDs,
 	}
 
-	team, efficacy := h.loadTeamAndEfficacy(ctx)
-	results := h.engine.RankTeam(team, h.loadTeamMoves(ctx, team), opponent, efficacy)
+	gc, _ := gamecontext.FromRequest(r)
+	team, efficacy := h.loadTeamAndEfficacy(ctx, gc)
+	results := h.engine.RankTeam(team, h.loadTeamMoves(ctx, gc, team), opponent, efficacy)
 
 	mu := view.BattleMatchup{
 		Opponent: opponent,
@@ -168,8 +175,11 @@ func (h *BattleHandler) HandleSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	gc, _ := gamecontext.FromRequest(r)
+
 	params := generated.SearchPokemonFilteredParams{
-		Name: sql.NullString{String: name, Valid: true},
+		Name:       sql.NullString{String: name, Valid: true},
+		MaxPokedex: gc.MaxPokedex,
 	}
 
 	results, err := h.store.SearchPokemonFiltered(ctx, params)
@@ -184,16 +194,18 @@ func (h *BattleHandler) HandleSearch(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *BattleHandler) loadTeamAndEfficacy(ctx context.Context) ([]matchup.Pokemon, map[int64]map[int64]int64) {
-	gs, err := h.store.GetGameState(ctx)
+func (h *BattleHandler) loadTeamAndEfficacy(ctx context.Context, gc gamecontext.GameContext) ([]matchup.Pokemon, map[int64]map[int64]int64) {
+	members, err := h.store.ListTeamMembers(ctx, gc.GameStateID)
 	if err != nil {
-		return nil, nil
+		h.log.Error("failed to list team members", "error", err)
 	}
-
-	members, _ := h.store.ListTeamMembers(ctx, gs.ID)
 	var team []matchup.Pokemon
 	for _, m := range members {
-		types, _ := h.store.GetPokemonWithTypes(ctx, m.PokemonID)
+		types, err := h.store.GetPokemonWithTypes(ctx, m.PokemonID)
+		if err != nil {
+			h.log.Error("failed to get pokemon types", "pokemon_id", m.PokemonID, "error", err)
+			continue
+		}
 		var typeIDs []int64
 		for _, t := range types {
 			typeIDs = append(typeIDs, t.TypeID)
@@ -207,7 +219,10 @@ func (h *BattleHandler) loadTeamAndEfficacy(ctx context.Context) ([]matchup.Poke
 		})
 	}
 
-	efficacyRows, _ := h.store.GetTypeEfficacy(ctx)
+	efficacyRows, err := h.store.GetTypeEfficacyByEra(ctx, gc.TypeChartEra)
+	if err != nil {
+		h.log.Error("failed to get type efficacy", "era", gc.TypeChartEra, "error", err)
+	}
 	efficacy := make(map[int64]map[int64]int64)
 	for _, e := range efficacyRows {
 		if efficacy[e.AttackingTypeID] == nil {
@@ -219,24 +234,22 @@ func (h *BattleHandler) loadTeamAndEfficacy(ctx context.Context) ([]matchup.Poke
 	return team, efficacy
 }
 
-func (h *BattleHandler) loadTeamMoves(ctx context.Context, team []matchup.Pokemon) map[int64][]matchup.Move {
-	gs, _ := h.store.GetGameState(ctx)
-	vgID := int64(7)
-	if gs.GameVersionID.Valid {
-		vgID = int64(versionGroupForGame(gs.GameVersionID.Int64))
-	}
-
+func (h *BattleHandler) loadTeamMoves(ctx context.Context, gc gamecontext.GameContext, team []matchup.Pokemon) map[int64][]matchup.Move {
 	moves := make(map[int64][]matchup.Move)
 	for _, member := range team {
 		level := member.Level
 		if level == 0 {
 			level = 50
 		}
-		rows, _ := h.store.ListPokemonMovesAtLevel(ctx, generated.ListPokemonMovesAtLevelParams{
+		rows, err := h.store.ListPokemonMovesAtLevel(ctx, generated.ListPokemonMovesAtLevelParams{
 			PokemonID:      member.ID,
-			VersionGroupID: vgID,
+			VersionGroupID: gc.VersionGroupID,
 			LevelLearnedAt: level,
 		})
+		if err != nil {
+			h.log.Error("failed to list pokemon moves", "pokemon_id", member.ID, "error", err)
+			continue
+		}
 		for _, r := range rows {
 			power := int64(0)
 			if r.Power.Valid {
@@ -262,14 +275,20 @@ func (h *BattleHandler) loadTeamMoves(ctx context.Context, team []matchup.Pokemo
 func (h *BattleHandler) HandleTypeChart(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	types, err := h.store.ListTypes(ctx)
+	gc, _ := gamecontext.FromRequest(r)
+	era := gc.TypeChartEra
+	if era == "" {
+		era = "post_fairy"
+	}
+
+	types, err := h.store.ListTypesByEra(ctx, era)
 	if err != nil {
 		h.log.Error("failed to list types", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
-	efficacy, err := h.store.GetTypeEfficacy(ctx)
+	efficacy, err := h.store.GetTypeEfficacyByEra(ctx, era)
 	if err != nil {
 		h.log.Error("failed to get efficacy", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

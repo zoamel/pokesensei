@@ -12,8 +12,10 @@ import (
 )
 
 type GameStateStore interface {
-	GetGameState(ctx context.Context) (generated.GameState, error)
+	GetActiveGameState(ctx context.Context) (generated.GameState, error)
+	GetGameStateForVersion(ctx context.Context, gameVersionID sql.NullInt64) (generated.GameState, error)
 	CreateGameState(ctx context.Context, arg generated.CreateGameStateParams) (generated.GameState, error)
+	SwitchActiveGameState(ctx context.Context, targetID int64) error
 	UpdateGameVersion(ctx context.Context, arg generated.UpdateGameVersionParams) error
 	UpdateStarter(ctx context.Context, arg generated.UpdateStarterParams) error
 	UpdateBadgeCount(ctx context.Context, arg generated.UpdateBadgeCountParams) error
@@ -58,27 +60,30 @@ func (h *OnboardingHandler) HandleGameStep(w http.ResponseWriter, r *http.Reques
 	}
 
 	ctx := r.Context()
+	gvID := sql.NullInt64{Int64: int64(gameVersionID), Valid: true}
 
-	// Get or create game state
-	gs, err := h.store.GetGameState(ctx)
-	if err != nil {
-		// No game state yet — create one
-		gs, err = h.store.CreateGameState(ctx, generated.CreateGameStateParams{
-			GameVersionID: sql.NullInt64{Int64: int64(gameVersionID), Valid: true},
+	// Check if a playthrough exists for this game version
+	existing, err := h.store.GetGameStateForVersion(ctx, gvID)
+	if err == nil {
+		// Atomically switch to existing playthrough
+		if err := h.store.SwitchActiveGameState(ctx, existing.ID); err != nil {
+			h.log.Error("failed to switch game state", "error", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+	} else {
+		// Create new playthrough (inserts with is_active=1), then atomically
+		// deactivate all others to ensure exactly one active state.
+		newGS, err := h.store.CreateGameState(ctx, generated.CreateGameStateParams{
+			GameVersionID: gvID,
 		})
 		if err != nil {
 			h.log.Error("failed to create game state", "error", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
-	} else {
-		// Update existing
-		err = h.store.UpdateGameVersion(ctx, generated.UpdateGameVersionParams{
-			GameVersionID: sql.NullInt64{Int64: int64(gameVersionID), Valid: true},
-			ID:            gs.ID,
-		})
-		if err != nil {
-			h.log.Error("failed to update game version", "error", err)
+		if err := h.store.SwitchActiveGameState(ctx, newGS.ID); err != nil {
+			h.log.Error("failed to switch to new game state", "error", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
@@ -105,7 +110,7 @@ func (h *OnboardingHandler) HandleStarterStep(w http.ResponseWriter, r *http.Req
 	}
 
 	ctx := r.Context()
-	gs, err := h.store.GetGameState(ctx)
+	gs, err := h.store.GetActiveGameState(ctx)
 	if err != nil {
 		http.Error(w, "Complete game selection first", http.StatusBadRequest)
 		return
@@ -133,13 +138,13 @@ func (h *OnboardingHandler) HandleBadgeStep(w http.ResponseWriter, r *http.Reque
 	}
 
 	badgeCount, err := strconv.Atoi(r.FormValue("badge_count"))
-	if err != nil || badgeCount < 0 || badgeCount > 8 {
+	if err != nil || badgeCount < 0 || badgeCount > 16 {
 		http.Error(w, "Invalid badge count", http.StatusBadRequest)
 		return
 	}
 
 	ctx := r.Context()
-	gs, err := h.store.GetGameState(ctx)
+	gs, err := h.store.GetActiveGameState(ctx)
 	if err != nil {
 		http.Error(w, "Complete game selection first", http.StatusBadRequest)
 		return
@@ -165,15 +170,15 @@ func startersForGame(gameVersionID int) []view.StarterInfo {
 	switch {
 	case gameVersionID == 10 || gameVersionID == 11: // FireRed/LeafGreen
 		return []view.StarterInfo{
-			{1, "Bulbasaur", "Grass/Poison", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png", "Strong early game, resists first two gyms."},
-			{4, "Charmander", "Fire", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png", "Challenging early but powerful later, evolves into Charizard."},
-			{7, "Squirtle", "Water", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png", "Balanced and reliable throughout the game."},
+			{PokemonID: 1, Name: "Bulbasaur", TypeName: "Grass/Poison", SpriteURL: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png", Description: "Strong early game, resists first two gyms."},
+			{PokemonID: 4, Name: "Charmander", TypeName: "Fire", SpriteURL: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png", Description: "Challenging early but powerful later, evolves into Charizard."},
+			{PokemonID: 7, Name: "Squirtle", TypeName: "Water", SpriteURL: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png", Description: "Balanced and reliable throughout the game."},
 		}
 	case gameVersionID == 15 || gameVersionID == 16: // HeartGold/SoulSilver
 		return []view.StarterInfo{
-			{152, "Chikorita", "Grass", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/152.png", "Defensive and supportive, but struggles against early gyms."},
-			{155, "Cyndaquil", "Fire", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/155.png", "Strong special attacker, great against Bug and Steel gyms."},
-			{158, "Totodile", "Water", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/158.png", "Powerful physical attacker, learns Ice Fang for coverage."},
+			{PokemonID: 152, Name: "Chikorita", TypeName: "Grass", SpriteURL: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/152.png", Description: "Defensive and supportive, but struggles against early gyms."},
+			{PokemonID: 155, Name: "Cyndaquil", TypeName: "Fire", SpriteURL: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/155.png", Description: "Strong special attacker, great against Bug and Steel gyms."},
+			{PokemonID: 158, Name: "Totodile", TypeName: "Water", SpriteURL: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/158.png", Description: "Powerful physical attacker, learns Ice Fang for coverage."},
 		}
 	default:
 		return nil
