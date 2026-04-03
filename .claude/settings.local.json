@@ -17,8 +17,9 @@
       "Bash(go build:*)",
       "Bash(ls db/generated/*.go)",
       "Bash(templ generate:*)",
-      "Bash(grep -r '\"zoamel/pokesensei/internal/' /Users/zoamel/Workspace/Projects/pokesensei/.worktrees/multi-game-redesign/internal/view/*.templ)",
-      "Bash(go vet:*)"
+      "Bash(go vet:*)",
+      "Bash(git merge:*)",
+      "Bash(git branch:*)"
     ]
   }
 }
