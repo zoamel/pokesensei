@@ -62,7 +62,7 @@ RETURNING id, team_member_id, move_id, slot;
 DELETE FROM team_member_moves WHERE id = ?1;
 
 -- name: ListAvailableMoves :many
-SELECT DISTINCT m.id, m.name, m.slug, m.power, m.accuracy, m.pp,
+SELECT DISTINCT m.id, m.name, m.slug, m.type_id, m.power, m.accuracy, m.pp,
        m.damage_class, m.effect, pm.learn_method, pm.level_learned_at,
        t.name AS type_name, t.slug AS type_slug
 FROM pokemon_moves pm

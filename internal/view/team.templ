@@ -99,7 +99,7 @@ templ teamBuilderSlot(slotNum int, slot TeamSlotData) {
 								hx-patch={ fmt.Sprintf("/team/members/%d", slot.Member.ID) }
 								hx-trigger="change"
 								hx-swap="none"
-								hx-vals='{"is_locked": "true"}'
+								hx-vals='js:{"is_locked": event.target.checked.toString()}'
 							/>
 							🔒
 						</label>

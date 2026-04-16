@@ -125,6 +125,11 @@ type PokemonType struct {
 	Slot      int64
 }
 
+type StarterGroup struct {
+	GameVersionID int64
+	PokemonID     int64
+}
+
 type TeamMember struct {
 	ID          int64
 	GameStateID int64

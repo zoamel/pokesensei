@@ -33,6 +33,40 @@ func (q *Queries) GetMoveByID(ctx context.Context, id int64) (Move, error) {
 	return i, err
 }
 
+const getPokemonWithFieldMoves = `-- name: GetPokemonWithFieldMoves :many
+SELECT DISTINCT pm.pokemon_id
+FROM pokemon_moves pm
+JOIN moves m ON m.id = pm.move_id
+WHERE pm.version_group_id = ?1
+  AND m.slug IN (
+    'cut', 'surf', 'fly', 'strength', 'rock-smash',
+    'waterfall', 'flash', 'whirlpool', 'dive'
+  )
+`
+
+func (q *Queries) GetPokemonWithFieldMoves(ctx context.Context, versionGroupID int64) ([]int64, error) {
+	rows, err := q.db.QueryContext(ctx, getPokemonWithFieldMoves, versionGroupID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int64
+	for rows.Next() {
+		var pokemon_id int64
+		if err := rows.Scan(&pokemon_id); err != nil {
+			return nil, err
+		}
+		items = append(items, pokemon_id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listPokemonMoves = `-- name: ListPokemonMoves :many
 SELECT pm.move_id, m.name, m.slug, m.type_id, m.power, m.accuracy, m.pp,
        m.damage_class, m.effect, pm.learn_method, pm.level_learned_at,

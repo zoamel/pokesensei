@@ -14,6 +14,16 @@ WHERE pm.pokemon_id = ?1
   AND pm.version_group_id = ?2
 ORDER BY pm.learn_method, pm.level_learned_at, m.name;
 
+-- name: GetPokemonWithFieldMoves :many
+SELECT DISTINCT pm.pokemon_id
+FROM pokemon_moves pm
+JOIN moves m ON m.id = pm.move_id
+WHERE pm.version_group_id = ?1
+  AND m.slug IN (
+    'cut', 'surf', 'fly', 'strength', 'rock-smash',
+    'waterfall', 'flash', 'whirlpool', 'dive'
+  );
+
 -- name: ListPokemonMovesAtLevel :many
 SELECT pm.move_id, m.name, m.slug, m.type_id, m.power, m.accuracy, m.pp,
        m.damage_class, m.effect, pm.learn_method, pm.level_learned_at,

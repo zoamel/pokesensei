@@ -19,7 +19,15 @@
       "Bash(templ generate:*)",
       "Bash(go vet:*)",
       "Bash(git merge:*)",
-      "Bash(git branch:*)"
+      "Bash(git branch:*)",
+      "Bash(grep:*)",
+      "Bash(git checkout:*)",
+      "Bash(make generate:*)",
+      "Bash(/tmp/pokesensei)",
+      "Bash(curl -s http://localhost:8080/team/suggestions)",
+      "Bash(pkill -f '/tmp/pokesensei')",
+      "Bash(rm -f /tmp/pokesensei)",
+      "Bash(find:*)"
     ]
   }
 }

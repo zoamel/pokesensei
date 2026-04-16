@@ -152,7 +152,7 @@ func (q *Queries) GetTeamMemberDetail(ctx context.Context, id int64) (GetTeamMem
 }
 
 const listAvailableMoves = `-- name: ListAvailableMoves :many
-SELECT DISTINCT m.id, m.name, m.slug, m.power, m.accuracy, m.pp,
+SELECT DISTINCT m.id, m.name, m.slug, m.type_id, m.power, m.accuracy, m.pp,
        m.damage_class, m.effect, pm.learn_method, pm.level_learned_at,
        t.name AS type_name, t.slug AS type_slug
 FROM pokemon_moves pm
@@ -177,6 +177,7 @@ type ListAvailableMovesRow struct {
 	ID             int64
 	Name           string
 	Slug           string
+	TypeID         sql.NullInt64
 	Power          sql.NullInt64
 	Accuracy       sql.NullInt64
 	Pp             int64
@@ -201,6 +202,7 @@ func (q *Queries) ListAvailableMoves(ctx context.Context, arg ListAvailableMoves
 			&i.ID,
 			&i.Name,
 			&i.Slug,
+			&i.TypeID,
 			&i.Power,
 			&i.Accuracy,
 			&i.Pp,

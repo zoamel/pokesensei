@@ -22,19 +22,30 @@ templ suggestionSlots(slots []suggest.TeamSlot) {
 	<div class="suggestion-slots">
 		for _, slot := range slots {
 			<div class="suggestion-slot">
-				if slot.Pokemon != nil {
-					<a href={ templ.SafeURL(fmt.Sprintf("/pokemon/%d", slot.Pokemon.ID)) } class="suggestion-link">
-						<img src={ slot.Pokemon.SpriteURL } alt={ slot.Pokemon.Name } width="48" height="48" loading="lazy"/>
-						<span class="suggestion-name">{ slot.Pokemon.Name }</span>
-					</a>
-					if slot.IsLocked {
-						<span class="badge-locked">🔒</span>
+				<div class="suggestion-slot-main">
+					if slot.Pokemon != nil {
+						<a href={ templ.SafeURL(fmt.Sprintf("/pokemon/%d", slot.Pokemon.ID)) } class="suggestion-link">
+							<img src={ slot.Pokemon.SpriteURL } alt={ slot.Pokemon.Name } width="48" height="48" loading="lazy"/>
+							<span class="suggestion-name">{ slot.Pokemon.Name }</span>
+						</a>
+						if slot.IsLocked {
+							<span class="badge-locked">🔒</span>
+						}
+						if slot.Pokemon.TradeRequired {
+							<span class="badge-trade">Trade</span>
+						}
+					} else {
+						<span class="empty-slot-label">{ fmt.Sprintf("Slot %d", slot.Slot) }</span>
 					}
-					if slot.Pokemon.TradeRequired {
-						<span class="badge-trade">Trade</span>
-					}
-				} else {
-					<span class="empty-slot-label">{ fmt.Sprintf("Slot %d", slot.Slot) }</span>
+				</div>
+				if len(slot.Moves) > 0 {
+					<div class="suggestion-moves">
+						for _, move := range slot.Moves {
+							<span class={ "type-pill", "type-pill-sm", fmt.Sprintf("type-%s", move.TypeSlug) } title={ fmt.Sprintf("%s · Pwr %d", move.Name, move.Power) }>
+								{ move.Name }
+							</span>
+						}
+					</div>
 				}
 			</div>
 		}
