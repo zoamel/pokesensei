@@ -32,7 +32,7 @@ func TestRunMigrations_011_InsertsXYGameData(t *testing.T) {
 	var vgGeneration, vgMaxDex, vgMaxBadges int
 	err = sqlDB.QueryRowContext(ctx, `
 		SELECT name, slug, generation, max_pokedex, type_chart_era, max_badges
-		FROM version_groups WHERE id = 16
+		FROM version_groups WHERE id = 15
 	`).Scan(&vgName, &vgSlug, &vgGeneration, &vgMaxDex, &vgEra, &vgMaxBadges)
 	if err != nil {
 		t.Fatalf("query xy version group: %v", err)
@@ -60,7 +60,7 @@ func TestRunMigrations_011_InsertsXYGameData(t *testing.T) {
 			t.Fatalf("query game_version %d: %v", id, err)
 		}
 		if slug != want.slug || name != want.name ||
-			!vgID.Valid || vgID.Int64 != 16 {
+			!vgID.Valid || vgID.Int64 != 15 {
 			t.Fatalf("game_version %d wrong: slug=%q name=%q vgID=%+v",
 				id, slug, name, vgID)
 		}
