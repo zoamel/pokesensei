@@ -1,0 +1,99 @@
+{
+  "game_version_slugs": ["x", "y"],
+  "trainers": [
+    {
+      "name": "Viola",
+      "trainer_class": "gym_leader",
+      "badge_number": 1,
+      "specialty_type": "bug",
+      "encounter_name": "Santalune City Gym",
+      "pokemon": [
+        { "pokemon_id": 283, "level": 10, "position": 1, "moves": ["quick-attack", "bubble", "water-sport"] },
+        { "pokemon_id": 666, "level": 12, "position": 2, "moves": ["harden", "infestation", "tackle"] }
+      ]
+    },
+    {
+      "name": "Grant",
+      "trainer_class": "gym_leader",
+      "badge_number": 2,
+      "specialty_type": "rock",
+      "encounter_name": "Cyllage City Gym",
+      "pokemon": [
+        { "pokemon_id": 698, "level": 25, "position": 1, "moves": ["aurora-beam", "rock-tomb", "thunder-wave", "take-down"] },
+        { "pokemon_id": 696, "level": 25, "position": 2, "moves": ["rock-tomb", "bite", "stomp"] }
+      ]
+    },
+    {
+      "name": "Korrina",
+      "trainer_class": "gym_leader",
+      "badge_number": 3,
+      "specialty_type": "fighting",
+      "encounter_name": "Shalour City Gym",
+      "pokemon": [
+        { "pokemon_id": 619, "level": 29, "position": 1, "moves": ["power-up-punch", "fake-out", "double-slap"] },
+        { "pokemon_id": 67,  "level": 28, "position": 2, "moves": ["power-up-punch", "rock-tomb", "leer"] },
+        { "pokemon_id": 701, "level": 32, "position": 3, "moves": ["flying-press", "hone-claws", "power-up-punch"] }
+      ]
+    },
+    {
+      "name": "Ramos",
+      "trainer_class": "gym_leader",
+      "badge_number": 4,
+      "specialty_type": "grass",
+      "encounter_name": "Coumarine City Gym",
+      "pokemon": [
+        { "pokemon_id": 189, "level": 30, "position": 1, "moves": ["grass-knot", "acrobatics", "leech-seed"] },
+        { "pokemon_id": 70,  "level": 31, "position": 2, "moves": ["grass-knot", "acid", "poison-powder", "gastro-acid"] },
+        { "pokemon_id": 673, "level": 34, "position": 3, "moves": ["grass-knot", "bulldoze", "take-down"] }
+      ]
+    },
+    {
+      "name": "Clemont",
+      "trainer_class": "gym_leader",
+      "badge_number": 5,
+      "specialty_type": "electric",
+      "encounter_name": "Lumiose City Gym",
+      "pokemon": [
+        { "pokemon_id": 587, "level": 35, "position": 1, "moves": ["volt-switch", "quick-attack", "aerial-ace"] },
+        { "pokemon_id": 82,  "level": 35, "position": 2, "moves": ["thunderbolt", "electric-terrain", "mirror-shot"] },
+        { "pokemon_id": 695, "level": 37, "position": 3, "moves": ["thunderbolt", "quick-attack", "grass-knot"] }
+      ]
+    },
+    {
+      "name": "Valerie",
+      "trainer_class": "gym_leader",
+      "badge_number": 6,
+      "specialty_type": "fairy",
+      "encounter_name": "Laverre City Gym",
+      "pokemon": [
+        { "pokemon_id": 303, "level": 38, "position": 1, "moves": ["feint-attack", "crunch", "iron-defense"] },
+        { "pokemon_id": 122, "level": 39, "position": 2, "moves": ["light-screen", "reflect", "psychic", "dazzling-gleam"] },
+        { "pokemon_id": 700, "level": 42, "position": 3, "moves": ["dazzling-gleam", "quick-attack", "swift", "charm"] }
+      ]
+    },
+    {
+      "name": "Olympia",
+      "trainer_class": "gym_leader",
+      "badge_number": 7,
+      "specialty_type": "psychic",
+      "encounter_name": "Anistar City Gym",
+      "pokemon": [
+        { "pokemon_id": 561, "level": 44, "position": 1, "moves": ["psychic", "air-slash", "light-screen", "reflect"] },
+        { "pokemon_id": 199, "level": 45, "position": 2, "moves": ["psychic", "calm-mind", "power-gem", "yawn"] },
+        { "pokemon_id": 678, "level": 48, "position": 3, "moves": ["psychic", "calm-mind", "fake-out", "shadow-ball"] }
+      ]
+    },
+    {
+      "name": "Wulfric",
+      "trainer_class": "gym_leader",
+      "badge_number": 8,
+      "specialty_type": "ice",
+      "encounter_name": "Snowbelle City Gym",
+      "pokemon": [
+        { "pokemon_id": 460, "level": 56, "position": 1, "moves": ["ice-beam", "ice-shard", "energy-ball"] },
+        { "pokemon_id": 615, "level": 55, "position": 2, "moves": ["ice-beam", "confuse-ray", "flash-cannon", "hail"] },
+        { "pokemon_id": 713, "level": 59, "position": 3, "moves": ["avalanche", "crunch", "curse", "gyro-ball"] }
+      ]
+    }
+  ]
+}
