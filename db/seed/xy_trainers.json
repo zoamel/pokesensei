@@ -160,6 +160,77 @@
         { "pokemon_id": 706, "level": 66, "position": 5, "moves": ["dragon-pulse", "muddy-water", "fire-blast", "focus-blast"] },
         { "pokemon_id": 282, "level": 68, "position": 6, "moves": ["moonblast", "psychic", "shadow-ball", "thunderbolt"] }
       ]
+    },
+    {
+      "name": "Serena",
+      "trainer_class": "rival",
+      "badge_number": 0,
+      "encounter_name": "Aquacorde Town",
+      "pokemon": [
+        { "pokemon_id": 653, "level": 5, "position": 1, "moves": ["scratch", "tail-whip", "ember"] }
+      ]
+    },
+    {
+      "name": "Shauna",
+      "trainer_class": "rival",
+      "badge_number": 0,
+      "encounter_name": "Aquacorde Town",
+      "pokemon": [
+        { "pokemon_id": 656, "level": 5, "position": 1, "moves": ["pound", "growl", "bubble"] }
+      ]
+    },
+    {
+      "name": "Tierno",
+      "trainer_class": "rival",
+      "badge_number": 1,
+      "encounter_name": "Kalos Route 5",
+      "pokemon": [
+        { "pokemon_id": 341, "level": 12, "position": 1, "moves": ["vise-grip", "swords-dance"] }
+      ]
+    },
+    {
+      "name": "Serena",
+      "trainer_class": "rival",
+      "badge_number": 4,
+      "encounter_name": "Kalos Route 14",
+      "pokemon": [
+        { "pokemon_id": 678, "level": 35, "position": 1, "moves": ["psychic", "fake-out", "disarming-voice", "light-screen"] },
+        { "pokemon_id": 359, "level": 35, "position": 2, "moves": ["slash", "swords-dance", "quick-attack", "bite"] },
+        { "pokemon_id": 655, "level": 37, "position": 3, "moves": ["psybeam", "mystical-fire"] }
+      ]
+    },
+    {
+      "name": "Shauna",
+      "trainer_class": "rival",
+      "badge_number": 6,
+      "encounter_name": "Kalos Route 19",
+      "pokemon": [
+        { "pokemon_id": 301, "level": 49, "position": 1, "moves": ["charm", "play-rough", "feint-attack", "return"] },
+        { "pokemon_id": 706, "level": 49, "position": 2, "moves": ["dragon-pulse", "sludge-wave", "body-slam", "earthquake"] },
+        { "pokemon_id": 658, "level": 51, "position": 3, "moves": ["water-shuriken", "extrasensory", "double-team"] }
+      ]
+    },
+    {
+      "name": "Tierno",
+      "trainer_class": "rival",
+      "badge_number": 6,
+      "encounter_name": "Kalos Route 19",
+      "pokemon": [
+        { "pokemon_id": 663, "level": 48, "position": 1, "moves": ["swords-dance", "acrobatics", "quick-attack"] },
+        { "pokemon_id": 407, "level": 49, "position": 2, "moves": ["petal-dance"] },
+        { "pokemon_id": 342, "level": 52, "position": 3, "moves": ["swords-dance", "crabhammer", "night-slash"] }
+      ]
+    },
+    {
+      "name": "Trevor",
+      "trainer_class": "rival",
+      "badge_number": 6,
+      "encounter_name": "Kalos Route 19",
+      "pokemon": [
+        { "pokemon_id": 26,  "level": 49, "position": 1, "moves": ["thunderbolt", "quick-attack", "nuzzle", "slam"] },
+        { "pokemon_id": 142, "level": 49, "position": 2, "moves": ["crunch", "ancient-power", "sky-drop", "supersonic"] },
+        { "pokemon_id": 671, "level": 51, "position": 3, "moves": ["moonblast", "energy-ball", "confide", "misty-terrain"] }
+      ]
     }
   ]
 }
