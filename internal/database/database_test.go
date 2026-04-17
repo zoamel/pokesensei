@@ -50,6 +50,15 @@ func TestRunMigrations_BackfillsGameVersionGroupIDs(t *testing.T) {
 			(11, 'LeafGreen', 'leafgreen', NULL),
 			(15, 'HeartGold', 'heartgold', NULL),
 			(16, 'SoulSilver', 'soulsilver', NULL);`,
+		`CREATE TABLE version_groups (
+			id INTEGER PRIMARY KEY,
+			name TEXT NOT NULL,
+			slug TEXT NOT NULL UNIQUE,
+			generation INTEGER NOT NULL,
+			max_pokedex INTEGER NOT NULL,
+			type_chart_era TEXT NOT NULL CHECK (type_chart_era IN ('pre_fairy', 'post_fairy')),
+			max_badges INTEGER NOT NULL DEFAULT 8
+		);`,
 	}
 
 	for _, stmt := range stmts {
