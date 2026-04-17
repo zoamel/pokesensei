@@ -94,6 +94,72 @@
         { "pokemon_id": 615, "level": 55, "position": 2, "moves": ["ice-beam", "confuse-ray", "flash-cannon", "hail"] },
         { "pokemon_id": 713, "level": 59, "position": 3, "moves": ["avalanche", "crunch", "curse", "gyro-ball"] }
       ]
+    },
+    {
+      "name": "Malva",
+      "trainer_class": "elite_four",
+      "badge_number": 8,
+      "specialty_type": "fire",
+      "encounter_name": "Pokémon League — Malva's Room",
+      "pokemon": [
+        { "pokemon_id": 668, "level": 63, "position": 1, "moves": ["hyper-voice", "flamethrower", "wild-charge", "noble-roar"] },
+        { "pokemon_id": 324, "level": 63, "position": 2, "moves": ["curse", "earthquake", "stone-edge", "flame-wheel"] },
+        { "pokemon_id": 609, "level": 63, "position": 3, "moves": ["flamethrower", "shadow-ball", "confuse-ray", "confide"] },
+        { "pokemon_id": 663, "level": 65, "position": 4, "moves": ["brave-bird", "quick-attack", "flare-blitz", "flail"] }
+      ]
+    },
+    {
+      "name": "Siebold",
+      "trainer_class": "elite_four",
+      "badge_number": 8,
+      "specialty_type": "water",
+      "encounter_name": "Pokémon League — Siebold's Room",
+      "pokemon": [
+        { "pokemon_id": 693, "level": 63, "position": 1, "moves": ["water-pulse", "dark-pulse", "dragon-pulse", "aura-sphere"] },
+        { "pokemon_id": 121, "level": 63, "position": 2, "moves": ["dazzling-gleam", "psychic", "surf", "light-screen"] },
+        { "pokemon_id": 130, "level": 63, "position": 3, "moves": ["waterfall", "ice-fang", "earthquake", "dragon-dance"] },
+        { "pokemon_id": 689, "level": 65, "position": 4, "moves": ["cross-chop", "stone-edge", "razor-shell", "x-scissor"] }
+      ]
+    },
+    {
+      "name": "Wikstrom",
+      "trainer_class": "elite_four",
+      "badge_number": 8,
+      "specialty_type": "steel",
+      "encounter_name": "Pokémon League — Wikstrom's Room",
+      "pokemon": [
+        { "pokemon_id": 707, "level": 63, "position": 1, "moves": ["dazzling-gleam", "flash-cannon", "torment", "spikes"] },
+        { "pokemon_id": 476, "level": 63, "position": 2, "moves": ["earth-power", "power-gem", "discharge", "flash-cannon"] },
+        { "pokemon_id": 212, "level": 63, "position": 3, "moves": ["bullet-punch", "x-scissor", "iron-head", "night-slash"] },
+        { "pokemon_id": 681, "level": 65, "position": 4, "moves": ["kings-shield", "sacred-sword", "shadow-claw", "iron-head"] }
+      ]
+    },
+    {
+      "name": "Drasna",
+      "trainer_class": "elite_four",
+      "badge_number": 8,
+      "specialty_type": "dragon",
+      "encounter_name": "Pokémon League — Drasna's Room",
+      "pokemon": [
+        { "pokemon_id": 691, "level": 63, "position": 1, "moves": ["dragon-pulse", "surf", "sludge-bomb", "thunderbolt"] },
+        { "pokemon_id": 621, "level": 63, "position": 2, "moves": ["dragon-tail", "revenge", "retaliate", "chip-away"] },
+        { "pokemon_id": 334, "level": 63, "position": 3, "moves": ["moonblast", "dragon-pulse", "cotton-guard", "sing"] },
+        { "pokemon_id": 715, "level": 65, "position": 4, "moves": ["air-slash", "dragon-pulse", "flamethrower", "super-fang"] }
+      ]
+    },
+    {
+      "name": "Diantha",
+      "trainer_class": "champion",
+      "badge_number": 8,
+      "encounter_name": "Pokémon League — Champion's Room",
+      "pokemon": [
+        { "pokemon_id": 701, "level": 64, "position": 1, "moves": ["swords-dance", "flying-press", "x-scissor", "poison-jab"] },
+        { "pokemon_id": 697, "level": 65, "position": 2, "moves": ["head-smash", "earthquake", "dragon-claw", "crunch"] },
+        { "pokemon_id": 699, "level": 65, "position": 3, "moves": ["thunder", "blizzard", "light-screen", "reflect"] },
+        { "pokemon_id": 711, "level": 65, "position": 4, "moves": ["trick-or-treat", "phantom-force", "seed-bomb", "shadow-sneak"] },
+        { "pokemon_id": 706, "level": 66, "position": 5, "moves": ["dragon-pulse", "muddy-water", "fire-blast", "focus-blast"] },
+        { "pokemon_id": 282, "level": 68, "position": 6, "moves": ["moonblast", "psychic", "shadow-ball", "thunderbolt"] }
+      ]
     }
   ]
 }
