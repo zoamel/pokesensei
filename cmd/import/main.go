@@ -55,6 +55,14 @@ func run() error {
 	}
 	defer sqlDB.Close()
 
+	// Disable FK enforcement for the batch rebuild. The importer wipes and
+	// re-populates reference tables (types, game_versions, pokemon, moves) in
+	// a deliberate order; with FKs on, migrations that pre-seed dependent
+	// rows (e.g. starter_groups → game_versions) block the DELETE phase.
+	if _, err := sqlDB.ExecContext(ctx, "PRAGMA foreign_keys=OFF"); err != nil {
+		return fmt.Errorf("disabling foreign keys for import: %w", err)
+	}
+
 	queries := generated.New(sqlDB)
 
 	// Parse game group slugs and resolve against DB
