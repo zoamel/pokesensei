@@ -185,7 +185,7 @@
       "badge_number": 1,
       "encounter_name": "Kalos Route 5",
       "pokemon": [
-        { "pokemon_id": 341, "level": 12, "position": 1, "moves": ["vise-grip", "swords-dance"] }
+        { "pokemon_id": 341, "level": 12, "position": 1, "moves": ["vice-grip", "swords-dance"] }
       ]
     },
     {
