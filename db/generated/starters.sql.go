@@ -38,3 +38,55 @@ func (q *Queries) ListStartersByGame(ctx context.Context, gameVersionID int64) (
 	}
 	return items, nil
 }
+
+const listStartersWithTypes = `-- name: ListStartersWithTypes :many
+SELECT
+    p.id AS pokemon_id,
+    p.name,
+    p.sprite_url,
+    t.name AS type_name,
+    pt.slot AS type_slot
+FROM starter_groups sg
+JOIN pokemon p ON p.id = sg.pokemon_id
+JOIN pokemon_types pt ON pt.pokemon_id = p.id
+JOIN types t ON t.id = pt.type_id
+WHERE sg.game_version_id = ?1
+ORDER BY p.id, pt.slot
+`
+
+type ListStartersWithTypesRow struct {
+	PokemonID int64
+	Name      string
+	SpriteUrl string
+	TypeName  string
+	TypeSlot  int64
+}
+
+func (q *Queries) ListStartersWithTypes(ctx context.Context, gameVersionID int64) ([]ListStartersWithTypesRow, error) {
+	rows, err := q.db.QueryContext(ctx, listStartersWithTypes, gameVersionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListStartersWithTypesRow
+	for rows.Next() {
+		var i ListStartersWithTypesRow
+		if err := rows.Scan(
+			&i.PokemonID,
+			&i.Name,
+			&i.SpriteUrl,
+			&i.TypeName,
+			&i.TypeSlot,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

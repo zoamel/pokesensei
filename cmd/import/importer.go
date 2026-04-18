@@ -85,7 +85,11 @@ func (imp *Importer) ImportTypeEfficacy(ctx context.Context) error {
 	}
 	defer tx.Rollback()
 
-	stmt, err := tx.PrepareContext(ctx, "INSERT INTO type_efficacy (attacking_type_id, defending_type_id, damage_factor) VALUES (?, ?, ?)")
+	// PokéAPI returns the modern (Gen VI+) damage relations — that's the
+	// post_fairy era. We insert those 324 rows, then derive pre_fairy from
+	// them the same way migration 008 does: drop Fairy rows, and undo Gen VI
+	// Steel defensive nerfs (Ghost and Dark were resisted pre-Gen VI).
+	stmt, err := tx.PrepareContext(ctx, "INSERT INTO type_efficacy (attacking_type_id, defending_type_id, damage_factor, era) VALUES (?, ?, ?, 'post_fairy')")
 	if err != nil {
 		return err
 	}
@@ -97,7 +101,6 @@ func (imp *Importer) ImportTypeEfficacy(ctx context.Context) error {
 			return fmt.Errorf("fetching type %d for efficacy: %w", id, err)
 		}
 
-		// Build efficacy map for this attacking type
 		efficacy := make(map[int]int)
 		for defID := 1; defID <= 18; defID++ {
 			efficacy[defID] = 100
@@ -125,10 +128,30 @@ func (imp *Importer) ImportTypeEfficacy(ctx context.Context) error {
 		}
 	}
 
+	if _, err := tx.ExecContext(ctx, `
+		INSERT INTO type_efficacy (attacking_type_id, defending_type_id, damage_factor, era)
+		SELECT attacking_type_id, defending_type_id, damage_factor, 'pre_fairy'
+		FROM type_efficacy
+		WHERE era = 'post_fairy'
+		  AND attacking_type_id != 18
+		  AND defending_type_id != 18
+	`); err != nil {
+		return fmt.Errorf("deriving pre_fairy efficacy: %w", err)
+	}
+
+	// Steel resisted Ghost and Dark in Gen I-V; these matchups are 50 pre-Gen VI.
+	if _, err := tx.ExecContext(ctx, `
+		UPDATE type_efficacy SET damage_factor = 50
+		WHERE era = 'pre_fairy' AND defending_type_id = 9
+		  AND attacking_type_id IN (8, 17)
+	`); err != nil {
+		return fmt.Errorf("adjusting pre_fairy steel resistances: %w", err)
+	}
+
 	if err := tx.Commit(); err != nil {
 		return err
 	}
-	imp.log.Info("imported type efficacy matrix", "entries", 18*18)
+	imp.log.Info("imported type efficacy matrix", "post_fairy_entries", 18*18, "pre_fairy_entries", 17*17)
 	return nil
 }
 
@@ -400,7 +423,9 @@ func (imp *Importer) ImportMoves(ctx context.Context) error {
 	defer stmt.Close()
 
 	count := 0
-	for id := 1; id <= 467; id++ { // Gen IV last move is ~467
+	// Gen VI (X/Y + ORAS) last move ID is 621. PokéAPI returns 404 for any
+	// gaps or IDs beyond what's released; the loop swallows those errors.
+	for id := 1; id <= 621; id++ {
 		m, err := imp.client.GetMove(ctx, id)
 		if err != nil {
 			imp.log.Debug("skipping move", "id", id, "error", err)

@@ -21,6 +21,7 @@ type GameStateStore interface {
 	UpdateBadgeCount(ctx context.Context, arg generated.UpdateBadgeCountParams) error
 	UpdateTradingEnabled(ctx context.Context, arg generated.UpdateTradingEnabledParams) error
 	ListGameVersions(ctx context.Context) ([]generated.GameVersion, error)
+	ListStartersWithTypes(ctx context.Context, gameVersionID int64) ([]generated.ListStartersWithTypesRow, error)
 }
 
 type OnboardingHandler struct {
@@ -89,11 +90,44 @@ func (h *OnboardingHandler) HandleGameStep(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-	// Determine starters based on game version
-	starters := startersForGame(gameVersionID)
+	starters, err := h.loadStarters(ctx, int64(gameVersionID))
+	if err != nil {
+		h.log.Error("failed to load starters", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 	if err := view.OnboardingStarterStep(starters).Render(ctx, w); err != nil {
 		h.log.Error("failed to render starter step", "error", err)
 	}
+}
+
+func (h *OnboardingHandler) loadStarters(ctx context.Context, gameVersionID int64) ([]view.StarterInfo, error) {
+	rows, err := h.store.ListStartersWithTypes(ctx, gameVersionID)
+	if err != nil {
+		return nil, err
+	}
+	byID := make(map[int64]*view.StarterInfo)
+	var order []int64
+	for _, r := range rows {
+		s, ok := byID[r.PokemonID]
+		if !ok {
+			s = &view.StarterInfo{
+				PokemonID: int(r.PokemonID),
+				Name:      r.Name,
+				SpriteURL: r.SpriteUrl,
+				TypeName:  r.TypeName,
+			}
+			byID[r.PokemonID] = s
+			order = append(order, r.PokemonID)
+			continue
+		}
+		s.TypeName += "/" + r.TypeName
+	}
+	starters := make([]view.StarterInfo, 0, len(order))
+	for _, id := range order {
+		starters = append(starters, *byID[id])
+	}
+	return starters, nil
 }
 
 // POST /onboarding/starter — save starter, return badge step
@@ -164,23 +198,3 @@ func (h *OnboardingHandler) HandleBadgeStep(w http.ResponseWriter, r *http.Reque
 	w.WriteHeader(http.StatusOK)
 }
 
-func startersForGame(gameVersionID int) []view.StarterInfo {
-	// FRLG starters: Bulbasaur, Charmander, Squirtle
-	// HGSS starters: Chikorita, Cyndaquil, Totodile
-	switch {
-	case gameVersionID == 10 || gameVersionID == 11: // FireRed/LeafGreen
-		return []view.StarterInfo{
-			{PokemonID: 1, Name: "Bulbasaur", TypeName: "Grass/Poison", SpriteURL: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png", Description: "Strong early game, resists first two gyms."},
-			{PokemonID: 4, Name: "Charmander", TypeName: "Fire", SpriteURL: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png", Description: "Challenging early but powerful later, evolves into Charizard."},
-			{PokemonID: 7, Name: "Squirtle", TypeName: "Water", SpriteURL: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png", Description: "Balanced and reliable throughout the game."},
-		}
-	case gameVersionID == 15 || gameVersionID == 16: // HeartGold/SoulSilver
-		return []view.StarterInfo{
-			{PokemonID: 152, Name: "Chikorita", TypeName: "Grass", SpriteURL: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/152.png", Description: "Defensive and supportive, but struggles against early gyms."},
-			{PokemonID: 155, Name: "Cyndaquil", TypeName: "Fire", SpriteURL: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/155.png", Description: "Strong special attacker, great against Bug and Steel gyms."},
-			{PokemonID: 158, Name: "Totodile", TypeName: "Water", SpriteURL: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/158.png", Description: "Powerful physical attacker, learns Ice Fang for coverage."},
-		}
-	default:
-		return nil
-	}
-}

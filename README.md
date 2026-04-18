@@ -12,6 +12,17 @@ A full-stack web application for managing Pokemon, built with Go and zero JavaSc
 - **[goose](https://pressly.github.io/goose/)** — database migrations
 - **Modern CSS** — `@layer`, `@import`, `oklch()`, `light-dark()`, no build step
 
+## Supported Games
+
+PokéSensei is a multi-game companion. Currently bundled:
+
+- **FireRed / LeafGreen** (Gen III, Kanto)
+- **HeartGold / SoulSilver** (Gen IV, Johto + Kanto)
+- **X / Y** (Gen VI, Kalos)
+
+Adding a new game is data-driven: insert a row into `version_groups`, add a
+badge map under `cmd/import/badges/`, and a trainer seed JSON under `db/seed/`.
+
 ## Prerequisites
 
 - [Go 1.25+](https://go.dev/dl/)
